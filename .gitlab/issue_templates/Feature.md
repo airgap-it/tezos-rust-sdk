@@ -1,26 +1,28 @@
 <!---
-Please read this!
+1. Before opening a new epic, make sure it isn't a duplicate.
 
-1. Before opening a new issue, make sure to search for keywords in the issues
-filtered by the "feature" label and verify the issue you're about to submit isn't a duplicate.
+2. Give it a good name, summing up the goal to achieve
 
-2. Make sure you're including the name of the affected component if applicable, as an example:
-
-tezos or aeternity
+3. After creating the epic, also create a label with the same name
+on the highest group/project level necessary and add it to this issue as well
 --->
 
-### Summary
+## Summary
+<!--- What is the greater goal to achieve with this epic? --->
 
-(Summarize the feature concisely)
 
-### What is the expected behavior?
 
-(Describe what the user should see)
+## Which issues need to be completed
+<!--- List all issues that need to be done. Example:
+- [] papers/airgap/airgap-vault#242+
+If you use this format, add the + at the end of the path
+--->
 
-### Relevant mockups or screenshots
 
-(Paste or link any relevant mockups or screenshot that describe the feature.)
+<!--- --------------------------------------------------- --->
 
-### Possible approach
 
-(Outline a possible approach for this feature, ex. make an example how the code could look like)
+<!--- these standard labels will be added to this issue, leave it as it is --->
+/label ~2141  ~"proj::tezossdk"
+
+
