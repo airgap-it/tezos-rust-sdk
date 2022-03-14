@@ -1,23 +1,28 @@
 <!---
-Please read this!
+1. Before opening a new epic, make sure it isn't a duplicate.
 
-1. Before opening a new issue, make sure to search for keywords in the issues
-filtered by the "bug" label and verify the issue you're about to submit isn't a duplicate.
+2. Give it a good name, summing up the goal to achieve
 
-2. Make sure you're including the name of the affected component if applicable.
-
+3. After creating the epic, also create a label with the same name
+on the highest group/project level necessary and add it to this issue as well
 --->
 
-### Summary
+## Summary
+<!--- What is the greater goal to achieve with this epic? --->
 
-Epic referencing all the relevant issues for WORK_UNIT.
 
-### Which issues need to be completed
 
-## [PROJECT_NAME](https://gitlab.papers.tech/papers/tezos/sdks/PROJECT_NAME)
-
-**Features**
-<!---
-- [ ] #ISSUE_NUMBER - TITLE
-- [ ] https://gitlab.papers.tech/papers/tezos/sdks/PROJECT_NAME/-/issues/ISSUE_NUMBER - TITLE
+## Which issues need to be completed
+<!--- List all issues that need to be done. Example:
+- [] papers/airgap/airgap-vault#242+
+If you use this format, add the + at the end of the path
 --->
+
+
+<!--- --------------------------------------------------- --->
+
+
+<!--- these standard labels will be added to this issue, leave it as it is --->
+/label ~2141  ~"proj::tezossdk"
+
+
