@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "tezos-core",
+    "tezos-crypto",
+    "tezos-micheline",
+    "tezos-operation",
+]
