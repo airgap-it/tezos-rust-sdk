@@ -1,0 +1,25 @@
+image: docker:latest
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  TEST_TAG: tezosoxide_test_$CI_COMMIT_SHA
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  script:
+    - docker build --target build -t $TEST_TAG .
+  tags:
+    - docker
+
+test:
+  allow_failure: false
+  stage: test
+  script:
+    - docker run --name unit-$CI_COMMIT_SHA $TEST_TAG cargo test
+  after_script:
+    - docker rm -f unit-$CI_COMMIT_SHA || true
+  tags:
+    - docker
