@@ -1,28 +1,43 @@
 <!---
-1. Before opening a new epic, make sure it isn't a duplicate.
+1. Before opening a new issue, make sure it isn't a duplicate.
 
-2. Give it a good name, summing up the goal to achieve
+2. Include the name of the affected component, eg: account-transaction-list or scan-address
 
-3. After creating the epic, also create a label with the same name
-on the highest group/project level necessary and add it to this issue as well
+3. Fill all proposed paragraphs (even with NA, if nothing available)
 --->
 
 ## Summary
-<!--- What is the greater goal to achieve with this epic? --->
+<!--- Summarize the feature concisely --->
 
 
 
-## Which issues need to be completed
-<!--- List all issues that need to be done. Example:
-- [] papers/airgap/airgap-vault#242+
-If you use this format, add the + at the end of the path
---->
+## What is the expected behavior?
+<!--- What the user should see / can do --->
+
+
+
+## Relevant Mockups, Screenshots and/or links
+<!--- Paste or link any relevant mockups or screenshot that describe the feature. --->
+
+
+
+## Possible fixes / approach
+<!--- If you can, link to the line of code that might be responsible for the problem or describe how to solve it  --->
+
+
+
+## Additional information
+<!--- anything that might be important for whoever works with this issue )  --->
+
 
 
 <!--- --------------------------------------------------- --->
 
+<!--- if you already know, please add an estimate eg. 2h or 1d, else leave it as it is--->
+/estimate
+
+
 
 <!--- these standard labels will be added to this issue, leave it as it is --->
-/label ~2141  ~"proj::tezossdk"
-
+/label ~"type::feature" ~"proj::tezossdk"
 
