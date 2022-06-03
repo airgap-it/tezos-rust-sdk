@@ -1,7 +1,7 @@
 image: docker:latest
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  TEST_TAG: tezosoxide_test_$CI_COMMIT_SHA
+  TEST_TAG: tezos_rust_sdk_test_$CI_COMMIT_SHA
 
 stages:
   - build
