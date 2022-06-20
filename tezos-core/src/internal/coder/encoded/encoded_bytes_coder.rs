@@ -6,13 +6,7 @@ use crate::{Error, Result};
 pub struct EncodedBytesCoder;
 
 impl EncodedBytesCoder {
-    pub fn new() -> Self {
-        EncodedBytesCoder {}
-    }
-}
-
-impl EncodedBytesCoder {
-    pub fn decode_with_meta<E: Encoded>(&self, value: &[u8], meta: &MetaEncoded) -> Result<E> {
+    pub fn decode_with_meta<E: Encoded>(value: &[u8], meta: &MetaEncoded) -> Result<E> {
         if value.len() == meta.bytes_length {
             let bytes = [meta.bytes_prefix(), value].concat();
             return E::new(
@@ -34,18 +28,18 @@ impl EncodedBytesCoder {
     }
 
     pub fn decode_consuming_with_meta<E: Encoded>(
-        &self,
         value: &mut Vec<u8>,
         meta: &MetaEncoded,
     ) -> Result<E> {
-        let bytes = value.consume_until(meta.bytes_length);
-        self.decode_with_meta(&bytes, meta)
+        let bytes = value.consume_until(meta.bytes_length)?;
+        Self::decode_with_meta(&bytes, meta)
     }
 }
 
-impl<E: Encoded> ConfigurableEncoder<&E, Vec<u8>, EncoderConfiguration> for EncodedBytesCoder {
+impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
+    for EncodedBytesCoder
+{
     fn encode_with_configuration(
-        &self,
         value: &E,
         configuration: EncoderConfiguration,
     ) -> Result<Vec<u8>> {
@@ -66,23 +60,23 @@ impl<E: Encoded> ConfigurableEncoder<&E, Vec<u8>, EncoderConfiguration> for Enco
     }
 }
 
-impl<E: Encoded> Encoder<&E, Vec<u8>> for EncodedBytesCoder {
-    fn encode(&self, value: &E) -> Result<Vec<u8>> {
-        self.encode_with_configuration(value, EncoderConfiguration { keep_prefix: false })
+impl<E: Encoded> Encoder<E, Vec<u8>, Error> for EncodedBytesCoder {
+    fn encode(value: &E) -> Result<Vec<u8>> {
+        Self::encode_with_configuration(value, EncoderConfiguration { keep_prefix: false })
     }
 }
 
-impl<E: Encoded> Decoder<E, &[u8]> for EncodedBytesCoder {
-    fn decode(&self, value: &[u8]) -> Result<E> {
+impl<E: Encoded> Decoder<E, Vec<u8>, Error> for EncodedBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<E> {
         let meta = MetaEncoded::recognize_bytes(value)?;
-        self.decode_with_meta(value, meta)
+        Self::decode_with_meta(value, meta)
     }
 }
 
-impl<E: Encoded> ConsumingDecoder<E, u8> for EncodedBytesCoder {
-    fn decode_consuming(&self, value: &mut Vec<u8>) -> Result<E> {
+impl<E: Encoded> ConsumingDecoder<E, u8, Error> for EncodedBytesCoder {
+    fn decode_consuming(value: &mut Vec<u8>) -> Result<E> {
         let meta = MetaEncoded::recognize_consumable_bytes(value)?;
-        self.decode_consuming_with_meta(value, meta)
+        Self::decode_consuming_with_meta(value, meta)
     }
 }
 

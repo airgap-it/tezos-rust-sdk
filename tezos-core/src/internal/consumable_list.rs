@@ -1,9 +1,13 @@
 use std::ops::Range;
 
+use crate::{Error, Result};
+
 pub trait ConsumableList<T> {
-    fn consume_at(&mut self, index: usize) -> Option<T>;
-    fn consume_range(&mut self, range: Range<usize>) -> Self;
-    fn consume_until(&mut self, index: usize) -> Self
+    fn consume_at(&mut self, index: usize) -> Result<T>;
+    fn consume_range(&mut self, range: Range<usize>) -> Result<Self>
+    where
+        Self: Sized;
+    fn consume_until(&mut self, index: usize) -> Result<Self>
     where
         Self: Sized,
     {
@@ -13,15 +17,18 @@ pub trait ConsumableList<T> {
 }
 
 impl<T> ConsumableList<T> for Vec<T> {
-    fn consume_at(&mut self, index: usize) -> Option<T> {
+    fn consume_at(&mut self, index: usize) -> Result<T> {
         if index < self.len() {
-            return Some(self.remove(index));
+            return Ok(self.remove(index));
         }
-        None
+        Err(Error::InvalidBytes)
     }
 
-    fn consume_range(&mut self, range: Range<usize>) -> Self {
-        self.splice(range, vec![]).collect()
+    fn consume_range(&mut self, range: Range<usize>) -> Result<Self> {
+        if range.end <= self.len() {
+            return Ok(self.splice(range, vec![]).collect());
+        }
+        Err(Error::InvalidBytes)
     }
 
     fn len(&self) -> usize {

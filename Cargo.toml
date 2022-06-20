@@ -2,6 +2,6 @@
 
 members = [
     "tezos-core",
-    "tezos-micheline",
+    "tezos-michelson",
     "tezos-operation",
 ]

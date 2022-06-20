@@ -10,7 +10,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Natural(String);
 
 impl Natural {
@@ -25,11 +25,14 @@ impl Natural {
         Self::from_string(value.to_string()).unwrap()
     }
 
-    pub fn to_integer<I: Unsigned + FromStr>(&self) -> I
+    pub fn to_integer<I: Unsigned + FromStr>(&self) -> Result<I>
     where
         <I as FromStr>::Err: Debug,
     {
-        self.0.parse::<I>().unwrap()
+        Ok(self
+            .0
+            .parse::<I>()
+            .map_err(|_error| Error::InvalidNaturalConversion)?)
     }
 
     pub fn is_valid(value: &str) -> bool {
@@ -38,8 +41,11 @@ impl Natural {
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = NaturalBytesCoder::new();
-        coder.encode(self)
+        NaturalBytesCoder::encode(self)
+    }
+
+    pub fn to_str(&self) -> &str {
+        &self.0
     }
 }
 
@@ -119,8 +125,7 @@ impl TryFrom<&Vec<u8>> for Natural {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = NaturalBytesCoder::new();
-        coder.decode(value)
+        NaturalBytesCoder::decode(value)
     }
 }
 

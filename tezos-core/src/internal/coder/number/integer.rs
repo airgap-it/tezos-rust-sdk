@@ -12,21 +12,11 @@ use crate::{
 
 use super::natural::NaturalBytesCoder;
 
-pub struct IntegerBytesCoder {
-    coder: NaturalBytesCoder,
-}
+pub struct IntegerBytesCoder;
 
-impl IntegerBytesCoder {
-    pub fn new() -> Self {
-        IntegerBytesCoder {
-            coder: NaturalBytesCoder::new(),
-        }
-    }
-}
-
-impl Encoder<&Integer, Vec<u8>> for IntegerBytesCoder {
-    fn encode(&self, value: &Integer) -> Result<Vec<u8>> {
-        let value: BigInt = value.to_integer();
+impl Encoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
+    fn encode(value: &Integer) -> Result<Vec<u8>> {
+        let value: BigInt = value.to_integer()?;
         let abs = value.abs().to_biguint().unwrap();
 
         let byte = &abs & BigUint::from(0b0011_1111u8);
@@ -45,7 +35,7 @@ impl Encoder<&Integer, Vec<u8>> for IntegerBytesCoder {
         let encoded_byte = (byte | sequence_mask | sign_mask).to_u8().unwrap();
 
         let next_value_encoded = if next_value > BigUint::zero() {
-            self.coder.encode_unsigned(next_value)
+            NaturalBytesCoder::encode_unsigned(next_value)
         } else {
             vec![]
         };
@@ -54,41 +44,36 @@ impl Encoder<&Integer, Vec<u8>> for IntegerBytesCoder {
     }
 }
 
-impl Decoder<Integer, &Vec<u8>> for IntegerBytesCoder {
-    fn decode(&self, value: &Vec<u8>) -> Result<Integer> {
+impl Decoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<Integer> {
         let value: &mut Vec<u8> = &mut (value.clone());
 
-        self.decode_consuming(value)
+        Self::decode_consuming(value)
     }
 }
 
-impl ConsumingDecoder<Integer, u8> for IntegerBytesCoder {
-    fn decode_consuming(&self, value: &mut Vec<u8>) -> Result<Integer> {
-        if let Some(byte) = value.consume_at(0) {
-            let part = BigInt::from(byte & 0b0011_1111u8);
-            let sign = if (byte & 0b0100_0000u8) == 0b0100_0000u8 {
-                -1i8
-            } else {
-                1i8
-            };
-            let has_next = (byte & 0b1000_0000u8) == 0b1000_0000u8;
-            let abs = if has_next {
-                let decoded: BigInt = self
-                    .coder
-                    .decode_consuming(value)?
-                    .to_biguint()
-                    .unwrap()
-                    .into();
-                part + (decoded << 6u8)
-            } else {
-                part
-            };
-            let result: BigInt = abs * sign;
+impl ConsumingDecoder<Integer, u8, Error> for IntegerBytesCoder {
+    fn decode_consuming(value: &mut Vec<u8>) -> Result<Integer> {
+        let byte = value.consume_at(0)?;
+        let part = BigInt::from(byte & 0b0011_1111u8);
+        let sign = if (byte & 0b0100_0000u8) == 0b0100_0000u8 {
+            -1i8
+        } else {
+            1i8
+        };
+        let has_next = (byte & 0b1000_0000u8) == 0b1000_0000u8;
+        let abs = if has_next {
+            let decoded: BigInt = NaturalBytesCoder::decode_consuming(value)?
+                .to_biguint()
+                .unwrap()
+                .into();
+            part + (decoded << 6u8)
+        } else {
+            part
+        };
+        let result: BigInt = abs * sign;
 
-            return Ok(result.into());
-        }
-
-        Err(Error::InvalidIntegerBytes)
+        return Ok(result.into());
     }
 }
 
@@ -159,8 +144,7 @@ mod test {
     #[test]
     fn test_encode() -> Result<()> {
         for (value, bytes) in test_values()? {
-            let coder = IntegerBytesCoder::new();
-            let encoded = coder.encode(&value)?;
+            let encoded = IntegerBytesCoder::encode(&value)?;
             assert_eq!(encoded, bytes);
         }
 
@@ -170,8 +154,7 @@ mod test {
     #[test]
     fn test_decode() -> Result<()> {
         for (value, bytes) in test_values()? {
-            let coder = IntegerBytesCoder::new();
-            let decoded = coder.decode(&bytes)?;
+            let decoded = IntegerBytesCoder::decode(&bytes)?;
             assert_eq!(value, decoded);
         }
 

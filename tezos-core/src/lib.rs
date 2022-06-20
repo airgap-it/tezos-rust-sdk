@@ -2,7 +2,7 @@
 
 pub mod crypto;
 pub mod error;
-mod internal;
+pub mod internal;
 pub mod types;
 
 #[cfg(feature = "crypto")]

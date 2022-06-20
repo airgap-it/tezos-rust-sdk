@@ -4,12 +4,9 @@ use super::{
     Encoded, MetaEncoded,
 };
 use crate::{
-    internal::coder::{
-        encoded::{
-            address_bytes_coder::AddressBytesCoder,
-            implicit_address_bytes_coder::ImplicitAddressBytesCoder,
-        },
-        Decoder, Encoder,
+    internal::coder::encoded::{
+        address_bytes_coder::AddressBytesCoder,
+        implicit_address_bytes_coder::ImplicitAddressBytesCoder,
     },
     Error, Result,
 };
@@ -20,6 +17,8 @@ pub enum Address {
 }
 
 impl Encoded for Address {
+    type Coder = AddressBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::Implicit(address) => address.base58(),
@@ -43,19 +42,13 @@ impl Encoded for Address {
         }
         Err(Error::InvalidBase58EncodedData)
     }
-
-    fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = AddressBytesCoder::new();
-        coder.encode(self)
-    }
 }
 
 impl TryFrom<&Vec<u8>> for Address {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = AddressBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 
@@ -104,6 +97,8 @@ impl ImplicitAddress {
 }
 
 impl Encoded for ImplicitAddress {
+    type Coder = ImplicitAddressBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::TZ1(address) => address.base58(),
@@ -132,19 +127,13 @@ impl Encoded for ImplicitAddress {
         }
         Err(Error::InvalidBase58EncodedData)
     }
-
-    fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = ImplicitAddressBytesCoder::new();
-        coder.encode(self)
-    }
 }
 
 impl TryFrom<&Vec<u8>> for ImplicitAddress {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = ImplicitAddressBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 

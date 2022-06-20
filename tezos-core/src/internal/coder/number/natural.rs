@@ -14,18 +14,14 @@ use crate::{
 pub struct NaturalBytesCoder;
 
 impl NaturalBytesCoder {
-    pub fn new() -> Self {
-        NaturalBytesCoder {}
-    }
-
-    pub fn encode_unsigned(&self, value: BigUint) -> Vec<u8> {
+    pub fn encode_unsigned(value: BigUint) -> Vec<u8> {
         if value == BigUint::zero() {
             return vec![0];
         }
-        self.encode_with(value, vec![])
+        Self::encode_with(value, vec![])
     }
 
-    fn encode_with(&self, value: BigUint, encoded: Vec<u8>) -> Vec<u8> {
+    fn encode_with(value: BigUint, encoded: Vec<u8>) -> Vec<u8> {
         if value == BigUint::zero() {
             return encoded;
         }
@@ -40,48 +36,45 @@ impl NaturalBytesCoder {
 
         let encoded_byte = (byte | sequence_mask).to_u8().unwrap();
 
-        self.encode_with(next_value, [encoded, vec![encoded_byte]].concat())
+        Self::encode_with(next_value, [encoded, vec![encoded_byte]].concat())
     }
 
-    fn decode_with(&self, value: &mut Vec<u8>, decoded: BigUint, shift: u8) -> BigUint {
-        if let Some(byte) = value.consume_at(0) {
-            let part = BigUint::from(byte & 0b0111_1111u8);
-            let has_next = (byte & 0b1000_0000) == 0b1000_0000;
-            let decoded = decoded + (part << shift);
-            if has_next {
-                return self.decode_with(value, decoded, shift + 7);
-            }
-            return decoded;
+    fn decode_with(value: &mut Vec<u8>, decoded: BigUint, shift: u8) -> Result<BigUint> {
+        let byte = value.consume_at(0)?;
+        let part = BigUint::from(byte & 0b0111_1111u8);
+        let has_next = (byte & 0b1000_0000) == 0b1000_0000;
+        let decoded = decoded + (part << shift);
+        if has_next {
+            return Self::decode_with(value, decoded, shift + 7);
         }
-
-        decoded
+        return Ok(decoded);
     }
 }
 
-impl Encoder<&Natural, Vec<u8>> for NaturalBytesCoder {
-    fn encode(&self, value: &Natural) -> Result<Vec<u8>> {
-        let value: BigUint = value.to_integer();
+impl Encoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
+    fn encode(value: &Natural) -> Result<Vec<u8>> {
+        let value: BigUint = value.to_integer().unwrap();
         if value == BigUint::zero() {
             return Ok(vec![0]);
         }
-        Ok(self.encode_with(value, vec![]))
+        Ok(Self::encode_with(value, vec![]))
     }
 }
 
-impl Decoder<Natural, &Vec<u8>> for NaturalBytesCoder {
-    fn decode(&self, value: &Vec<u8>) -> Result<Natural> {
+impl Decoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<Natural> {
         let value: &mut Vec<u8> = &mut (value.clone());
 
-        self.decode_consuming(value)
+        Self::decode_consuming(value)
     }
 }
 
-impl ConsumingDecoder<Natural, u8> for NaturalBytesCoder {
-    fn decode_consuming(&self, value: &mut Vec<u8>) -> Result<Natural> {
+impl ConsumingDecoder<Natural, u8, Error> for NaturalBytesCoder {
+    fn decode_consuming(value: &mut Vec<u8>) -> Result<Natural> {
         if value.is_empty() {
             return Err(Error::InvalidNaturalBytes);
         }
-        let result = self.decode_with(value, BigUint::zero(), 0);
+        let result = Self::decode_with(value, BigUint::zero(), 0)?;
 
         Ok(result.into())
     }
@@ -127,8 +120,7 @@ mod test {
     #[test]
     fn test_encode() -> Result<()> {
         for (value, bytes) in test_values()? {
-            let coder = NaturalBytesCoder::new();
-            let encoded = coder.encode(&value)?;
+            let encoded = NaturalBytesCoder::encode(&value)?;
             assert_eq!(encoded, bytes);
         }
 
@@ -138,8 +130,7 @@ mod test {
     #[test]
     fn test_decode() -> Result<()> {
         for (value, bytes) in test_values()? {
-            let coder = NaturalBytesCoder::new();
-            let decoded = coder.decode(&bytes)?;
+            let decoded = NaturalBytesCoder::decode(&bytes)?;
             assert_eq!(value, decoded);
         }
 
