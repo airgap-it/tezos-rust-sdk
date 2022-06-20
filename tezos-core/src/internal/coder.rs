@@ -2,63 +2,59 @@ pub mod encoded;
 pub mod mutez;
 pub mod number;
 
-use crate::Result;
-
-pub trait ConfigurableEncoder<T, S, C> {
-    fn encode_with_configuration(&self, value: T, configuration: C) -> Result<S>;
+pub trait ConfigurableEncoder<T, S, C, Error> {
+    fn encode_with_configuration(value: &T, configuration: C) -> std::result::Result<S, Error>;
 }
 
-pub trait Encoder<T, S>: ConfigurableEncoder<T, S, ()> {
-    fn encode(&self, value: T) -> Result<S>;
+pub trait Encoder<T, S, Error>: ConfigurableEncoder<T, S, (), Error> {
+    fn encode(value: &T) -> std::result::Result<S, Error>;
 }
 
-impl<E, T, S> ConfigurableEncoder<T, S, ()> for E
+impl<E, T, S, Error> ConfigurableEncoder<T, S, (), Error> for E
 where
-    E: Encoder<T, S>,
+    E: Encoder<T, S, Error>,
 {
-    fn encode_with_configuration(&self, value: T, _configuration: ()) -> Result<S> {
-        self.encode(value)
+    fn encode_with_configuration(value: &T, _configuration: ()) -> Result<S, Error> {
+        Self::encode(value)
     }
 }
 
-pub trait ConfigurableDecoder<T, S, C> {
-    fn decode_with_configuration(&self, value: S, configuration: C) -> Result<T>;
+pub trait ConfigurableDecoder<T, S, C, Error> {
+    fn decode_with_configuration(value: &S, configuration: C) -> Result<T, Error>;
 }
 
-pub trait Decoder<T, S>: ConfigurableDecoder<T, S, ()> {
-    fn decode(&self, value: S) -> Result<T>;
+pub trait Decoder<T, S, Error>: ConfigurableDecoder<T, S, (), Error> {
+    fn decode(value: &S) -> Result<T, Error>;
 }
 
-impl<D, T, S> ConfigurableDecoder<T, S, ()> for D
+impl<D, T, S, Error> ConfigurableDecoder<T, S, (), Error> for D
 where
-    D: Decoder<T, S>,
+    D: Decoder<T, S, Error>,
 {
-    fn decode_with_configuration(&self, value: S, _configuration: ()) -> Result<T> {
-        self.decode(value)
+    fn decode_with_configuration(value: &S, _configuration: ()) -> Result<T, Error> {
+        Self::decode(value)
     }
 }
 
-pub trait ConfigurableConsumingDecoder<T, S, C> {
+pub trait ConfigurableConsumingDecoder<T, S, C, Error> {
     fn decode_consuming_with_configuration(
-        &self,
         value: &mut Vec<S>,
         configuration: C,
-    ) -> Result<T>;
+    ) -> Result<T, Error>;
 }
 
-pub trait ConsumingDecoder<T, S>: ConfigurableConsumingDecoder<T, S, ()> {
-    fn decode_consuming(&self, value: &mut Vec<S>) -> Result<T>;
+pub trait ConsumingDecoder<T, S, Error>: ConfigurableConsumingDecoder<T, S, (), Error> {
+    fn decode_consuming(value: &mut Vec<S>) -> Result<T, Error>;
 }
 
-impl<D, T, S> ConfigurableConsumingDecoder<T, S, ()> for D
+impl<D, T, S, Error> ConfigurableConsumingDecoder<T, S, (), Error> for D
 where
-    D: ConsumingDecoder<T, S>,
+    D: ConsumingDecoder<T, S, Error>,
 {
     fn decode_consuming_with_configuration(
-        &self,
         value: &mut Vec<S>,
         _configuration: (),
-    ) -> Result<T> {
-        self.decode_consuming(value)
+    ) -> Result<T, Error> {
+        Self::decode_consuming(value)
     }
 }

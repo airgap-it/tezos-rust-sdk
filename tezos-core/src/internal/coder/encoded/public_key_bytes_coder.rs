@@ -10,36 +10,26 @@ use crate::{
         types::{BytesTag, EncodedTag},
     },
     types::encoded::{self, MetaEncoded, PublicKey},
-    Result,
+    Error, Result,
 };
 
-pub struct PublicKeyBytesCoder {
-    coder: EncodedGroupBytesCoder<PublicKeyTagProvider>,
-}
+pub struct PublicKeyBytesCoder;
 
-impl PublicKeyBytesCoder {
-    pub fn new() -> Self {
-        PublicKeyBytesCoder {
-            coder: EncodedGroupBytesCoder::new(PublicKeyTagProvider::new()),
-        }
+impl Encoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
+    fn encode(value: &PublicKey) -> Result<Vec<u8>> {
+        EncodedGroupBytesCoder::<Self>::encode(&value)
     }
 }
 
-impl Encoder<&PublicKey, Vec<u8>> for PublicKeyBytesCoder {
-    fn encode(&self, value: &PublicKey) -> Result<Vec<u8>> {
-        self.coder.encode(&value)
+impl Decoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<PublicKey> {
+        EncodedGroupBytesCoder::<Self>::decode(value)
     }
 }
 
-impl Decoder<PublicKey, &Vec<u8>> for PublicKeyBytesCoder {
-    fn decode(&self, value: &Vec<u8>) -> Result<PublicKey> {
-        self.coder.decode(value)
-    }
-}
-
-impl ConsumingDecoder<PublicKey, u8> for PublicKeyBytesCoder {
-    fn decode_consuming(&self, value: &mut Vec<u8>) -> Result<PublicKey> {
-        self.coder.decode_consuming(value)
+impl ConsumingDecoder<PublicKey, u8, Error> for PublicKeyBytesCoder {
+    fn decode_consuming(value: &mut Vec<u8>) -> Result<PublicKey> {
+        EncodedGroupBytesCoder::<Self>::decode_consuming(value)
     }
 }
 
@@ -91,27 +81,19 @@ impl Add<Vec<u8>> for PublicKeyTag {
     }
 }
 
-struct PublicKeyTagProvider;
-
-impl PublicKeyTagProvider {
-    fn new() -> Self {
-        PublicKeyTagProvider {}
-    }
-}
-
-impl TagProvider for PublicKeyTagProvider {
+impl TagProvider for PublicKeyBytesCoder {
     type E = PublicKey;
     type T = PublicKeyTag;
 
-    fn tag_from_encoded(&self, encoded: &Self::E) -> Option<Self::T> {
+    fn tag_from_encoded(encoded: &Self::E) -> Option<Self::T> {
         Self::T::from_encoded(encoded)
     }
 
-    fn tag_from_bytes(&self, bytes: &[u8]) -> Option<Self::T> {
+    fn tag_from_bytes(bytes: &[u8]) -> Option<Self::T> {
         Self::T::recognize(bytes)
     }
 
-    fn tag_consuming(&self, bytes: &mut Vec<u8>) -> Option<Self::T> {
+    fn tag_consuming(bytes: &mut Vec<u8>) -> Option<Self::T> {
         if let Some(tag) = Self::T::recognize_consumable(bytes) {
             let _ = bytes.consume_until(tag.value().len());
             return Some(tag);
@@ -129,8 +111,7 @@ mod test {
     #[test]
     fn test_encode_1() -> Result<()> {
         let key: PublicKey = "edpkuHhTYggbo1d3vRJTtoKy9hFnZGc8Vpr6qEzbZMXWV69odaM3a4".try_into()?;
-        let coder = PublicKeyBytesCoder::new();
-        let bytes = coder.encode(&key)?;
+        let bytes = PublicKeyBytesCoder::encode(&key)?;
         assert_eq!(
             bytes,
             [
@@ -148,8 +129,7 @@ mod test {
             25, 50, 87, 48, 202, 220, 89, 250, 26, 11, 223, 114, 115,
         ]
         .to_vec();
-        let coder = PublicKeyBytesCoder::new();
-        let key = coder.decode(&bytes)?;
+        let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
             key.base58(),
             "edpkuHhTYggbo1d3vRJTtoKy9hFnZGc8Vpr6qEzbZMXWV69odaM3a4"
@@ -161,8 +141,7 @@ mod test {
     fn test_encode_2() -> Result<()> {
         let key: PublicKey =
             "sppkCVP3G6y4SsGAiHdR8UUd9dpawhAMpe5RT87F8wHKT7izLgrUncF".try_into()?;
-        let coder = PublicKeyBytesCoder::new();
-        let bytes = coder.encode(&key)?;
+        let bytes = PublicKeyBytesCoder::encode(&key)?;
         assert_eq!(
             bytes,
             [
@@ -180,8 +159,7 @@ mod test {
             125, 82, 150, 69, 83, 44, 112, 143, 51, 221, 107, 88, 85, 82, 245,
         ]
         .to_vec();
-        let coder = PublicKeyBytesCoder::new();
-        let key = coder.decode(&bytes)?;
+        let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
             key.base58(),
             "sppkCVP3G6y4SsGAiHdR8UUd9dpawhAMpe5RT87F8wHKT7izLgrUncF"
@@ -193,8 +171,7 @@ mod test {
     fn test_encode_3() -> Result<()> {
         let key: PublicKey =
             "p2pkE3k5ZLRUvXTtjqGesGCZQBQjPE1cZghFFAmZTeQm7WNTwfsqeZg".try_into()?;
-        let coder = PublicKeyBytesCoder::new();
-        let bytes = coder.encode(&key)?;
+        let bytes = PublicKeyBytesCoder::encode(&key)?;
         assert_eq!(
             bytes,
             [
@@ -212,8 +189,7 @@ mod test {
             91, 212, 166, 141, 35, 172, 23, 145, 189, 122, 166, 43, 132, 29, 36,
         ]
         .to_vec();
-        let coder = PublicKeyBytesCoder::new();
-        let key = coder.decode(&bytes)?;
+        let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
             key.base58(),
             "p2pkE3k5ZLRUvXTtjqGesGCZQBQjPE1cZghFFAmZTeQm7WNTwfsqeZg"

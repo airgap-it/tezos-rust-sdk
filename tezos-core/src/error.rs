@@ -1,6 +1,5 @@
-use std::result;
-
 use derive_more::{Display, Error as DError, From};
+use std::result;
 
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
@@ -31,6 +30,8 @@ pub enum Error {
     InvalidSecretKeyBytes,
     InvalidPublicKeyBytes,
     InvalidSignatureBytes,
+    InvalidIntegerConversion,
+    InvalidNaturalConversion,
 }
 
 pub type Result<T> = result::Result<T, Error>;

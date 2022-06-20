@@ -1,39 +1,29 @@
 use crate::{
     types::{mutez::Mutez, number::natural::Natural},
-    Result,
+    Error, Result,
 };
 
 use super::{number::natural::NaturalBytesCoder, ConsumingDecoder, Decoder, Encoder};
 
-pub struct MutezBytesCoder {
-    coder: NaturalBytesCoder,
-}
+pub struct MutezBytesCoder;
 
-impl MutezBytesCoder {
-    pub fn new() -> Self {
-        MutezBytesCoder {
-            coder: NaturalBytesCoder::new(),
-        }
-    }
-}
-
-impl Encoder<&Mutez, Vec<u8>> for MutezBytesCoder {
-    fn encode(&self, value: &Mutez) -> Result<Vec<u8>> {
+impl Encoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
+    fn encode(value: &Mutez) -> Result<Vec<u8>> {
         let value: Natural = value.into();
-        self.coder.encode(&value)
+        NaturalBytesCoder::encode(&value)
     }
 }
 
-impl Decoder<Mutez, &Vec<u8>> for MutezBytesCoder {
-    fn decode(&self, value: &Vec<u8>) -> Result<Mutez> {
-        let nat = self.coder.decode(value)?;
+impl Decoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<Mutez> {
+        let nat = NaturalBytesCoder::decode(value)?;
         (&nat).try_into()
     }
 }
 
-impl ConsumingDecoder<Mutez, u8> for MutezBytesCoder {
-    fn decode_consuming(&self, value: &mut Vec<u8>) -> Result<Mutez> {
-        let nat = self.coder.decode_consuming(value)?;
+impl ConsumingDecoder<Mutez, u8, Error> for MutezBytesCoder {
+    fn decode_consuming(value: &mut Vec<u8>) -> Result<Mutez> {
+        let nat = NaturalBytesCoder::decode_consuming(value)?;
         (&nat).try_into()
     }
 }

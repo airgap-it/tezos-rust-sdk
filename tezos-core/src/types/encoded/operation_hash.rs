@@ -1,5 +1,4 @@
 use crate::internal::coder::encoded::encoded_bytes_coder::EncodedBytesCoder;
-use crate::internal::coder::Encoder;
 use crate::types::encoded::{Encoded, MetaEncoded};
 use crate::{Error, Result};
 
@@ -8,6 +7,8 @@ pub struct OperationHash {
 }
 
 impl Encoded for OperationHash {
+    type Coder = EncodedBytesCoder;
+
     fn base58(&self) -> &str {
         &self.base58
     }
@@ -33,8 +34,7 @@ impl TryFrom<&Vec<u8>> for OperationHash {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode_with_meta(value, &META)
+        <Self as Encoded>::Coder::decode_with_meta(value, &META)
     }
 }
 
@@ -42,8 +42,7 @@ impl TryFrom<[u8; META.bytes_length]> for OperationHash {
     type Error = Error;
 
     fn try_from(value: [u8; META.bytes_length]) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode_with_meta(&value, &META)
+        <Self as Encoded>::Coder::decode_with_meta(&value, &META)
     }
 }
 
@@ -67,8 +66,7 @@ impl TryFrom<&OperationHash> for Vec<u8> {
     type Error = Error;
 
     fn try_from(value: &OperationHash) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.encode(value)
+        value.to_bytes()
     }
 }
 

@@ -1,9 +1,6 @@
 use crate::{
-    internal::coder::{
-        encoded::{
-            encoded_bytes_coder::EncodedBytesCoder, public_key_bytes_coder::PublicKeyBytesCoder,
-        },
-        Decoder, Encoder,
+    internal::coder::encoded::{
+        encoded_bytes_coder::EncodedBytesCoder, public_key_bytes_coder::PublicKeyBytesCoder,
     },
     types::encoded::{
         Ed25519PublicKey, Ed25519SecretKey, Encoded, MetaEncoded, P256PublicKey, P256SecretKey,
@@ -19,6 +16,8 @@ pub enum Key {
 }
 
 impl Encoded for Key {
+    type Coder = EncodedBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::Secret(value) => value.base58(),
@@ -55,8 +54,7 @@ impl TryFrom<&Vec<u8>> for Key {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 
@@ -80,8 +78,7 @@ impl TryFrom<&Key> for Vec<u8> {
     type Error = Error;
 
     fn try_from(value: &Key) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.encode(value)
+        value.to_bytes()
     }
 }
 
@@ -107,6 +104,8 @@ impl SecretKey {
 }
 
 impl Encoded for SecretKey {
+    type Coder = EncodedBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::Ed25519(value) => value.base58(),
@@ -141,8 +140,7 @@ impl TryFrom<&Vec<u8>> for SecretKey {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 
@@ -166,8 +164,7 @@ impl TryFrom<&SecretKey> for Vec<u8> {
     type Error = Error;
 
     fn try_from(value: &SecretKey) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.encode(value)
+        value.to_bytes()
     }
 }
 
@@ -193,6 +190,8 @@ impl PublicKey {
 }
 
 impl Encoded for PublicKey {
+    type Coder = PublicKeyBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::Ed25519(value) => value.base58(),
@@ -221,19 +220,13 @@ impl Encoded for PublicKey {
         }
         Err(Error::InvalidBase58EncodedData)
     }
-
-    fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = PublicKeyBytesCoder::new();
-        coder.encode(self)
-    }
 }
 
 impl TryFrom<&Vec<u8>> for PublicKey {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = PublicKeyBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    internal::coder::{encoded::encoded_bytes_coder::EncodedBytesCoder, Encoder},
+    internal::coder::encoded::encoded_bytes_coder::EncodedBytesCoder,
     types::encoded::{Ed25519Signature, Encoded, MetaEncoded, P256Signature, Secp256K1Signature},
     Error, Result,
 };
@@ -24,6 +24,8 @@ impl GenericSignature {
 }
 
 impl Encoded for GenericSignature {
+    type Coder = EncodedBytesCoder;
+
     fn base58(&self) -> &str {
         &self.base58
     }
@@ -49,8 +51,7 @@ impl TryFrom<&Vec<u8>> for GenericSignature {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode_with_meta(value, &META)
+        <Self as Encoded>::Coder::decode_with_meta(value, &META)
     }
 }
 
@@ -58,8 +59,7 @@ impl TryFrom<[u8; META.bytes_length]> for GenericSignature {
     type Error = Error;
 
     fn try_from(value: [u8; META.bytes_length]) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode_with_meta(&value, &META)
+        <Self as Encoded>::Coder::decode_with_meta(&value, &META)
     }
 }
 
@@ -110,8 +110,7 @@ impl TryFrom<&GenericSignature> for Vec<u8> {
     type Error = Error;
 
     fn try_from(value: &GenericSignature) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.encode(value)
+        value.to_bytes()
     }
 }
 

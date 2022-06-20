@@ -66,8 +66,7 @@ impl Mutez {
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = MutezBytesCoder::new();
-        coder.encode(self)
+        MutezBytesCoder::encode(self)
     }
 }
 
@@ -256,8 +255,7 @@ impl TryFrom<&Vec<u8>> for Mutez {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = MutezBytesCoder::new();
-        coder.decode(value)
+        MutezBytesCoder::decode(value)
     }
 }
 

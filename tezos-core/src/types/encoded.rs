@@ -95,11 +95,13 @@ pub use self::{
 };
 
 use crate::{
-    internal::coder::{encoded::encoded_bytes_coder::EncodedBytesCoder, Encoder},
+    internal::coder::{Decoder, Encoder},
     Error, Result,
 };
 
 pub trait Encoded: Sized {
+    type Coder: Encoder<Self, Vec<u8>, Error> + Decoder<Self, Vec<u8>, Error>;
+
     fn base58(&self) -> &str;
     fn meta(&self) -> &MetaEncoded;
     fn new(base58: String) -> Result<Self>;
@@ -109,8 +111,11 @@ pub trait Encoded: Sized {
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = EncodedBytesCoder::new();
-        coder.encode(self)
+        Self::Coder::encode(self)
+    }
+
+    fn from_bytes(bytes: &Vec<u8>) -> Result<Self> {
+        Self::Coder::decode(bytes)
     }
 }
 

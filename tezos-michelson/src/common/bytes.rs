@@ -1,0 +1,120 @@
+use hex;
+use regex::Regex;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::{
+    michelson::data::Data as MichelsonData,
+    {Error, Result},
+};
+
+#[derive(Debug, PartialEq, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Bytes(
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "literal_bytes_serializer",
+            deserialize_with = "literal_bytes_deserializer"
+        )
+    )]
+    String,
+);
+
+impl Bytes {
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+
+    pub fn is_valid(value: &str) -> bool {
+        let re = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
+        re.is_match(value)
+    }
+
+    pub fn from_string(value: String) -> Result<Self> {
+        if Self::is_valid(&value) {
+            let mut value = value;
+            if !value.starts_with("0x") {
+                value = format!("0x{}", value);
+            }
+            return Ok(Self(value));
+        }
+        Err(Error::InvalidHexString)
+    }
+}
+
+impl TryFrom<String> for Bytes {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self> {
+        Self::from_string(value)
+    }
+}
+
+impl TryFrom<&str> for Bytes {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self> {
+        Self::from_string(value.to_owned())
+    }
+}
+
+impl From<&[u8]> for Bytes {
+    fn from(value: &[u8]) -> Self {
+        let hex = format!("0x{}", hex::encode(value));
+        Bytes(hex)
+    }
+}
+
+impl From<Vec<u8>> for Bytes {
+    fn from(value: Vec<u8>) -> Self {
+        let hex = format!("0x{}", hex::encode(value));
+        Bytes(hex)
+    }
+}
+
+impl From<&Bytes> for Vec<u8> {
+    fn from(value: &Bytes) -> Self {
+        hex::decode(&value.0[2..]).unwrap()
+    }
+}
+
+impl From<Bytes> for MichelsonData {
+    fn from(value: Bytes) -> Self {
+        Self::Bytes(value)
+    }
+}
+
+impl TryFrom<MichelsonData> for Bytes {
+    type Error = Error;
+
+    fn try_from(value: MichelsonData) -> Result<Self> {
+        if let MichelsonData::Bytes(value) = value {
+            return Ok(value);
+        }
+        Err(Error::InvalidMichelsonData)
+    }
+}
+
+#[cfg(feature = "serde")]
+fn literal_bytes_serializer<S>(value: &str, s: S) -> core::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    if value.starts_with("0x") {
+        return s.serialize_str(&value[2..]);
+    }
+    s.serialize_str(value)
+}
+
+#[cfg(feature = "serde")]
+fn literal_bytes_deserializer<'de, D>(d: D) -> core::result::Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = String::deserialize(d)?;
+    if !value.starts_with("0x") {
+        return Ok(format!("0x{}", value));
+    }
+
+    Ok(value)
+}

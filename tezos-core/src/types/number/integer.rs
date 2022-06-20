@@ -9,7 +9,9 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug, PartialEq, Eq)]
+use super::natural::Natural;
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Integer(String);
 
 impl Integer {
@@ -24,11 +26,14 @@ impl Integer {
         Self::from_string(value.to_string()).unwrap()
     }
 
-    pub fn to_integer<I: Int + FromStr>(&self) -> I
+    pub fn to_integer<I: Int + FromStr>(&self) -> Result<I>
     where
         <I as FromStr>::Err: Debug,
     {
-        self.0.parse::<I>().unwrap()
+        Ok(self
+            .0
+            .parse::<I>()
+            .map_err(|_error| Error::InvalidIntegerConversion)?)
     }
 
     pub fn is_valid(value: &str) -> bool {
@@ -37,8 +42,11 @@ impl Integer {
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let coder = IntegerBytesCoder::new();
-        coder.encode(self)
+        IntegerBytesCoder::encode(self)
+    }
+
+    pub fn to_str(&self) -> &str {
+        &self.0
     }
 }
 
@@ -50,19 +58,19 @@ impl ToString for Integer {
 
 impl ToPrimitive for Integer {
     fn to_i64(&self) -> Option<i64> {
-        Some(self.to_integer())
+        self.to_integer().ok()
     }
 
     fn to_u64(&self) -> Option<u64> {
-        Some(self.to_integer())
+        self.to_integer().ok()
     }
 
     fn to_i128(&self) -> Option<i128> {
-        Some(self.to_integer())
+        self.to_integer().ok()
     }
 
     fn to_u128(&self) -> Option<u128> {
-        Some(self.to_integer())
+        self.to_integer().ok()
     }
 }
 
@@ -110,6 +118,12 @@ impl From<BigInt> for Integer {
     }
 }
 
+impl From<Natural> for Integer {
+    fn from(value: Natural) -> Self {
+        Integer(value.to_string())
+    }
+}
+
 impl TryFrom<String> for Integer {
     type Error = Error;
 
@@ -130,8 +144,7 @@ impl TryFrom<&Vec<u8>> for Integer {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = IntegerBytesCoder::new();
-        coder.decode(value)
+        IntegerBytesCoder::decode(value)
     }
 }
 

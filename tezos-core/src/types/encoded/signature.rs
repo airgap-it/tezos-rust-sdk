@@ -1,5 +1,5 @@
 use crate::{
-    internal::coder::{encoded::encoded_bytes_coder::EncodedBytesCoder, Decoder},
+    internal::coder::encoded::encoded_bytes_coder::EncodedBytesCoder,
     types::encoded::{
         ed25519_signature::Ed25519Signature, generic_signature::GenericSignature,
         p256_signature::P256Signature, secp256_k1_signature::Secp256K1Signature, Encoded,
@@ -27,6 +27,8 @@ impl Signature {
 }
 
 impl Encoded for Signature {
+    type Coder = EncodedBytesCoder;
+
     fn base58(&self) -> &str {
         match self {
             Self::Generic(value) => value.base58(),
@@ -75,8 +77,7 @@ impl TryFrom<&Vec<u8>> for Signature {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
-        let coder = EncodedBytesCoder::new();
-        coder.decode(value)
+        Self::from_bytes(value)
     }
 }
 
