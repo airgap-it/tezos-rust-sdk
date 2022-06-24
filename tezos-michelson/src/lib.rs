@@ -47,7 +47,7 @@ mod test {
             (michelson::data::r#true(), micheline::prim("True")),
             (michelson::data::r#false(), micheline::prim("False")),
             (
-                michelson::data::pair(true.into(), false.into()),
+                michelson::data::pair(vec![true.into(), false.into()]),
                 micheline::prim_with_args(
                     "Pair",
                     vec![micheline::prim("True"), micheline::prim("False")],

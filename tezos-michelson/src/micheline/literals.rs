@@ -66,6 +66,17 @@ impl Literal {
     }
 }
 
+impl TryFrom<Micheline> for Literal {
+    type Error = Error;
+
+    fn try_from(value: Micheline) -> Result<Self> {
+        if let Micheline::Literal(value) = value {
+            return Ok(value);
+        }
+        Err(Error::InvalidMicheline)
+    }
+}
+
 impl From<Int> for Literal {
     fn from(value: Int) -> Self {
         Literal::Int(value)

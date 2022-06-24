@@ -28,6 +28,10 @@ impl String {
     pub fn to_str(&self) -> &str {
         self.0.as_str()
     }
+
+    pub fn into_string(self) -> std::string::String {
+        self.0
+    }
 }
 
 impl FromStr for String {

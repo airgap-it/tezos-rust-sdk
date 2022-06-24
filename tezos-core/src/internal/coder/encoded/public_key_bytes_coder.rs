@@ -9,7 +9,10 @@ use crate::{
         consumable_list::ConsumableList,
         types::{BytesTag, EncodedTag},
     },
-    types::encoded::{self, MetaEncoded, PublicKey},
+    types::encoded::{
+        Ed25519PublicKey, MetaEncoded, P256PublicKey, PublicKey, Secp256K1PublicKey,
+        TraitMetaEncoded,
+    },
     Error, Result,
 };
 
@@ -66,9 +69,9 @@ impl EncodedTag for PublicKeyTag {
 
     fn meta(&self) -> &MetaEncoded {
         match self {
-            Self::EdPK => &encoded::META_ED25519_PUBLIC_KEY,
-            Self::SpPK => &encoded::META_SECP256_K1_PUBLIC_KEY,
-            Self::P2PK => &encoded::META_P256_PUBLIC_KEY,
+            Self::EdPK => Ed25519PublicKey::meta_value(),
+            Self::SpPK => Secp256K1PublicKey::meta_value(),
+            Self::P2PK => P256PublicKey::meta_value(),
         }
     }
 }
@@ -131,7 +134,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "edpkuHhTYggbo1d3vRJTtoKy9hFnZGc8Vpr6qEzbZMXWV69odaM3a4"
         );
         Ok(())
@@ -161,7 +164,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "sppkCVP3G6y4SsGAiHdR8UUd9dpawhAMpe5RT87F8wHKT7izLgrUncF"
         );
         Ok(())
@@ -191,7 +194,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "p2pkE3k5ZLRUvXTtjqGesGCZQBQjPE1cZghFFAmZTeQm7WNTwfsqeZg"
         );
         Ok(())

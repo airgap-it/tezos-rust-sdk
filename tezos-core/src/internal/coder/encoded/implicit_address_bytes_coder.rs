@@ -6,7 +6,10 @@ use crate::{
         consumable_list::ConsumableList,
         types::{BytesTag, EncodedTag},
     },
-    types::encoded::{self, ImplicitAddress, MetaEncoded},
+    types::encoded::{
+        Ed25519PublicKeyHash, ImplicitAddress, MetaEncoded, P256PublicKeyHash,
+        Secp256K1PublicKeyHash, TraitMetaEncoded,
+    },
     Error, Result,
 };
 
@@ -56,9 +59,9 @@ impl EncodedTag for ImplicitAddressTag {
 
     fn meta(&self) -> &MetaEncoded {
         match self {
-            Self::TZ1 => &encoded::META_ED25519_PUBLIC_KEY_HASH,
-            Self::TZ2 => &encoded::META_SECP256_K1_PUBLIC_KEY_HASH,
-            Self::TZ3 => &encoded::META_P256_PUBLIC_KEY_HASH,
+            Self::TZ1 => Ed25519PublicKeyHash::meta_value(),
+            Self::TZ2 => Secp256K1PublicKeyHash::meta_value(),
+            Self::TZ3 => P256PublicKeyHash::meta_value(),
         }
     }
 }

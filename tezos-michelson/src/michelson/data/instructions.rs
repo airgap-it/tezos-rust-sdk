@@ -610,3 +610,9 @@ make_instructions!(
     (JoinTickets, JOIN_TICKETS, join_ticket, 139),
     (OpenChest, OPEN_CHEST, open_chest, 143),
 );
+
+impl From<Primitive> for crate::michelson::Primitive {
+    fn from(value: Primitive) -> Self {
+        Self::Instruction(value)
+    }
+}

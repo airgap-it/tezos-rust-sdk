@@ -12,7 +12,7 @@ use crate::{
         consumable_list::ConsumableList,
         types::BytesTag,
     },
-    types::encoded::{Address, META_CONTRACT_HASH},
+    types::encoded::{Address, ContractHash, TraitMetaEncoded},
     Error, Result,
 };
 
@@ -44,7 +44,7 @@ impl Decoder<Address, Vec<u8>, Error> for AddressBytesCoder {
                 &bytes,
             )?)),
             AddressTag::Originated => {
-                EncodedBytesCoder::decode_with_meta(&bytes, &META_CONTRACT_HASH)
+                EncodedBytesCoder::decode_with_meta(&bytes, ContractHash::meta_value())
             }
         }
     }
@@ -60,7 +60,7 @@ impl ConsumingDecoder<Address, u8, Error> for AddressBytesCoder {
                 ImplicitAddressBytesCoder::decode_consuming(value)?,
             )),
             AddressTag::Originated => Ok(Address::Originated(
-                EncodedBytesCoder::decode_consuming_with_meta(value, &META_CONTRACT_HASH)?,
+                EncodedBytesCoder::decode_consuming_with_meta(value, ContractHash::meta_value())?,
             )),
         }
     }
@@ -133,7 +133,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz1fJGtrdmckD3VkiDxqUEci5h4gGcvocw6e");
+        assert_eq!(address.value(), "tz1fJGtrdmckD3VkiDxqUEci5h4gGcvocw6e");
         Ok(())
     }
 
@@ -159,7 +159,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz2AjVPbMHdDF1XwHVhUrTg6ZvqY83AYhJEy");
+        assert_eq!(address.value(), "tz2AjVPbMHdDF1XwHVhUrTg6ZvqY83AYhJEy");
         Ok(())
     }
 
@@ -185,7 +185,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz3Nk25g51knuzFZZz2DeA5PveaQYmCtV68B");
+        assert_eq!(address.value(), "tz3Nk25g51knuzFZZz2DeA5PveaQYmCtV68B");
         Ok(())
     }
 
@@ -211,7 +211,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7");
+        assert_eq!(address.value(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7");
         Ok(())
     }
 }

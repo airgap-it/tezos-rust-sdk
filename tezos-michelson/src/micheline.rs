@@ -15,7 +15,7 @@ use crate::{
     internal::{
         coder::micheline_bytes_coder::MichelineBytesCoder, normalizer::MichelineNormalizer,
     },
-    michelson::{data::Data, types::Type, Michelson},
+    michelson::{types::Type, Michelson},
     Error, Result,
 };
 
@@ -139,29 +139,6 @@ impl From<Michelson> for Micheline {
                 Type::Chest(value) => value.into(),
                 Type::ChestKey(value) => value.into(),
             },
-        }
-    }
-}
-
-impl From<Data> for Micheline {
-    fn from(value: Data) -> Self {
-        match value {
-            Data::Int(value) => value.into(),
-            Data::Nat(value) => value.into(),
-            Data::String(value) => value.into(),
-            Data::Bytes(value) => value.into(),
-            Data::Unit(value) => value.into(),
-            Data::True(value) => value.into(),
-            Data::False(value) => value.into(),
-            Data::Pair(value) => value.into(),
-            Data::Left(value) => value.into(),
-            Data::Right(value) => value.into(),
-            Data::Some(value) => value.into(),
-            Data::None(value) => value.into(),
-            Data::Sequence(value) => value.into(),
-            Data::Elt(value) => value.into(),
-            Data::Map(value) => value.into(),
-            Data::Instruction(value) => value.into(),
         }
     }
 }

@@ -43,7 +43,7 @@ impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
         value: &E,
         configuration: EncoderConfiguration,
     ) -> Result<Vec<u8>> {
-        let bytes = bs58::decode(value.base58())
+        let bytes = bs58::decode(value.value())
             .with_check(Some(value.meta().version()))
             .into_vec()?;
         if bytes.len() <= value.meta().versioned_bytes_prefix().len()

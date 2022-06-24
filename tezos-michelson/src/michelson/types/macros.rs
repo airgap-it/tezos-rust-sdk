@@ -1,16 +1,15 @@
 macro_rules! make_types {
     (
-        $(
-            $enum_case_name:ident($enum_case_type:ty),)?
-            [$($type_impl:tt)*],
-            conversion_fallback: $fallback:ident,
-            $(($name:ident, $code:ident, $tag:literal
-                $(, ($field_name:ident: $field_type:ty))*
-                $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
-                $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*),
-            )+
+        $(type_enum: $enum_case_name:ident($enum_case_type:ty),)?
+        [$($type_impl:tt)*],
+        conversion_fallback: $fallback:ident,
+        $(($name:ident, $code:ident, $tag:literal
+            $(, ($field_name:ident: $field_type:ty))*
+            $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
+            $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*),
+        )+
     ) => {
-        use crate::micheline::{Micheline, primitive_application::PrimitiveApplication};
+        use crate::{micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
         pub use self::{
             $($code::{$name, $code},)*
         };
@@ -61,9 +60,7 @@ macro_rules! make_types {
             }
         }
 
-        const PRIMS: &[&'static crate::michelson::Prim] = &[
-            $(&$code::PRIM,)*
-        ];
+        make_primitive_enum!($($name, $code, $tag)+);
 
         $(
             make_type!(
@@ -86,10 +83,10 @@ macro_rules! make_type {
         mod $code {
             use crate::{
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
-                michelson::{Annotation, Prim, metadata::TypeFieldMetadata, PrimType, Michelson},
+                michelson::{Annotation, metadata::TypeFieldMetadata, PrimType, Michelson},
                 Error, Result,
             };
-            use super::Type;
+            use super::{Type, Primitive};
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
@@ -143,12 +140,10 @@ macro_rules! make_type {
             }
 
             impl PrimType for $name {
-                fn prim_value() -> &'static Prim {
-                    &PRIM
+                fn prim_value() -> crate::michelson::Primitive {
+                    Primitive::$name.into()
                 }
             }
-
-            pub const PRIM: Prim = Prim::new(stringify!($code), &[$tag]);
 
             impl From<$name> for Michelson {
                 fn from(value: $name) -> Self {
@@ -189,11 +184,11 @@ macro_rules! make_type {
 
                 #[allow(unused)]
                 fn try_from(value: PrimitiveApplication) -> Result<Self> {
-                    if value.prim() != PRIM.name() {
+                    if value.prim() != Self::prim_value().name() {
                         return Err(Error::InvalidPrimitiveApplication);
                     }
                     let metadata: TypeFieldMetadata = (&value).try_into()?;
-                    let mut args = value.to_args().unwrap_or(vec![]);
+                    let mut args = value.into_args().unwrap_or(vec![]);
                     Ok(Self {
                         $(
                             $field_name: if !args.is_empty() { args.remove(0).try_into()? } else { Err(Error::InvalidPrimitiveApplication)? },
@@ -224,7 +219,7 @@ macro_rules! make_type {
                         let mut values = value.$vec_field_name.into_iter().map(|value| value.into()).collect::<Vec<Micheline>>();
                         args.append(&mut values);
                     )*
-                    let primitive_application = PrimitiveApplication::new(PRIM.name().into(), Some(args), Some(annots));
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));
 
                     primitive_application.into()
                 }

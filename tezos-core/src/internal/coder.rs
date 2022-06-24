@@ -1,6 +1,19 @@
-pub mod encoded;
-pub mod mutez;
-pub mod number;
+mod encoded;
+mod mutez;
+mod number;
+
+pub use self::{
+    encoded::{
+        address_bytes_coder::AddressBytesCoder,
+        contract_address_bytes_coder::ContractAddressBytesCoder,
+        encoded_bytes_coder::{EncodedBytesCoder, EncoderConfiguration},
+        encoded_group_bytes_coder::{EncodedGroupBytesCoder, TagProvider},
+        implicit_address_bytes_coder::ImplicitAddressBytesCoder,
+        public_key_bytes_coder::PublicKeyBytesCoder,
+    },
+    mutez::MutezBytesCoder,
+    number::{integer::IntegerBytesCoder, natural::NaturalBytesCoder},
+};
 
 pub trait ConfigurableEncoder<T, S, C, Error> {
     fn encode_with_configuration(value: &T, configuration: C) -> std::result::Result<S, Error>;

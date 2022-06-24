@@ -1,7 +1,5 @@
 use crate::{
-    internal::coder::encoded::{
-        encoded_bytes_coder::EncodedBytesCoder, public_key_bytes_coder::PublicKeyBytesCoder,
-    },
+    internal::coder::{EncodedBytesCoder, PublicKeyBytesCoder},
     types::encoded::{
         Ed25519PublicKey, Ed25519SecretKey, Encoded, MetaEncoded, P256PublicKey, P256SecretKey,
         Secp256K1PublicKey, Secp256K1SecretKey,
@@ -18,26 +16,26 @@ pub enum Key {
 impl Encoded for Key {
     type Coder = EncodedBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::Secret(value) => value.base58(),
-            Self::Public(value) => value.base58(),
+            Self::Secret(value) => value.value(),
+            Self::Public(value) => value.value(),
         }
     }
 
-    fn meta(&self) -> &MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::Secret(value) => value.meta(),
             Self::Public(value) => value.meta(),
         }
     }
 
-    fn new(base58: String) -> Result<Self> {
-        if SecretKey::is_valid_base58(&base58) {
-            return Ok(Self::Secret(SecretKey::new(base58)?));
+    fn new(value: String) -> Result<Self> {
+        if SecretKey::is_valid_base58(&value) {
+            return Ok(Self::Secret(SecretKey::new(value)?));
         }
-        if PublicKey::is_valid_base58(&base58) {
-            return Ok(Self::Public(PublicKey::new(base58)?));
+        if PublicKey::is_valid_base58(&value) {
+            return Ok(Self::Public(PublicKey::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
     }
@@ -106,15 +104,15 @@ impl SecretKey {
 impl Encoded for SecretKey {
     type Coder = EncodedBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::Ed25519(value) => value.base58(),
-            Self::Secp256K1(value) => value.base58(),
-            Self::P256(value) => value.base58(),
+            Self::Ed25519(value) => value.value(),
+            Self::Secp256K1(value) => value.value(),
+            Self::P256(value) => value.value(),
         }
     }
 
-    fn meta(&self) -> &MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::Ed25519(value) => value.meta(),
             Self::Secp256K1(value) => value.meta(),
@@ -122,15 +120,15 @@ impl Encoded for SecretKey {
         }
     }
 
-    fn new(base58: String) -> Result<Self> {
-        if Ed25519SecretKey::is_valid_base58(&base58) {
-            return Ok(Self::Ed25519(Ed25519SecretKey::new(base58)?));
+    fn new(value: String) -> Result<Self> {
+        if Ed25519SecretKey::is_valid_base58(&value) {
+            return Ok(Self::Ed25519(Ed25519SecretKey::new(value)?));
         }
-        if Secp256K1SecretKey::is_valid_base58(&base58) {
-            return Ok(Self::Secp256K1(Secp256K1SecretKey::new(base58)?));
+        if Secp256K1SecretKey::is_valid_base58(&value) {
+            return Ok(Self::Secp256K1(Secp256K1SecretKey::new(value)?));
         }
-        if P256SecretKey::is_valid_base58(&base58) {
-            return Ok(Self::P256(P256SecretKey::new(base58)?));
+        if P256SecretKey::is_valid_base58(&value) {
+            return Ok(Self::P256(P256SecretKey::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
     }
@@ -192,15 +190,15 @@ impl PublicKey {
 impl Encoded for PublicKey {
     type Coder = PublicKeyBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::Ed25519(value) => value.base58(),
-            Self::Secp256K1(value) => value.base58(),
-            Self::P256(value) => value.base58(),
+            Self::Ed25519(value) => value.value(),
+            Self::Secp256K1(value) => value.value(),
+            Self::P256(value) => value.value(),
         }
     }
 
-    fn meta(&self) -> &MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::Ed25519(value) => value.meta(),
             Self::Secp256K1(value) => value.meta(),
@@ -208,15 +206,15 @@ impl Encoded for PublicKey {
         }
     }
 
-    fn new(base58: String) -> Result<Self> {
-        if Ed25519PublicKey::is_valid_base58(&base58) {
-            return Ok(Self::Ed25519(Ed25519PublicKey::new(base58)?));
+    fn new(value: String) -> Result<Self> {
+        if Ed25519PublicKey::is_valid_base58(&value) {
+            return Ok(Self::Ed25519(Ed25519PublicKey::new(value)?));
         }
-        if Secp256K1PublicKey::is_valid_base58(&base58) {
-            return Ok(Self::Secp256K1(Secp256K1PublicKey::new(base58)?));
+        if Secp256K1PublicKey::is_valid_base58(&value) {
+            return Ok(Self::Secp256K1(Secp256K1PublicKey::new(value)?));
         }
-        if P256PublicKey::is_valid_base58(&base58) {
-            return Ok(Self::P256(P256PublicKey::new(base58)?));
+        if P256PublicKey::is_valid_base58(&value) {
+            return Ok(Self::P256(P256PublicKey::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
     }
@@ -263,7 +261,7 @@ mod test {
         let key: Key = "edpkuF5y5V7NNH5xKMCKHHqVDzq6YuUXiPT3FFjA9CGnht6xCgziTe".try_into()?;
         if let Key::Public(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "edpkuF5y5V7NNH5xKMCKHHqVDzq6YuUXiPT3FFjA9CGnht6xCgziTe"
             );
             return Ok(());
@@ -276,7 +274,7 @@ mod test {
         let key: Key = "edskRhKTQkgxb7CNTr31rzy3xdkyKaYX9hySAnZYJTPmUzPB7WU4NL7C8pmtQDgRqQ4jDw4Ugh6Y1UW5nvo7UYrRbyhVYK1YuR".try_into()?;
         if let Key::Secret(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "edskRhKTQkgxb7CNTr31rzy3xdkyKaYX9hySAnZYJTPmUzPB7WU4NL7C8pmtQDgRqQ4jDw4Ugh6Y1UW5nvo7UYrRbyhVYK1YuR"
             );
             return Ok(());
@@ -289,7 +287,7 @@ mod test {
         let key: PublicKey = "edpkuF5y5V7NNH5xKMCKHHqVDzq6YuUXiPT3FFjA9CGnht6xCgziTe".try_into()?;
         if let PublicKey::Ed25519(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "edpkuF5y5V7NNH5xKMCKHHqVDzq6YuUXiPT3FFjA9CGnht6xCgziTe"
             );
             return Ok(());
@@ -302,7 +300,7 @@ mod test {
         let key: SecretKey = "edskRhKTQkgxb7CNTr31rzy3xdkyKaYX9hySAnZYJTPmUzPB7WU4NL7C8pmtQDgRqQ4jDw4Ugh6Y1UW5nvo7UYrRbyhVYK1YuR".try_into()?;
         if let SecretKey::Ed25519(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "edskRhKTQkgxb7CNTr31rzy3xdkyKaYX9hySAnZYJTPmUzPB7WU4NL7C8pmtQDgRqQ4jDw4Ugh6Y1UW5nvo7UYrRbyhVYK1YuR"
             );
             return Ok(());
@@ -315,7 +313,7 @@ mod test {
         let key: Key = "sppkDN74FpFyXiHUe7MZS7rwDzzwb2esc21355LEcSExN67KdNnAfqA".try_into()?;
         if let Key::Public(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "sppkDN74FpFyXiHUe7MZS7rwDzzwb2esc21355LEcSExN67KdNnAfqA"
             );
             return Ok(());
@@ -328,7 +326,7 @@ mod test {
         let key: Key = "spsk2WUw2TFXQq2CsrNhB7EfFzdhMyNvGoYgD4uGQ6e17MgoRDv1co".try_into()?;
         if let Key::Secret(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "spsk2WUw2TFXQq2CsrNhB7EfFzdhMyNvGoYgD4uGQ6e17MgoRDv1co"
             );
             return Ok(());
@@ -342,7 +340,7 @@ mod test {
             "sppkDN74FpFyXiHUe7MZS7rwDzzwb2esc21355LEcSExN67KdNnAfqA".try_into()?;
         if let PublicKey::Secp256K1(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "sppkDN74FpFyXiHUe7MZS7rwDzzwb2esc21355LEcSExN67KdNnAfqA"
             );
             return Ok(());
@@ -355,7 +353,7 @@ mod test {
         let key: SecretKey = "spsk2WUw2TFXQq2CsrNhB7EfFzdhMyNvGoYgD4uGQ6e17MgoRDv1co".try_into()?;
         if let SecretKey::Secp256K1(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "spsk2WUw2TFXQq2CsrNhB7EfFzdhMyNvGoYgD4uGQ6e17MgoRDv1co"
             );
             return Ok(());
@@ -368,7 +366,7 @@ mod test {
         let key: Key = "p2pkDkL6thzTwyPjpmMotSqeKy1MAftLrseqTALwBhHwUtXRmFV983f".try_into()?;
         if let Key::Public(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "p2pkDkL6thzTwyPjpmMotSqeKy1MAftLrseqTALwBhHwUtXRmFV983f"
             );
             return Ok(());
@@ -381,7 +379,7 @@ mod test {
         let key: Key = "p2sk2Xoduh8dx6B3smV81NMV25cYpZJj7yYWMRARedzyJae8SB9auw".try_into()?;
         if let Key::Secret(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "p2sk2Xoduh8dx6B3smV81NMV25cYpZJj7yYWMRARedzyJae8SB9auw"
             );
             return Ok(());
@@ -395,7 +393,7 @@ mod test {
             "p2pkDkL6thzTwyPjpmMotSqeKy1MAftLrseqTALwBhHwUtXRmFV983f".try_into()?;
         if let PublicKey::P256(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "p2pkDkL6thzTwyPjpmMotSqeKy1MAftLrseqTALwBhHwUtXRmFV983f"
             );
             return Ok(());
@@ -408,7 +406,7 @@ mod test {
         let key: SecretKey = "p2sk2Xoduh8dx6B3smV81NMV25cYpZJj7yYWMRARedzyJae8SB9auw".try_into()?;
         if let SecretKey::P256(key) = key {
             assert_eq!(
-                key.base58(),
+                key.value(),
                 "p2sk2Xoduh8dx6B3smV81NMV25cYpZJj7yYWMRARedzyJae8SB9auw"
             );
             return Ok(());

@@ -4,10 +4,6 @@ use super::macros::{make_type, make_types};
 
 make_types!(
     [
-        pub fn prim_values() -> &'static [&'static crate::michelson::Prim] {
-            &PRIMS
-        }
-
         fn fallback(_value: PrimitiveApplication) -> Result<Self> {
             Err(Error::InvalidPrimitiveApplication)
         }
@@ -58,5 +54,11 @@ impl TryFrom<Michelson> for Type {
     fn try_from(value: Michelson) -> Result<Self> {
         let value: super::Type = value.try_into()?;
         value.try_into()
+    }
+}
+
+impl From<Primitive> for crate::michelson::Primitive {
+    fn from(value: Primitive) -> Self {
+        Self::ComparableType(value)
     }
 }

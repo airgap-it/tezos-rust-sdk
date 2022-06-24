@@ -1,5 +1,5 @@
 use tezos_core::internal::{
-    coder::{number::integer::IntegerBytesCoder, ConsumingDecoder, Decoder, Encoder},
+    coder::{ConsumingDecoder, Decoder, Encoder, IntegerBytesCoder},
     consumable_list::ConsumableList,
 };
 
@@ -8,7 +8,7 @@ use crate::{
         literals::Literal, primitive_application::PrimitiveApplication, sequence::Sequence,
         Micheline,
     },
-    michelson::Prim,
+    michelson::Primitive,
     Error, Result,
 };
 
@@ -94,24 +94,24 @@ impl ConsumingDecoder<Literal, u8, Error> for MichelineBytesCoder {
 
 impl MichelineBytesCoder {
     fn encode_prim_no_args_no_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
 
-        Ok([Tag::PrimNoArgsNoAnnots.value(), prim.tag()].concat())
+        Ok([Tag::PrimNoArgsNoAnnots.value(), &[prim.tag()]].concat())
     }
 
     fn encode_prim_no_args_some_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
 
         Ok([
             Tag::PrimNoArgsSomeAnnots.value(),
-            prim.tag(),
+            &[prim.tag()],
             &Self::encode_annots(value),
         ]
         .concat())
     }
 
     fn encode_prim_1_arg_no_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
         let arg_bytes = value
             .args()
             .as_ref()
@@ -120,11 +120,11 @@ impl MichelineBytesCoder {
             .map(|arg| arg.to_bytes())
             .ok_or(Error::InvalidPrimitiveApplication)??;
 
-        Ok([Tag::Prim1ArgNoAnnots.value(), prim.tag(), &arg_bytes].concat())
+        Ok([Tag::Prim1ArgNoAnnots.value(), &[prim.tag()], &arg_bytes].concat())
     }
 
     fn encode_prim_1_arg_some_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
         let arg_bytes = value
             .args()
             .as_ref()
@@ -135,7 +135,7 @@ impl MichelineBytesCoder {
 
         Ok([
             Tag::Prim1ArgSomeAnnots.value(),
-            prim.tag(),
+            &[prim.tag()],
             &arg_bytes,
             &Self::encode_annots(value),
         ]
@@ -143,7 +143,7 @@ impl MichelineBytesCoder {
     }
 
     fn encode_prim_2_args_no_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
         let first_arg_bytes = value
             .args()
             .as_ref()
@@ -162,7 +162,7 @@ impl MichelineBytesCoder {
 
         Ok([
             Tag::Prim2ArgsNoAnnots.value(),
-            prim.tag(),
+            &[prim.tag()],
             &first_arg_bytes,
             &second_arg_bytes,
         ]
@@ -170,7 +170,7 @@ impl MichelineBytesCoder {
     }
 
     fn encode_prim_2_args_some_annots(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
         let first_arg_bytes = value
             .args()
             .as_ref()
@@ -189,7 +189,7 @@ impl MichelineBytesCoder {
 
         Ok([
             Tag::Prim2ArgsSomeAnnots.value(),
-            prim.tag(),
+            &[prim.tag()],
             &first_arg_bytes,
             &second_arg_bytes,
             &Self::encode_annots(value),
@@ -198,7 +198,7 @@ impl MichelineBytesCoder {
     }
 
     fn encode_prim_generic(value: &PrimitiveApplication) -> Result<Vec<u8>> {
-        let prim: &'static Prim = value.prim().try_into()?;
+        let prim: Primitive = value.prim().try_into()?;
         let args_bytes = value
             .args()
             .as_ref()
@@ -212,7 +212,7 @@ impl MichelineBytesCoder {
 
         Ok([
             Tag::PrimGeneric.value(),
-            prim.tag(),
+            &[prim.tag()],
             &utils::encode_bytes(&args_bytes),
             &Self::encode_annots(value),
         ]
@@ -229,7 +229,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_no_args_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
 
         Ok(PrimitiveApplication::new(
             prim.name().to_owned(),
@@ -239,7 +239,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_no_args_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let annots = utils::decode_annots(bytes)?;
 
         Ok(PrimitiveApplication::new(
@@ -250,7 +250,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_1_arg_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let arg = Self::decode_consuming(bytes)?;
 
         Ok(PrimitiveApplication::new(
@@ -261,7 +261,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_1_arg_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let arg = Self::decode_consuming(bytes)?;
         let annots = utils::decode_annots(bytes)?;
 
@@ -273,7 +273,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_2_args_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let first_arg = Self::decode_consuming(bytes)?;
         let second_arg = Self::decode_consuming(bytes)?;
 
@@ -285,7 +285,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_2_args_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let first_arg = Self::decode_consuming(bytes)?;
         let second_arg = Self::decode_consuming(bytes)?;
         let annots = utils::decode_annots(bytes)?;
@@ -298,7 +298,7 @@ impl MichelineBytesCoder {
     }
 
     fn decode_prim_generic(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: &'static Prim = [bytes.consume_at(0)?].as_ref().try_into()?;
+        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
         let mut args_bytes = utils::decode_bytes(bytes)?;
         let mut args: Vec<Micheline> = Vec::new();
         while !args_bytes.is_empty() {

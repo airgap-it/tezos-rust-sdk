@@ -1,8 +1,9 @@
 use crate::{
-    internal::coder::encoded::encoded_bytes_coder::EncodedBytesCoder,
+    internal::coder::EncodedBytesCoder,
     types::encoded::{
         ed25519_signature::Ed25519Signature, generic_signature::GenericSignature,
         p256_signature::P256Signature, secp256_k1_signature::Secp256K1Signature, Encoded,
+        MetaEncoded,
     },
     Error, Result,
 };
@@ -29,16 +30,16 @@ impl Signature {
 impl Encoded for Signature {
     type Coder = EncodedBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::Generic(value) => value.base58(),
-            Self::Ed25519(value) => value.base58(),
-            Self::Secp256K1(value) => value.base58(),
-            Self::P256(value) => value.base58(),
+            Self::Generic(value) => value.value(),
+            Self::Ed25519(value) => value.value(),
+            Self::Secp256K1(value) => value.value(),
+            Self::P256(value) => value.value(),
         }
     }
 
-    fn meta(&self) -> &super::MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::Generic(value) => value.meta(),
             Self::Ed25519(value) => value.meta(),
@@ -113,7 +114,7 @@ mod test {
     fn test_convert_to_generic() -> Result<()> {
         let signature: Signature = "edsigtczTq2EC9VQNRRT53gzcs25DJFg1iZeTzQxY7jBtjradZb8qqZaqzAYSbVWvg1abvqFpQCV8TgqotDwckJiTJ9fJ2eYESb".try_into()?;
         let generic = signature.to_generic_signature()?;
-        assert_eq!(generic.base58(), "sigTAzhy1HsZDLNETmuf9RuinhXRb5jvmscjCoPPBujWZgFmCFLffku7JXYtu8aYQFVHnCUghmd4t39RuR6ANV76bCCYTR9u");
+        assert_eq!(generic.value(), "sigTAzhy1HsZDLNETmuf9RuinhXRb5jvmscjCoPPBujWZgFmCFLffku7JXYtu8aYQFVHnCUghmd4t39RuR6ANV76bCCYTR9u");
         Ok(())
     }
 }
