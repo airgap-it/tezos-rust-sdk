@@ -1,16 +1,18 @@
 use std::result::Result;
 use async_trait::async_trait;
-use serde::Serialize;
-use serde::{de::DeserializeOwned};
-use tezos_core::types::encoded::{ChainID, Encoded};
+use tezos_core::types::encoded::{ChainID};
 
+use crate::{http, shell_rpc};
 use crate::error::{Error};
+use crate::models::invalid_block::InvalidBlock;
 use crate::{constants};
 use crate::models::checkpoint::{Checkpoint};
-use crate::rpc_traits::{ShellRPC, ActiveRPC};
+use crate::shell_rpc::{ShellRPC};
+use crate::active_rpc::{ActiveRPC};
 
 pub struct RpcContext {
     pub chain_alias: String,
+    pub http_client: http::TezosHttp,
 }
 impl RpcContext {
     /// Changes the chain alias used for requests under the `/chains/<chain_alias>/...` endpoint.
@@ -19,13 +21,11 @@ impl RpcContext {
     }
 }
 
-pub struct TezosRpc<'a> {
-    pub node_url: &'a str,
+pub struct TezosRpc {
     pub context: RpcContext,
-    http: reqwest::Client,
 }
 
-impl<'a> TezosRpc<'a> {
+impl TezosRpc {
     /// Creates a Tezos RPC client that will connect with the node specified with the node_url.
     ///
     /// ```rust
@@ -33,32 +33,13 @@ impl<'a> TezosRpc<'a> {
     ///
     /// let client = TezosRpc::new("https://tezos-node.prod.gke.papers.tech");
     /// ```
-    pub fn new(node_url: &'a str) -> Self {
+    pub fn new(rpc_endpoint: &str) -> Self {
         TezosRpc {
-            node_url,
             context: RpcContext {
-                chain_alias: constants::DEFAULT_CHAIN_ALIAS.to_string()
+                chain_alias: constants::DEFAULT_CHAIN_ALIAS.to_string(),
+                http_client: http::TezosHttp::new(rpc_endpoint),
             },
-            http: reqwest::Client::new(),
         }
-    }
-
-    fn url(&self, path: &str) -> String {
-        format!("{}{}", self.node_url, path)
-    }
-
-    async fn get<T: DeserializeOwned>(&self, url: String) -> Result<T, Error> {
-        Ok(self.http.get(url).send().await?.json::<T>().await?)
-    }
-
-    async fn post<B: Serialize, T: DeserializeOwned>(&self, url: &String, body: &B) -> Result<T, Error> {
-        Ok(self.http
-            .post(url)
-            .json(body)
-            .send()
-            .await?
-            .json::<T>()
-            .await?)
     }
 }
 
@@ -66,27 +47,26 @@ impl<'a> TezosRpc<'a> {
 ///
 /// See [RPCs - Reference](https://tezos.gitlab.io/shell/rpc.html) for more details.
 #[async_trait]
-impl<'a> ShellRPC for TezosRpc<'a> {
+impl<'a> ShellRPC for TezosRpc {
     /// Get the chain unique identifier.
     ///
     /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
     async fn chain_id(&self) -> Result<ChainID, Error> {
-        let path = format!("/chains/{}/chain_id", self.context.chain_alias);
-
-        let chain_id = self.get(self.url(path.as_str())).await?;
-
-        Ok(ChainID::new(chain_id)?)
+        shell_rpc::chains::chain_id(&self.context).await
     }
 
     /// Get the current checkpoint for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
     async fn checkpoint(&self) -> Result<Checkpoint, Error> {
-        let path = format!("/chains/{}/levels/checkpoint", self.context.chain_alias);
+        shell_rpc::chains::levels::checkpoint(&self.context).await
+    }
 
-        let checkpoint = self.get(self.url(path.as_str())).await?;
-
-        Ok(checkpoint)
+    /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
+    ///
+    /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
+    async fn invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
+        shell_rpc::chains::invalid_blocks(&self.context).await
     }
 }
 
@@ -94,12 +74,13 @@ impl<'a> ShellRPC for TezosRpc<'a> {
 ///
 /// See [RPCs - Reference](https://tezos.gitlab.io/active/rpc.html) for more details.
 #[async_trait]
-impl<'a> ActiveRPC for TezosRpc<'a> {
+impl<'a> ActiveRPC for TezosRpc {
 }
 
 #[cfg(test)]
 mod client_tests {
     use httpmock::prelude::*;
+    use tezos_core::types::encoded::Encoded;
     use super::*;
     use crate::{constants::{DEFAULT_CHAIN_ALIAS}};
 
@@ -131,6 +112,51 @@ mod client_tests {
         let client = TezosRpc::new(rpc_url.as_str());
         let chain_id = client.chain_id().await?;
         assert_eq!("NetXdQprcVkpaWU", chain_id.base58());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_invalid_blocks() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        let valid_response = serde_json::json!(
+            [
+                {
+                    "block": "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2",
+                    "level": 2424833 as u64,
+                    "errors": [
+                        {
+                            "kind": "permanent",
+                            "id": "proto.alpha.Failed_to_get_script",
+                            "contract": "KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW",
+                        }
+                    ]
+                }
+            ]
+        );
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path("/chains/main/invalid_blocks");
+            then.status(200)
+                .header("content-type", "application/json")
+                .json_body(valid_response);
+        });
+
+        let client = TezosRpc::new(rpc_url.as_str());
+        let response = client.invalid_blocks().await?;
+
+        assert_eq!(response.len(), 1, "Expects a single invalid block.");
+
+        let invalid_block = &response[0];
+        assert_eq!(invalid_block.block, "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
+        assert_eq!(invalid_block.level, 2424833);
+        assert_eq!(invalid_block.errors.len(), 1, "Expects a single error.");
+        assert_eq!(invalid_block.errors[0].kind, "permanent");
+        assert_eq!(invalid_block.errors[0].id, "proto.alpha.Failed_to_get_script");
+        assert_eq!(invalid_block.errors[0].contract, Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string()));
 
         Ok(())
     }
