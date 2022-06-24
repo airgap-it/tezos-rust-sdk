@@ -1,5 +1,7 @@
-use crate::internal::coder::{ConfigurableEncoder, ConsumingDecoder, Decoder, Encoder};
-use crate::internal::consumable_list::ConsumableList;
+use crate::internal::{
+    coder::{ConfigurableEncoder, ConsumingDecoder, Decoder, Encoder},
+    consumable_list::ConsumableList,
+};
 use crate::types::encoded::{Encoded, MetaEncoded};
 use crate::{Error, Result};
 
@@ -36,12 +38,12 @@ impl EncodedBytesCoder {
     }
 }
 
-impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
+impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncodedBytesCoderConfiguration, Error>
     for EncodedBytesCoder
 {
     fn encode_with_configuration(
         value: &E,
-        configuration: EncoderConfiguration,
+        configuration: EncodedBytesCoderConfiguration,
     ) -> Result<Vec<u8>> {
         let bytes = bs58::decode(value.value())
             .with_check(Some(value.meta().version()))
@@ -62,7 +64,10 @@ impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
 
 impl<E: Encoded> Encoder<E, Vec<u8>, Error> for EncodedBytesCoder {
     fn encode(value: &E) -> Result<Vec<u8>> {
-        Self::encode_with_configuration(value, EncoderConfiguration { keep_prefix: false })
+        Self::encode_with_configuration(
+            value,
+            EncodedBytesCoderConfiguration { keep_prefix: false },
+        )
     }
 }
 
@@ -80,6 +85,6 @@ impl<E: Encoded> ConsumingDecoder<E, u8, Error> for EncodedBytesCoder {
     }
 }
 
-pub struct EncoderConfiguration {
+pub struct EncodedBytesCoderConfiguration {
     pub keep_prefix: bool,
 }

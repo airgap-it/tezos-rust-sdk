@@ -1,7 +1,7 @@
 use super::{
     contract_hash::ContractHash, ed25519_public_key_hash::Ed25519PublicKeyHash,
     p256_public_key_hash::P256PublicKeyHash, secp256_k1_public_key_hash::Secp256K1PublicKeyHash,
-    Encoded, MetaEncoded,
+    Encoded, MetaEncoded, TraitMetaEncoded,
 };
 use crate::{
     internal::coder::{AddressBytesCoder, ContractAddressBytesCoder, ImplicitAddressBytesCoder},
@@ -164,6 +164,10 @@ pub struct ContractAddress {
 }
 
 impl ContractAddress {
+    pub fn contract_hash(&self) -> &ContractHash {
+        &self.contract_hash
+    }
+
     pub fn entrypoint(&self) -> Option<&str> {
         self.entrypoint.as_ref().map(|value| &**value)
     }
@@ -215,6 +219,12 @@ impl Encoded for ContractAddress {
             contract_hash: ContractHash::new(address.into())?,
             entrypoint: entrypoint.map(|value| value.into()),
         })
+    }
+}
+
+impl TraitMetaEncoded for ContractAddress {
+    fn meta_value() -> &'static MetaEncoded {
+        ContractHash::meta_value()
     }
 }
 

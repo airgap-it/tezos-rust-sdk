@@ -1,6 +1,6 @@
 use tezos_core::{
     internal::types::BytesTag,
-    types::encoded::{Address, ChainId, Encoded, Key, Signature},
+    types::encoded::{Address, ChainId, Encoded, ImplicitAddress, Key, Signature},
 };
 
 use crate::{
@@ -368,7 +368,7 @@ impl MichelinePacker {
     }
 
     fn pre_pack_key_hash(value: Literal) -> Result<Micheline> {
-        todo!()
+        Self::pre_pack_encoded::<ImplicitAddress>(value)
     }
 
     fn pre_pack_key(value: Literal) -> Result<Micheline> {

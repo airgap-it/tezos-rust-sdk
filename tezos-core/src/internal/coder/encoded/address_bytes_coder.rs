@@ -3,23 +3,17 @@ use std::ops::Add;
 use crate::{
     internal::{
         coder::{
-            encoded::{
-                encoded_bytes_coder::EncodedBytesCoder,
-                implicit_address_bytes_coder::ImplicitAddressBytesCoder,
-            },
-            ConsumingDecoder, Decoder, Encoder,
+            encoded::implicit_address_bytes_coder::ImplicitAddressBytesCoder, Decoder, Encoder,
         },
-        consumable_list::ConsumableList,
         types::BytesTag,
     },
-    types::encoded::{Address, ContractHash, TraitMetaEncoded},
+    types::encoded::Address,
     Error, Result,
 };
 
-pub struct AddressBytesCoder {
-    implicit_address_coder: ImplicitAddressBytesCoder,
-    originated_address_coder: EncodedBytesCoder,
-}
+use super::contract_address_bytes_coder::ContractAddressBytesCoder;
+
+pub struct AddressBytesCoder;
 
 impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
     fn encode(value: &Address) -> Result<Vec<u8>> {
@@ -28,7 +22,7 @@ impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
                 Ok(AddressTag::Implicit + ImplicitAddressBytesCoder::encode(address)?)
             }
             Address::Originated(address) => {
-                Ok(AddressTag::Originated + EncodedBytesCoder::encode(address)?)
+                Ok(AddressTag::Originated + ContractAddressBytesCoder::encode(address)?)
             }
         }
     }
@@ -43,25 +37,9 @@ impl Decoder<Address, Vec<u8>, Error> for AddressBytesCoder {
             AddressTag::Implicit => Ok(Address::Implicit(ImplicitAddressBytesCoder::decode(
                 &bytes,
             )?)),
-            AddressTag::Originated => {
-                EncodedBytesCoder::decode_with_meta(&bytes, ContractHash::meta_value())
-            }
-        }
-    }
-}
-
-impl ConsumingDecoder<Address, u8, Error> for AddressBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Address> {
-        let tag = AddressTag::recognize(&value).ok_or(Error::InvalidBytes)?;
-        _ = value.consume_until(tag.value().len())?;
-
-        match tag {
-            AddressTag::Implicit => Ok(Address::Implicit(
-                ImplicitAddressBytesCoder::decode_consuming(value)?,
-            )),
-            AddressTag::Originated => Ok(Address::Originated(
-                EncodedBytesCoder::decode_consuming_with_meta(value, ContractHash::meta_value())?,
-            )),
+            AddressTag::Originated => Ok(Address::Originated(ContractAddressBytesCoder::decode(
+                &bytes,
+            )?)),
         }
     }
 }
@@ -197,7 +175,7 @@ mod test {
             bytes,
             [
                 1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5,
-                210, 0, 75
+                210, 0, 75, 0
             ]
         );
         Ok(())
@@ -207,7 +185,7 @@ mod test {
     fn test_decode_4() -> Result<()> {
         let bytes = [
             1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5, 210,
-            0, 75,
+            0, 75, 0,
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;

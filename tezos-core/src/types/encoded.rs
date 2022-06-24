@@ -131,10 +131,10 @@ make_encoded_structs!(
     },
     {
         use {
-            internal::coder::EncodedBytesCoder,
+            internal::coder::ContractHashBytesCoder,
         }
         struct contract_hash::ContractHash;
-        coder: EncodedBytesCoder;
+        coder: ContractHashBytesCoder;
         meta {
             base58_prefix: "KT1",
             base58_length: 36,

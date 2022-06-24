@@ -1,25 +1,44 @@
 use crate::{
-    internal::coder::{ConsumingDecoder, Decoder, Encoder},
-    types::encoded::ContractAddress,
+    internal::coder::{ConfigurableDecoder, ConfigurableEncoder, Decoder, Encoder},
+    types::encoded::{ContractAddress, TraitMetaEncoded},
     Error,
+};
+
+use super::contract_hash_bytes_coder::{
+    ContractHashBytesCoder, ContractHashBytesCoderConfiguration,
 };
 
 pub struct ContractAddressBytesCoder;
 
 impl Encoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
     fn encode(value: &ContractAddress) -> std::result::Result<Vec<u8>, Error> {
-        todo!()
+        let mut bytes = ContractHashBytesCoder::encode_with_configuration(
+            value.contract_hash(),
+            ContractHashBytesCoderConfiguration { with_suffix: true },
+        )?;
+        if let Some(entrypoint) = value.entrypoint() {
+            bytes.extend_from_slice(entrypoint.as_bytes());
+        }
+        Ok(bytes)
     }
 }
 
 impl Decoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<ContractAddress, Error> {
-        todo!()
-    }
-}
-
-impl ConsumingDecoder<ContractAddress, u8, Error> for ContractAddressBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<ContractAddress, Error> {
-        todo!()
+    fn decode(value: &Vec<u8>) -> std::result::Result<ContractAddress, Error> {
+        let meta = ContractAddress::meta_value();
+        let (contract_hash_bytes, entrypoint_bytes) = value.split_at(meta.bytes_length + 1);
+        let contract_hash = ContractHashBytesCoder::decode_with_configuration(
+            contract_hash_bytes.to_vec().as_ref(),
+            ContractHashBytesCoderConfiguration { with_suffix: true },
+        )?;
+        let entrypoint = if entrypoint_bytes.is_empty() {
+            None
+        } else {
+            Some(
+                String::from_utf8(entrypoint_bytes.to_vec())
+                    .map_err(|_error| Error::InvalidBytes)?,
+            )
+        };
+        Ok(ContractAddress::from_components(contract_hash, entrypoint))
     }
 }
