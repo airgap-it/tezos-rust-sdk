@@ -75,6 +75,9 @@ impl TryFrom<Michelson> for Map {
     }
 }
 
-pub fn map(values: Vec<Elt>) -> Michelson {
+pub fn map<Output>(values: Vec<Elt>) -> Output
+where
+    Output: From<Map>,
+{
     Map::new(values).into()
 }

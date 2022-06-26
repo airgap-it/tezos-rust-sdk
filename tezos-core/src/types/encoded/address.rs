@@ -73,6 +73,18 @@ impl TryFrom<&Address> for Vec<u8> {
     }
 }
 
+impl From<ImplicitAddress> for Address {
+    fn from(value: ImplicitAddress) -> Self {
+        Self::Implicit(value)
+    }
+}
+
+impl From<ContractAddress> for Address {
+    fn from(value: ContractAddress) -> Self {
+        Self::Originated(value)
+    }
+}
+
 pub enum ImplicitAddress {
     TZ1(Ed25519PublicKeyHash),
     TZ2(Secp256K1PublicKeyHash),
@@ -158,25 +170,54 @@ impl TryFrom<&ImplicitAddress> for Vec<u8> {
     }
 }
 
-pub struct ContractAddress {
-    contract_hash: ContractHash,
-    entrypoint: Option<String>,
+impl TryFrom<Address> for ImplicitAddress {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        if let Address::Implicit(value) = value {
+            return Ok(value);
+        }
+        Err(Error::InvalidAddress)
+    }
 }
 
+impl From<Ed25519PublicKeyHash> for ImplicitAddress {
+    fn from(value: Ed25519PublicKeyHash) -> Self {
+        Self::TZ1(value)
+    }
+}
+
+impl From<Secp256K1PublicKeyHash> for ImplicitAddress {
+    fn from(value: Secp256K1PublicKeyHash) -> Self {
+        Self::TZ2(value)
+    }
+}
+
+impl From<P256PublicKeyHash> for ImplicitAddress {
+    fn from(value: P256PublicKeyHash) -> Self {
+        Self::TZ3(value)
+    }
+}
+
+pub struct ContractAddress(String);
+
 impl ContractAddress {
-    pub fn contract_hash(&self) -> &ContractHash {
-        &self.contract_hash
+    pub fn contract_hash(&self) -> &str {
+        let (address, _) = Self::split_to_components(&self.0).unwrap();
+        address
     }
 
     pub fn entrypoint(&self) -> Option<&str> {
-        self.entrypoint.as_ref().map(|value| &**value)
+        let (_, entrypoint) = Self::split_to_components(&self.0).unwrap();
+        entrypoint
     }
 
-    pub fn from_components(contract_hash: ContractHash, entrypoint: Option<String>) -> Self {
-        Self {
-            contract_hash,
-            entrypoint,
-        }
+    pub fn from_components(contract_hash: &ContractHash, entrypoint: Option<&str>) -> Self {
+        let tail = entrypoint
+            .map(|entrypoint| format!("%{}", entrypoint))
+            .unwrap_or("".into());
+        let value = format!("{}{}", contract_hash.value(), tail);
+        Self(value)
     }
 
     pub fn is_valid_base58(value: &str) -> bool {
@@ -206,19 +247,19 @@ impl Encoded for ContractAddress {
     type Coder = ContractAddressBytesCoder;
 
     fn value(&self) -> &str {
-        self.contract_hash.value()
+        &self.0
     }
 
     fn meta(&self) -> &'static MetaEncoded {
-        self.contract_hash.meta()
+        ContractHash::meta_value()
     }
 
     fn new(value: String) -> Result<Self> {
-        let (address, entrypoint) = Self::split_to_components(value.as_str())?;
-        Ok(Self {
-            contract_hash: ContractHash::new(address.into())?,
-            entrypoint: entrypoint.map(|value| value.into()),
-        })
+        let (address, _) = Self::split_to_components(value.as_str())?;
+        if !ContractHash::is_valid_base58(address) {
+            return Err(Error::InvalidBase58EncodedData);
+        }
+        Ok(Self(value))
     }
 }
 
@@ -257,6 +298,12 @@ impl TryFrom<&ContractAddress> for Vec<u8> {
 
     fn try_from(value: &ContractAddress) -> Result<Self> {
         value.to_bytes()
+    }
+}
+
+impl From<ContractAddress> for ContractHash {
+    fn from(value: ContractAddress) -> Self {
+        value.contract_hash().try_into().unwrap()
     }
 }
 

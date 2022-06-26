@@ -1,3 +1,4 @@
+use chrono::DateTime;
 use tezos_core::{
     internal::types::BytesTag,
     types::encoded::{Address, ChainId, Encoded, ImplicitAddress, Key, Signature},
@@ -6,7 +7,7 @@ use tezos_core::{
 use crate::{
     micheline::{
         literals::{Bytes, Literal},
-        prim_with_args,
+        primitive_application,
         primitive_application::PrimitiveApplication,
         sequence::Sequence,
         Micheline,
@@ -169,8 +170,10 @@ impl MichelinePacker {
     fn pre_pack_pair(value: Micheline, schema: &PrimitiveApplication) -> Result<Micheline> {
         if value.is_micheline_sequence() {
             let args = value.into_micheline_sequence().unwrap().into_values();
-            let pair = prim_with_args(Primitive::Data(DataPrimitive::Pair), args).normalized();
-            return Self::pre_pack_pair(pair, schema);
+            let pair = primitive_application(DataPrimitive::Pair)
+                .with_args(args)
+                .normalized();
+            return Self::pre_pack_pair(pair.into(), schema);
         }
         let value = value
             .into_micheline_primitive_application()
@@ -380,7 +383,15 @@ impl MichelinePacker {
     }
 
     fn pre_pack_timestamp(value: Literal) -> Result<Micheline> {
-        todo!()
+        match value {
+            Literal::Int(_) => Ok(value.into()),
+            Literal::String(value) => {
+                let date_time = DateTime::parse_from_rfc3339(value.to_str())
+                    .map_err(|_error| Error::MichelineValueSchemaMismatch)?;
+                Ok(Literal::Int(date_time.timestamp_millis().into()).into())
+            }
+            _ => Err(Error::MichelineValueSchemaMismatch),
+        }
     }
 }
 
@@ -411,5 +422,419 @@ impl BytesTag for Tag {
         match self {
             Self::Message => &[5],
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::michelson::{data, types};
+    use hex_literal::hex;
+
+    use super::*;
+
+    #[test]
+    fn test_pack() -> Result<()> {
+        let tests_values = [
+            integer_values(),
+            string_values(),
+            bytes_values(),
+            primitive_application_values(),
+            sequence_values(),
+        ]
+        .concat();
+        for (bytes, value, schema) in tests_values {
+            let packed = MichelinePacker::pack(value, schema.as_ref())?;
+            assert_eq!(bytes, packed);
+        }
+
+        Ok(())
+    }
+
+    fn integer_values() -> Vec<(&'static [u8], Micheline, Option<Micheline>)> {
+        vec![
+            (
+                &hex!("0500c384efcfc7dac2f5849995afab9fa7c48b8fa4c0d9b5ca908dc70d"),
+                data::try_int("-41547452475632687683489977342365486797893454355756867843").unwrap(),
+                Some(types::int()),
+            ),
+            (
+                &hex!("0500fc90d3c2e6a3b9c4c0b7fbf3b3b6d802"),
+                data::try_int("-54576326575686358562454576456764").unwrap(),
+                Some(types::int()),
+            ),
+            (
+                &hex!("0500c8a8dd9df89cb998be01"),
+                data::int(-6852352674543413768i64),
+                Some(types::int()),
+            ),
+            (
+                &hex!("0500f9b1e2fee2c308"),
+                data::int(-18756523543673i64),
+                Some(types::int()),
+            ),
+            (&hex!("0500c002"), data::int(-128), Some(types::int())),
+            (&hex!("0500ff01"), data::int(-127), Some(types::int())),
+            (&hex!("0500c001"), data::int(-64), Some(types::int())),
+            (&hex!("05006a"), data::int(-42), Some(types::int())),
+            (&hex!("05004a"), data::int(-10), Some(types::int())),
+            (&hex!("050041"), data::int(-1), Some(types::int())),
+            (&hex!("050000"), data::int(0), Some(types::int())),
+            (&hex!("050001"), data::int(1), Some(types::int())),
+            (&hex!("05000a"), data::int(10), Some(types::int())),
+            (&hex!("05002a"), data::int(42), Some(types::int())),
+            (&hex!("05008001"), data::int(64), Some(types::int())),
+            (&hex!("0500bf01"), data::int(127), Some(types::int())),
+            (&hex!("05008002"), data::int(128), Some(types::int())),
+            (
+                &hex!("0500b9b1e2fee2c308"),
+                data::int(18756523543673i64),
+                Some(types::int()),
+            ),
+            (
+                &hex!("050088a8dd9df89cb998be01"),
+                data::int(6852352674543413768i64),
+                Some(types::int()),
+            ),
+            (
+                &hex!("0500bc90d3c2e6a3b9c4c0b7fbf3b3b6d802"),
+                data::int(54576326575686358562454576456764i128),
+                Some(types::int()),
+            ),
+            (
+                &hex!("05008384efcfc7dac2f5849995afab9fa7c48b8fa4c0d9b5ca908dc70d"),
+                data::try_int("41547452475632687683489977342365486797893454355756867843").unwrap(),
+                Some(types::int()),
+            ),
+            (
+                &hex!("05002a"),
+                data::int(42),
+                Some(types::big_map(
+                    types::unit::<types::ComparableType>().into(),
+                    types::unit::<types::ComparableType>().into(),
+                )),
+            ),
+        ]
+    }
+
+    fn string_values() -> Vec<(&'static [u8], Micheline, Option<Micheline>)> {
+        vec![
+            (
+                &hex!("050100000000"),
+                data::try_string("").unwrap(),
+                Some(types::string()),
+            ),
+            (
+                &hex!("05010000000161"),
+                data::try_string("a").unwrap(),
+                Some(types::string()),
+            ),
+            (
+                &hex!("050100000003616263"),
+                data::try_string("abc").unwrap(),
+                Some(types::string()),
+            ),
+            (
+                &hex!("050100000024747a315a734b4d6f6f47504a6135486f525435445156356a31526b5263536979706e594e"),
+                data::try_string("tz1ZsKMooGPJa5HoRT5DQV5j1RkRcSiypnYN").unwrap(),
+                Some(types::string()),
+            ),
+            (
+                &hex!("050a00000016000094a0ba27169ed8d97c1f476de6156c2482dbfb3d"),
+                data::try_string("tz1ZBuF2dQ7E1b32bK3g1Qsah4pvWqpM4b4A").unwrap(),
+                Some(types::address()),
+            ),
+            (
+                &hex!("050a00000004ef6a66af"),
+                data::try_string("NetXy3eo3jtuwuc").unwrap(),
+                Some(types::chain_id()),
+            ),
+            (
+                &hex!("050a000000150094a0ba27169ed8d97c1f476de6156c2482dbfb3d"),
+                data::try_string("tz1ZBuF2dQ7E1b32bK3g1Qsah4pvWqpM4b4A").unwrap(),
+                Some(types::key_hash()),
+            ),
+            (
+                &hex!("050a00000021005a9847101250e9cea9e714a8fd945e5131aeb5c021e027b1420db0cdd971c862"),
+                data::try_string("edpkuL84TEk6s2C9JCywmBS4Mztumq6iUVxNtBHvuZG95VPvFw1yCR").unwrap(),
+                Some(types::key()),
+            ),
+            (
+                &hex!("0500aff8aff1ce5f"),
+                data::try_string("2022-01-20T10:43:57.103Z").unwrap(),
+                Some(types::timestamp()),
+            ),
+        ]
+    }
+
+    fn bytes_values() -> Vec<(&'static [u8], Micheline, Option<Micheline>)> {
+        vec![
+            (
+                &hex!("050a00000000"),
+                data::try_bytes("0x").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a0000000100"),
+                data::try_bytes("0x00").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a000000049434dc98"),
+                data::try_bytes("0x9434dc98").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a000000047b1ea2cb"),
+                data::try_bytes("0x7b1ea2cb").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a00000004e40476d7"),
+                data::try_bytes("0xe40476d7").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a00000006c47320abdd31"),
+                data::try_bytes("0xc47320abdd31").unwrap(),
+                Some(types::bytes()),
+            ),
+            (
+                &hex!("050a000000065786dac9eaf4"),
+                data::try_bytes("0x5786dac9eaf4").unwrap(),
+                Some(types::bytes()),
+            ),
+        ]
+    }
+
+    fn primitive_application_values() -> Vec<(&'static [u8], Micheline, Option<Micheline>)> {
+        vec![
+            (&hex!("050303"), data::r#false(), Some(types::bool())),
+            (
+                &hex!("050704030b030b"),
+                data::elt(data::unit(), data::unit()),
+                None,
+            ),
+            (
+                &hex!("050505030b"),
+                data::left(data::unit()),
+                Some(types::or(types::unit(), types::bool())),
+            ),
+            (
+                &hex!("0505050707030b0707030b030b"),
+                data::left(data::pair(vec![data::unit(), data::unit(), data::unit()])),
+                Some(types::or(
+                    types::pair(vec![types::unit(), types::unit(), types::unit()]),
+                    types::bool(),
+                )),
+            ),
+            (
+                &hex!("050306"),
+                data::none(),
+                Some(types::option(types::pair(vec![
+                    types::unit(),
+                    types::unit(),
+                    types::unit(),
+                ]))),
+            ),
+            (&hex!("050303"), data::r#false(), Some(types::bool())),
+            (
+                &hex!("050707030b030b"),
+                data::pair(vec![data::unit(), data::unit()]),
+                Some(types::pair(vec![types::unit(), types::unit()])),
+            ),
+            (
+                &hex!("050707030b0707030b030b"),
+                data::pair(vec![data::unit(), data::unit(), data::unit()]),
+                Some(types::pair(vec![
+                    types::unit(),
+                    types::unit(),
+                    types::unit(),
+                ])),
+            ),
+            (
+                &hex!("050707030b0707030b030b"),
+                vec![data::unit(), data::unit(), data::unit()].into(),
+                Some(types::pair(vec![
+                    types::unit(),
+                    types::unit(),
+                    types::unit(),
+                ])),
+            ),
+            (
+                &hex!("050508030b"),
+                data::right(data::unit()),
+                Some(types::or(types::bool(), types::unit())),
+            ),
+            (
+                &hex!("0505080707030b0707030b030b"),
+                data::right(data::pair(vec![data::unit(), data::unit(), data::unit()])),
+                Some(types::or(
+                    types::bool(),
+                    types::pair(vec![types::unit(), types::unit(), types::unit()]),
+                )),
+            ),
+            (
+                &hex!("050509030b"),
+                data::some(data::unit()),
+                Some(types::option(types::unit())),
+            ),
+            (
+                &hex!("0505090707030b0707030b030b"),
+                data::some(data::pair(vec![data::unit(), data::unit(), data::unit()])),
+                Some(types::option(types::pair(vec![
+                    types::unit(),
+                    types::unit(),
+                    types::unit(),
+                ]))),
+            ),
+            (&hex!("05030a"), data::r#true(), Some(types::bool())),
+            (&hex!("05030b"), data::unit(), Some(types::unit())),
+        ]
+    }
+
+    fn sequence_values() -> Vec<(&'static [u8], Micheline, Option<Micheline>)> {
+        vec![
+            (
+                &hex!("050200000000"),
+                vec![].into(),
+                Some(types::list(types::unit())),
+            ),
+            (
+                &hex!("0502000000020000"),
+                vec![data::int(0)].into(),
+                Some(types::list(types::int())),
+            ),
+            (
+                &hex!("050200000006030b030b030b"),
+                vec![data::unit(), data::unit(), data::unit()].into(),
+                Some(types::list(types::unit())),
+            ),
+            (
+                &hex!("0502000000060704030b030b"),
+                data::map(vec![data::elt(data::unit(), data::unit())]),
+                Some(types::map(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("0502000000060704030b030b"),
+                data::map(vec![data::elt(data::unit(), data::unit())]),
+                Some(types::big_map(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000002030c"),
+                vec![data::instructions::pack()].into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("0502000000070200000002030c"),
+                vec![vec![data::instructions::pack()].into()].into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000009051f0200000002034f"),
+                vec![data::instructions::dip(
+                    vec![data::instructions::unit()].into(),
+                    None,
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000010072c0200000002034f0200000002034f"),
+                vec![data::instructions::r#if(
+                    vec![data::instructions::unit()].into(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000010072d0200000002034f0200000002034f"),
+                vec![data::instructions::r#if_cons(
+                    vec![data::instructions::unit()].into(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000010072e0200000002034f0200000002034f"),
+                vec![data::instructions::r#if_left(
+                    vec![data::instructions::unit()].into(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000010072f0200000002034f0200000002034f"),
+                vec![data::instructions::r#if_none(
+                    vec![data::instructions::unit()].into(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000001509310000000b036c036c0200000002034f00000000"),
+                vec![data::instructions::lambda(
+                    types::unit(),
+                    types::unit(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000000905340200000002034f"),
+                vec![data::instructions::r#loop(
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000000905380200000002034f"),
+                vec![data::instructions::map(
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000000905520200000002034f"),
+                vec![data::instructions::iter(
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000000905530200000002034f"),
+                vec![data::instructions::loop_left(
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("05020000000f0743075e036c036c0200000002034f"),
+                vec![data::instructions::push(
+                    types::lambda(types::unit(), types::unit()),
+                    data::sequence(vec![data::instructions::unit()]),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+            (
+                &hex!("050200000015091d0000000b036c036c0200000002034f00000000"),
+                vec![data::instructions::create_contract(
+                    types::unit(),
+                    types::unit(),
+                    vec![data::instructions::unit()].into(),
+                )]
+                .into(),
+                Some(types::lambda(types::unit(), types::unit())),
+            ),
+        ]
     }
 }

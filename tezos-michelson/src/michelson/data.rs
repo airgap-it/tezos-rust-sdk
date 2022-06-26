@@ -9,6 +9,8 @@ pub use map::{map, Map};
 pub use sequence::{sequence, Sequence};
 pub use tezos_core::types::number::{integer::Integer as Int, natural::Natural as Nat};
 
+use super::types::Type;
+
 make_all_data!(
     custom_cases: {
         Int(Int),
@@ -31,6 +33,12 @@ make_all_data!(
 );
 
 impl Data {
+    pub fn pack(self, schema: Option<Type>) -> Result<Vec<u8>> {
+        let micheline: Micheline = self.into();
+        let schema: Option<Micheline> = schema.map(|schema| schema.into());
+        micheline.pack(schema.as_ref())
+    }
+
     pub fn is_valid_prim_name(name: &str) -> bool {
         let primitive = name.parse::<Primitive>();
         if primitive.is_err() {
@@ -508,66 +516,74 @@ impl From<Primitive> for crate::michelson::Primitive {
     }
 }
 
-pub fn int<T>(value: T) -> Michelson
+pub fn int<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Int>,
+    Output: From<Int>,
 {
-    let int: Int = value.into();
-    int.into()
+    let value: Int = value.into();
+    value.into()
 }
 
-pub fn try_int<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_int<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Int, Error = Error>,
+    Output: From<Int>,
 {
-    let int: Int = value.try_into()?;
-    Ok(int.into())
+    let value: Int = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn nat<T>(value: T) -> Michelson
+pub fn nat<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Nat>,
+    Output: From<Nat>,
 {
-    let nat: Nat = value.into();
-    nat.into()
+    let value: Nat = value.into();
+    value.into()
 }
 
-pub fn try_nat<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_nat<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Nat, Error = Error>,
+    Output: From<Nat>,
 {
-    let nat: Nat = value.try_into()?;
-    Ok(nat.into())
+    let value: Nat = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn string<T>(value: T) -> Michelson
+pub fn string<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<String>,
+    Output: From<String>,
 {
-    let string: String = value.into();
-    string.into()
+    let value: String = value.into();
+    value.into()
 }
 
-pub fn try_string<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_string<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<String, Error = Error>,
+    Output: From<String>,
 {
-    let string: String = value.try_into()?;
-    Ok(string.into())
+    let value: String = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn bytes<T>(value: T) -> Michelson
+pub fn bytes<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Bytes>,
+    Output: From<Bytes>,
 {
-    let bytes: Bytes = value.into();
-    bytes.into()
+    let value: Bytes = value.into();
+    value.into()
 }
 
-pub fn try_bytes<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_bytes<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Bytes, Error = Error>,
+    Output: From<Bytes>,
 {
-    let bytes: Bytes = value.try_into()?;
-    Ok(bytes.into())
+    let value: Bytes = value.try_into()?;
+    Ok(value.into())
 }

@@ -3,10 +3,14 @@ macro_rules! make_types {
         $(type_enum: $enum_case_name:ident($enum_case_type:ty),)?
         [$($type_impl:tt)*],
         conversion_fallback: $fallback:ident,
-        $(($name:ident, $code:ident, $tag:literal
-            $(, ($field_name:ident: $field_type:ty))*
-            $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
-            $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*),
+        $(
+            (
+                $name:ident, $code:ident, $tag:literal
+                $(, super_enum: $super_enum_type:ty, $super_enum_case:ident)?
+                $(, ($field_name:ident: $field_type:ty))*
+                $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
+                $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
+            ),
         )+
     ) => {
         use crate::{micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
@@ -65,6 +69,7 @@ macro_rules! make_types {
         $(
             make_type!(
                 $name, $code, $tag
+                $(, super_enum: $super_enum_type, $super_enum_case)?
                 $(, ($field_name, $field_type))*
                 $(, boxed: ($boxed_field_name: $boxed_field_type))*
                 $(, vec: ($vec_field_name: $vec_field_type))*
@@ -76,6 +81,7 @@ macro_rules! make_types {
 macro_rules! make_type {
     (
         $name:ident, $code:ident, $tag:literal
+        $(, super_enum: $super_enum_type:ty, $super_enum_case:ident)?
         $(, ($field_name:ident, $field_type:ty))*
         $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
         $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
@@ -129,12 +135,12 @@ macro_rules! make_type {
                     self.metadata.annotations()
                 }
 
-                pub fn new($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)* metadata: TypeFieldMetadata) -> Self {
+                pub fn new($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)* metadata: core::option::Option<TypeFieldMetadata>) -> Self {
                     Self {
                         $($field_name,)*
                         $($boxed_field_name: Box::new($boxed_field_name),)*
                         $($vec_field_name,)*
-                        metadata
+                        metadata: metadata.unwrap_or_default()
                     }
                 }
             }
@@ -157,6 +163,14 @@ macro_rules! make_type {
                     Self::$name(value)
                 }
             }
+
+            $(
+                impl From<$name> for $super_enum_type {
+                    fn from(value: $name) -> Self {
+                        Self::$super_enum_case(value.into())
+                    }
+                }
+            )?
 
             impl TryFrom<Type> for $name {
                 type Error = Error;
@@ -225,12 +239,12 @@ macro_rules! make_type {
                 }
             }
 
-            pub fn $code($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Michelson {
+            pub fn $code<Output>($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Output where Output: From<$name> {
                 $name::new(
                     $($field_name,)*
                     $($boxed_field_name,)*
                     $($vec_field_name,)*
-                    TypeFieldMetadata::default()
+                    None,
                 ).into()
             }
         }

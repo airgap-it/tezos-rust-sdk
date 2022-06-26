@@ -67,6 +67,12 @@ impl PrimitiveApplication {
         MichelineNormalizer::normalize(self)
     }
 
+    pub fn with_args(mut self, args: Vec<Micheline>) -> Self {
+        self.args = if !args.is_empty() { Some(args) } else { None };
+
+        self
+    }
+
     pub fn with_mutated_args<F>(mut self, mutator: F) -> Self
     where
         F: FnOnce(Vec<Micheline>) -> Vec<Micheline>,
@@ -100,6 +106,16 @@ impl PrimitiveApplication {
             args.insert(index, replacer(element)?);
         }
         Ok(self)
+    }
+
+    pub fn with_annots(mut self, annots: Vec<String>) -> Self {
+        self.annots = if !annots.is_empty() {
+            Some(annots)
+        } else {
+            None
+        };
+
+        self
     }
 }
 

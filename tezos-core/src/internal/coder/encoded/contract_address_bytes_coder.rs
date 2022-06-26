@@ -13,7 +13,7 @@ pub struct ContractAddressBytesCoder;
 impl Encoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
     fn encode(value: &ContractAddress) -> std::result::Result<Vec<u8>, Error> {
         let mut bytes = ContractHashBytesCoder::encode_with_configuration(
-            value.contract_hash(),
+            &value.contract_hash().try_into()?,
             ContractHashBytesCoderConfiguration { with_suffix: true },
         )?;
         if let Some(entrypoint) = value.entrypoint() {
@@ -39,6 +39,9 @@ impl Decoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
                     .map_err(|_error| Error::InvalidBytes)?,
             )
         };
-        Ok(ContractAddress::from_components(contract_hash, entrypoint))
+        Ok(ContractAddress::from_components(
+            &contract_hash,
+            entrypoint.as_ref().map(|x| &**x),
+        ))
     }
 }

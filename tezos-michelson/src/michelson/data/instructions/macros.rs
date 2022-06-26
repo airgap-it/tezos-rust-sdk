@@ -178,6 +178,13 @@ macro_rules! make_instruction {
                 }
             }
 
+            impl From<$name> for Data {
+                fn from(value: $name) -> Self {
+                    let value: Instruction = value.into();
+                    Self::Instruction(value)
+                }
+            }
+
             impl TryFrom<Instruction> for $name {
                 type Error = Error;
 
@@ -263,7 +270,7 @@ macro_rules! make_instruction {
                 }
             }
 
-            pub fn $mod_name($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)*) -> Michelson {
+            pub fn $mod_name<Output>($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)*) -> Output where Output: From<$name> {
                 $name::new(
                     $($field_name, )*
                     $($opt_field_name, )*

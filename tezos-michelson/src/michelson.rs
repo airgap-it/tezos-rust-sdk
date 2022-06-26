@@ -9,7 +9,7 @@ use std::str::FromStr;
 pub use self::{
     data::instructions::Primitive as InstructionPrimitive,
     data::Primitive as DataPrimitive,
-    types::{comparables::Primitive as ComparableTypePrimitive, Primitive as TypePrimitive},
+    types::{ComparableTypePrimitive, Primitive as TypePrimitive},
 };
 use self::{
     data::{instructions::Instruction, Data},
@@ -120,7 +120,7 @@ impl TryFrom<Vec<Micheline>> for Michelson {
 
     fn try_from(value: Vec<Micheline>) -> Result<Self> {
         if value.is_empty() {
-            return Ok(data::sequence(vec![]).into());
+            return Ok(data::sequence(vec![]));
         }
 
         let michelson_values = value
@@ -268,7 +268,7 @@ impl TryFrom<&str> for Primitive {
         if let Ok(primitive) = primitive {
             return Ok(Primitive::Type(primitive));
         }
-        let primitive = value.parse::<types::comparables::Primitive>();
+        let primitive = value.parse::<types::ComparableTypePrimitive>();
         if let Ok(primitive) = primitive {
             return Ok(Primitive::ComparableType(primitive));
         }
@@ -292,7 +292,7 @@ impl TryFrom<u8> for Primitive {
         if let Ok(primitive) = primitive {
             return Ok(Primitive::Type(primitive));
         }
-        let primitive: Result<types::comparables::Primitive> = value.try_into();
+        let primitive: Result<types::ComparableTypePrimitive> = value.try_into();
         if let Ok(primitive) = primitive {
             return Ok(Primitive::ComparableType(primitive));
         }

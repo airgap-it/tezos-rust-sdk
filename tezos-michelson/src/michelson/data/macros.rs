@@ -172,7 +172,7 @@ macro_rules! make_data {
                 }
             }
 
-            pub fn $mod_name() -> Michelson {
+            pub fn $mod_name<Output>() -> Output where Output: From<$name> {
                 $name.into()
             }
         }
@@ -336,7 +336,7 @@ macro_rules! make_data {
                 }
             }
 
-            pub fn $mod_name($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Michelson {
+            pub fn $mod_name<Output>($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Output where Output: From<$name> {
                 $name::new(
                     $($field_name, )*
                     $($opt_field_name, )*

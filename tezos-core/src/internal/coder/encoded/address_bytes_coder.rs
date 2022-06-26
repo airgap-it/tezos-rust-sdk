@@ -192,4 +192,30 @@ mod test {
         assert_eq!(address.value(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7");
         Ok(())
     }
+
+    #[test]
+    fn test_encode_5() -> Result<()> {
+        let address: Address = "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7%mint".try_into()?;
+        let bytes = AddressBytesCoder::encode(&address)?;
+        assert_eq!(
+            bytes,
+            [
+                1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5,
+                210, 0, 75, 0, 109, 105, 110, 116
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_decode_5() -> Result<()> {
+        let bytes = [
+            1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5, 210,
+            0, 75, 0, 109, 105, 110, 116,
+        ]
+        .to_vec();
+        let address = AddressBytesCoder::decode(&bytes)?;
+        assert_eq!(address.value(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7%mint");
+        Ok(())
+    }
 }

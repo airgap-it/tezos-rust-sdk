@@ -48,6 +48,14 @@ macro_rules! make_primitive_enum {
             }
         }
 
+        impl From<Primitive> for std::string::String {
+            fn from(value: Primitive) -> Self {
+                match value {
+                    $(Primitive::$name => stringify!($code).into(),)*
+                }
+            }
+        }
+
         impl From<Primitive> for u8 {
             fn from(value: Primitive) -> Self {
                 value as u8

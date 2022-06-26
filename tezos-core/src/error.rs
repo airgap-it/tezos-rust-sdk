@@ -32,6 +32,7 @@ pub enum Error {
     InvalidSignatureBytes,
     InvalidIntegerConversion,
     InvalidNaturalConversion,
+    InvalidAddress,
     InvalidContractAddress,
 }
 

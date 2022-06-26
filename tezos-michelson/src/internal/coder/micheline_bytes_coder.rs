@@ -509,10 +509,7 @@ mod utils {
 
 #[cfg(test)]
 mod test {
-    use crate::micheline::{
-        int, prim, prim_with_args, prim_with_args_and_annots, sequence, try_bytes, try_int,
-        try_string,
-    };
+    use crate::micheline::{int, primitive_application, sequence, try_bytes, try_int, try_string};
 
     use super::*;
 
@@ -672,35 +669,34 @@ mod test {
     fn primitive_application_values() -> Vec<(Micheline, &'static [u8])> {
         vec![
             (
-                prim_with_args("parameter", vec![prim("unit")]),
+                primitive_application("parameter")
+                    .with_args(vec![primitive_application("unit").into()])
+                    .into(),
                 &[5, 0, 3, 108],
             ),
             (
-                prim_with_args_and_annots(
-                    "parameter",
-                    vec![prim("unit")],
-                    vec!["%parameter".into()],
-                ),
+                primitive_application("parameter")
+                    .with_args(vec![primitive_application("unit").into()])
+                    .with_annots(vec!["%parameter".into()])
+                    .into(),
                 &[
                     6, 0, 3, 108, 0, 0, 0, 10, 37, 112, 97, 114, 97, 109, 101, 116, 101, 114,
                 ],
             ),
             (
-                prim_with_args_and_annots(
-                    "parameter",
-                    vec![prim("unit")],
-                    vec!["%annot1".into(), "@annot2".into()],
-                ),
+                primitive_application("parameter")
+                    .with_args(vec![primitive_application("unit").into()])
+                    .with_annots(vec!["%annot1".into(), "@annot2".into()])
+                    .into(),
                 &[
                     6, 0, 3, 108, 0, 0, 0, 15, 37, 97, 110, 110, 111, 116, 49, 32, 64, 97, 110,
                     110, 111, 116, 50,
                 ],
             ),
             (
-                prim_with_args_and_annots(
-                    "parameter",
-                    vec![prim("unit")],
-                    vec![
+                primitive_application("parameter")
+                    .with_args(vec![primitive_application("unit").into()])
+                    .with_annots(vec![
                         "@annot1".into(),
                         ":annot2".into(),
                         "$annot3".into(),
@@ -708,8 +704,8 @@ mod test {
                         "%annot5".into(),
                         "!annot6".into(),
                         "?annot7".into(),
-                    ],
-                ),
+                    ])
+                    .into(),
                 &[
                     6, 0, 3, 108, 0, 0, 0, 55, 64, 97, 110, 110, 111, 116, 49, 32, 58, 97, 110,
                     110, 111, 116, 50, 32, 36, 97, 110, 110, 111, 116, 51, 32, 38, 97, 110, 110,
@@ -718,7 +714,13 @@ mod test {
                 ],
             ),
             (
-                prim_with_args("Pair", vec![prim("Unit"), prim("Unit"), prim("Unit")]),
+                primitive_application("Pair")
+                    .with_args(vec![
+                        primitive_application("Unit").into(),
+                        primitive_application("Unit").into(),
+                        primitive_application("Unit").into(),
+                    ])
+                    .into(),
                 &[9, 7, 0, 0, 0, 6, 3, 11, 3, 11, 3, 11, 0, 0, 0, 0],
             ),
         ]
@@ -726,7 +728,7 @@ mod test {
 
     fn sequence_values() -> Vec<(Micheline, &'static [u8])> {
         vec![
-            (sequence(vec![]), &[2, 0, 0, 0, 0]),
+            (sequence::<Vec<Micheline>, _>(vec![]), &[2, 0, 0, 0, 0]),
             (vec![int(0)].into(), &[2, 0, 0, 0, 2, 0, 0]),
             (
                 vec![int(0), try_string("abc").unwrap()].into(),

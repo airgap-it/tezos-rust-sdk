@@ -54,7 +54,7 @@ impl TryFrom<&str> for String {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        Self::from_string(value.to_owned())
+        Self::from_string(value.into())
     }
 }
 

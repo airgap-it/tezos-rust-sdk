@@ -2,7 +2,8 @@ use tezos_core::internal::normalizer::Normalizer;
 
 use crate::{
     micheline::{
-        prim_with_args, primitive_application::PrimitiveApplication, sequence::Sequence, Micheline,
+        primitive_application, primitive_application::PrimitiveApplication, sequence::Sequence,
+        Micheline,
     },
     michelson::{self, PrimType},
 };
@@ -33,7 +34,7 @@ impl Normalizer<PrimitiveApplication> for MichelineNormalizer {
                 let mut args = args;
                 vec![
                     Self::normalize(args.remove(0)),
-                    Self::normalize(prim_with_args(prim, args)),
+                    Self::normalize(primitive_application(prim).with_args(args).into()),
                 ]
             })
         } else {

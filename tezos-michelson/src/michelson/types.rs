@@ -1,13 +1,14 @@
-pub mod comparables;
+mod comparables;
 mod macros;
 
 use macros::{make_type, make_types};
 
 use super::Michelson;
 use crate::{Error, Result};
+pub use comparables::{Primitive as ComparableTypePrimitive, Type as ComparableType, *};
 
 make_types!(
-    type_enum: Comparable(crate::michelson::types::comparables::Type),
+    type_enum: Comparable(crate::michelson::types::ComparableType),
     [
         pub fn is_valid_prim_name(name: &str) -> bool {
             let primitive = name.parse::<Primitive>();
