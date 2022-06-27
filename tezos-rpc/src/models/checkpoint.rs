@@ -1,7 +1,42 @@
 use serde::{Deserialize, Serialize};
+use tezos_core::types::encoded::BlockHash;
 
 #[derive(Serialize, Deserialize)]
 pub struct Checkpoint {
-    pub block_hash: String,
+    pub block_hash: BlockHash,
     pub level: u64
+}
+
+#[cfg(test)]
+mod test {
+    use tezos_core::types::encoded::Encoded;
+
+    use crate::error::Error;
+
+    use super::*;
+
+    #[test]
+    fn test_serde_serialize() -> Result<(), Error> {
+        let invalid_block = Checkpoint {
+            block_hash: "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA".try_into()?,
+            level: 1,
+        };
+        let json = serde_json::to_string(&invalid_block)?;
+
+        assert_eq!(json, "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_serde_deserialize() -> Result<(), crate::error::Error> {
+        let json = "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}";
+
+        let invalid_block: Checkpoint = serde_json::from_str(&json)?;
+
+        assert_eq!(invalid_block.block_hash.base58(), "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA");
+        assert_eq!(invalid_block.level, 1);
+
+        Ok(())
+    }
 }
