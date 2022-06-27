@@ -3,7 +3,9 @@ use tezos_core::types::encoded::BlockHash;
 
 #[derive(Serialize, Deserialize)]
 pub struct Checkpoint {
+    /// A block identifier (Base58Check-encoded)
     pub block_hash: BlockHash,
+    /// The block level
     pub level: u64
 }
 

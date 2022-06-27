@@ -3,13 +3,13 @@ use tezos_core::types::encoded::{BlockHash};
 use crate::client::TezosRPCContext;
 use crate::error::Error;
 
-fn path(chain_alias: String) -> String {
-    format!("{}{}", super::path(chain_alias),"/blocks")
+fn path(chain_id: String) -> String {
+    format!("{}{}", super::path(chain_id),"/blocks")
 }
 
 /// `GetBlocksQuery` query parameters for request:
 ///
-/// [`GET /chains/<chain_id>/blocks?[length=<uint>]&(head=<block_hash>)*&[min_date=<date>]`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
+/// [`GET /chains/<chain_id>/blocks?[length=<uint>]&(head=<block_hash>)&[min_date=<date>]`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
 #[derive(Serialize)]
 pub struct GetBlocksQuery {
     /// The requested number of predecessors to return.
@@ -31,4 +31,54 @@ pub async fn get(ctx: &TezosRPCContext, query: &GetBlocksQuery) -> Result<Vec<Ve
     let path = self::path(ctx.chain_id.to_string());
 
     ctx.http_client.get_with_query(path.as_str(), query).await
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        httpmock::prelude::*,
+        tezos_core::types::encoded::{BlockHash, Encoded},
+        crate::client::TezosRPC,
+        crate::error::Error,
+        crate::shell_rpc::ShellRPC,
+        crate::shell_rpc::chains::chain::blocks::GetBlocksQuery
+    };
+
+    #[tokio::test]
+    async fn test_is_bootstrapped() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        let valid_response = serde_json::json!(
+            [
+                [
+                    "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
+                ]
+            ]
+        );
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path(super::path("main".to_string()))
+                .query_param("length", "1")
+                .query_param("head", "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8")
+                .query_param("min_date", "1");
+            then.status(200)
+                .header("content-type", "application/json")
+                .json_body(valid_response);
+        });
+
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        let req_query = &GetBlocksQuery{
+            length: Some(1),
+            head: Some(BlockHash::new("BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())?),
+            min_date: Some(1)
+        };
+        let response = client.get_blocks(req_query).await?;
+
+        assert_eq!(response[0][0].base58(), "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8");
+
+        Ok(())
+    }
 }
