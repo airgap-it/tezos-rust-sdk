@@ -59,4 +59,15 @@ impl TezosHttp {
 
         Ok(req.send().await?.json::<T>().await?)
     }
+
+    /// Convenience method to make a `DELETE` request to a URL.
+    pub async fn delete<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &Option<B>) -> Result<T, Error> {
+        let mut req = self.client.delete(self.url(url));
+
+        if let Some(json) = body {
+            req = req.json(json);
+        }
+
+        Ok(req.send().await?.json::<T>().await?)
+    }
 }

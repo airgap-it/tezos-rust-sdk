@@ -2,6 +2,7 @@ use std::result::Result;
 use async_trait::async_trait;
 use tezos_core::types::encoded::{ChainID, BlockHash};
 
+use crate::models::bootstrapped_status::BootstrappedStatus;
 use crate::shell_rpc::chains::chain::PatchChainRequest;
 use crate::shell_rpc::chains::chain::blocks::GetBlocksQuery;
 use crate::{http, shell_rpc};
@@ -67,7 +68,7 @@ impl TezosRPC {
 
 #[async_trait]
 impl<'a> ShellRPC for TezosRPC {
-    async fn patch_chain(&self, body: PatchChainRequest) -> Result<(), Error> {
+    async fn patch_chain(&self, body: &PatchChainRequest) -> Result<(), Error> {
         shell_rpc::chains::chain::patch(&self.context, body).await
     }
 
@@ -83,148 +84,31 @@ impl<'a> ShellRPC for TezosRPC {
         shell_rpc::chains::chain::invalid_blocks::get(&self.context).await
     }
 
+    async fn get_invalid_block(&self, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
+        shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash).await
+    }
+
+    async fn remove_invalid_block(&self, block_hash: &BlockHash) -> Result<(), Error> {
+        shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash).await
+    }
+
+    async fn is_bootstrapped(&self) -> Result<BootstrappedStatus, Error> {
+        shell_rpc::chains::chain::is_bootstrapped::get(&self.context).await
+    }
+
+    async fn get_caboose(&self) -> Result<Checkpoint, Error> {
+        shell_rpc::chains::chain::levels::caboose::get(&self.context).await
+    }
+
     async fn get_checkpoint(&self) -> Result<Checkpoint, Error> {
         shell_rpc::chains::chain::levels::checkpoint::get(&self.context).await
+    }
+
+    async fn get_savepoint(&self) -> Result<Checkpoint, Error> {
+        shell_rpc::chains::chain::levels::savepoint::get(&self.context).await
     }
 }
 
 #[async_trait]
 impl<'a> ActiveRPC for TezosRPC {
-}
-
-#[cfg(test)]
-mod client_tests {
-    use httpmock::prelude::*;
-    use tezos_core::types::encoded::Encoded;
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get_chain_id() -> Result<(), Error> {
-        let server = MockServer::start();
-        let rpc_url = server.base_url();
-
-        server.mock(|when, then| {
-            when.method(GET)
-                .path("/chains/main/chain_id");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body("NetXdQprcVkpaWU");
-        });
-
-        let client = TezosRPC::new(rpc_url.as_str());
-        let chain_id = client.get_chain_id().await?;
-        assert_eq!("NetXdQprcVkpaWU", chain_id.base58());
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_get_invalid_blocks() -> Result<(), Error> {
-        let server = MockServer::start();
-        let rpc_url = server.base_url();
-
-        let valid_response = serde_json::json!(
-            [
-                {
-                    "block": "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2",
-                    "level": 2424833 as u64,
-                    "errors": [
-                        {
-                            "kind": "permanent",
-                            "id": "proto.alpha.Failed_to_get_script",
-                            "contract": "KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW",
-                        }
-                    ]
-                }
-            ]
-        );
-
-        server.mock(|when, then| {
-            when.method(GET)
-                .path("/chains/main/invalid_blocks");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(valid_response);
-        });
-
-        let client = TezosRPC::new(rpc_url.as_str());
-        let response = client.get_invalid_blocks().await?;
-
-        assert_eq!(response.len(), 1, "Expects a single invalid block.");
-
-        let invalid_block = &response[0];
-        assert_eq!(invalid_block.block.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
-        assert_eq!(invalid_block.level, 2424833);
-        assert_eq!(invalid_block.errors.len(), 1, "Expects a single error.");
-        assert_eq!(invalid_block.errors[0].kind, "permanent");
-        assert_eq!(invalid_block.errors[0].id, "proto.alpha.Failed_to_get_script");
-        assert_eq!(invalid_block.errors[0].contract, Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string()));
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_get_blocks() -> Result<(), Error> {
-        let server = MockServer::start();
-        let rpc_url = server.base_url();
-
-        let valid_response = serde_json::json!(
-            [
-                [
-                    "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
-                ]
-            ]
-        );
-
-        server.mock(|when, then| {
-            when.method(GET)
-                .path("/chains/main/blocks")
-                .query_param("length", "1")
-                .query_param("head", "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8")
-                .query_param("min_date", "1");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(valid_response);
-        });
-
-        let client = TezosRPC::new(rpc_url.as_str());
-
-        let req_query = &GetBlocksQuery{
-            length: Some(1),
-            head: Some(BlockHash::new("BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())?),
-            min_date: Some(1)
-        };
-        let response = client.get_blocks(req_query).await?;
-
-        assert_eq!(response[0][0].base58(), "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8");
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_get_checkpoint() -> Result<(), Error> {
-        let server = MockServer::start();
-        let rpc_url = server.base_url();
-
-        let valid_response = serde_json::json!({
-            "block_hash": "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2",
-            "level": 2424833 as u64
-        });
-
-        server.mock(|when, then| {
-            when.method(GET)
-                .path("/chains/main/levels/checkpoint");
-            then.status(200)
-                .header("content-type", "application/json")
-                .json_body(valid_response);
-        });
-
-        let client = TezosRPC::new(rpc_url.as_str());
-        let response = client.get_checkpoint().await?;
-
-        assert_eq!(response.block_hash.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
-        assert_eq!(response.level, 2424833);
-
-        Ok(())
-    }
 }

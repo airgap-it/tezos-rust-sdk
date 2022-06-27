@@ -1,3 +1,5 @@
+use crate::models::bootstrapped_status::BootstrappedStatus;
+
 use {
     async_trait::async_trait,
     std::result::Result,
@@ -17,7 +19,7 @@ pub trait ShellRPC {
     /// Forcefully set the bootstrapped flag of the node.
     ///
     /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-    async fn patch_chain(&self, body: PatchChainRequest) -> Result<(), Error>;
+    async fn patch_chain(&self, body: &PatchChainRequest) -> Result<(), Error>;
 
     /// Get the chain unique identifier.
     ///
@@ -37,8 +39,33 @@ pub trait ShellRPC {
     /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
     async fn get_invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error>;
 
+    /// Get the errors that appeared during the block (in)validation.
+    ///
+    /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
+    async fn get_invalid_block(&self, block_hash: &BlockHash) -> Result<InvalidBlock, Error>;
+
+    /// Remove an invalid block for the tezos storage.
+    ///
+    /// [`DELETE /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
+    async fn remove_invalid_block(&self, block_hash: &BlockHash) -> Result<(), Error>;
+
+    /// Get the bootstrap status of a chain.
+    ///
+    /// [`DELETE /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
+    async fn is_bootstrapped(&self) -> Result<BootstrappedStatus, Error>;
+
+    /// Get the current caboose for this chain.
+    ///
+    /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
+    async fn get_caboose(&self) -> Result<Checkpoint, Error>;
+
     /// Get the current checkpoint for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
     async fn get_checkpoint(&self) -> Result<Checkpoint, Error>;
+
+    /// Get the current savepoint for this chain.
+    ///
+    /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
+    async fn get_savepoint(&self) -> Result<Checkpoint, Error>;
 }
