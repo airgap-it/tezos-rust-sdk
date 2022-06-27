@@ -1,6 +1,6 @@
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::error::Error;
+use crate::{error::Error};
 
 pub struct TezosHttp {
     rpc_endpoint: String,
@@ -20,11 +20,26 @@ impl TezosHttp {
         format!("{}{}", self.rpc_endpoint, path)
     }
 
-    pub async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
-        Ok(self.client.get(self.url(url)).send().await?.json::<T>().await?)
+    pub fn change_rpc_endpoint(&mut self, rpc_endpoint: String) {
+        self.rpc_endpoint = rpc_endpoint;
     }
 
-    pub async fn post<B: Serialize, T: DeserializeOwned>(&self, url: &String, body: &B) -> Result<T, Error> {
+    /// Convenience method to make a `GET` request to a URL.
+    pub async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
+        let req = self.client.get(self.url(url));
+
+        Ok(req.send().await?.json::<T>().await?)
+    }
+
+    /// Convenience method to make a `GET` request with query parameters to a URL.
+    pub async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized>(&self, url: &str, query: &Q) -> Result<T, Error> {
+        let req = self.client.get(self.url(url));
+
+        Ok(req.query(query).send().await?.json::<T>().await?)
+    }
+
+    /// Convenience method to make a `POST` request to a URL.
+    pub async fn post<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &B) -> Result<T, Error> {
         Ok(self.client
             .post(self.url(url))
             .json(body)
@@ -32,5 +47,16 @@ impl TezosHttp {
             .await?
             .json::<T>()
             .await?)
+    }
+
+    /// Convenience method to make a `PATCH` request to a URL.
+    pub async fn patch<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &Option<B>) -> Result<T, Error> {
+        let mut req = self.client.patch(self.url(url));
+
+        if let Some(json) = body {
+            req = req.json(json);
+        }
+
+        Ok(req.send().await?.json::<T>().await?)
     }
 }
