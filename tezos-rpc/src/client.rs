@@ -1,7 +1,9 @@
 use std::result::Result;
 use async_trait::async_trait;
-use tezos_core::types::encoded::{ChainID};
+use tezos_core::types::encoded::{ChainID, BlockHash};
 
+use crate::shell_rpc::chains::chain::PatchChainRequest;
+use crate::shell_rpc::chains::chain::blocks::GetBlocksQuery;
 use crate::{http, shell_rpc};
 use crate::error::{Error};
 use crate::models::invalid_block::InvalidBlock;
@@ -10,71 +12,84 @@ use crate::models::checkpoint::{Checkpoint};
 use crate::shell_rpc::{ShellRPC};
 use crate::active_rpc::{ActiveRPC};
 
-pub struct RpcContext {
-    pub chain_alias: String,
+pub struct TezosRPCContext {
+    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
+    pub chain_id: String,
     pub http_client: http::TezosHttp,
 }
-impl RpcContext {
-    /// Changes the chain alias used for requests under the `/chains/<chain_alias>/...` endpoint.
-    pub fn change_chain_alias(&mut self, chain_alias: &str) {
-        self.chain_alias = chain_alias.to_string()
+impl TezosRPCContext {
+    /// Changes the rpc endpoint used in RPC requests.
+    pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
+        self.http_client.change_rpc_endpoint(rpc_endpoint.to_string());
     }
 }
 
-pub struct TezosRpc {
-    pub context: RpcContext,
+pub struct TezosRPC {
+    pub context: TezosRPCContext,
 }
 
-impl TezosRpc {
-    /// Creates a Tezos RPC client that will connect with the node specified with the node_url.
+impl TezosRPC {
+    /// Creates a Tezos RPC client that will connect to the specified node RPC.
     ///
     /// ```rust
-    /// use tezos_rpc::client::{TezosRpc};
+    /// use tezos_rpc::client::{TezosRPC};
     ///
-    /// let client = TezosRpc::new("https://tezos-node.prod.gke.papers.tech");
+    /// let client = TezosRPC::new("https://tezos-node.prod.gke.papers.tech");
     /// ```
     pub fn new(rpc_endpoint: &str) -> Self {
-        TezosRpc {
-            context: RpcContext {
-                chain_alias: constants::DEFAULT_CHAIN_ALIAS.to_string(),
+        TezosRPC {
+            context: TezosRPCContext {
+                chain_id: constants::DEFAULT_CHAIN_ALIAS.to_string(),
+                http_client: http::TezosHttp::new(rpc_endpoint),
+            },
+        }
+    }
+
+    /// Creates a Tezos RPC client that will connect to the specified node RPC.
+    ///
+    /// This method allows the user to provide the chain identifier that will be used when
+    /// sending requests to the RPC. The default is `main`.
+    ///
+    /// ```rust
+    /// use tezos_rpc::client::{TezosRPC};
+    ///
+    /// let client = TezosRPC::new_with_chain_id("https://tezos-node.prod.gke.papers.tech", "NetXLH1uAxK7CCh");
+    /// ```
+    pub fn new_with_chain_id(rpc_endpoint: &str, chain_id: &str) -> Self {
+        TezosRPC {
+            context: TezosRPCContext {
+                chain_id: chain_id.to_string(),
                 http_client: http::TezosHttp::new(rpc_endpoint),
             },
         }
     }
 }
 
-/// Implements protocol-independent RPCs.
-///
-/// See [RPCs - Reference](https://tezos.gitlab.io/shell/rpc.html) for more details.
 #[async_trait]
-impl<'a> ShellRPC for TezosRpc {
-    /// Get the chain unique identifier.
-    ///
-    /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-    async fn chain_id(&self) -> Result<ChainID, Error> {
-        shell_rpc::chains::chain_id(&self.context).await
+impl<'a> ShellRPC for TezosRPC {
+    async fn patch_chain(&self, body: PatchChainRequest) -> Result<(), Error> {
+        shell_rpc::chains::chain::patch(&self.context, body).await
     }
 
-    /// Get the current checkpoint for this chain.
-    ///
-    /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
-    async fn checkpoint(&self) -> Result<Checkpoint, Error> {
-        shell_rpc::chains::levels::checkpoint(&self.context).await
+    async fn get_chain_id(&self) -> Result<ChainID, Error> {
+        shell_rpc::chains::chain::chain_id::get(&self.context).await
     }
 
-    /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
-    ///
-    /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
-    async fn invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
-        shell_rpc::chains::invalid_blocks(&self.context).await
+    async fn get_blocks(&self, query: &GetBlocksQuery) -> Result<Vec<Vec<BlockHash>>, Error> {
+        shell_rpc::chains::chain::blocks::get(&self.context, query).await
+    }
+
+    async fn get_invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
+        shell_rpc::chains::chain::invalid_blocks::get(&self.context).await
+    }
+
+    async fn get_checkpoint(&self) -> Result<Checkpoint, Error> {
+        shell_rpc::chains::chain::levels::checkpoint::get(&self.context).await
     }
 }
 
-/// Implements protocol-dependent RPCs.
-///
-/// See [RPCs - Reference](https://tezos.gitlab.io/active/rpc.html) for more details.
 #[async_trait]
-impl<'a> ActiveRPC for TezosRpc {
+impl<'a> ActiveRPC for TezosRPC {
 }
 
 #[cfg(test)]
@@ -82,19 +97,6 @@ mod client_tests {
     use httpmock::prelude::*;
     use tezos_core::types::encoded::Encoded;
     use super::*;
-    use crate::{constants::{DEFAULT_CHAIN_ALIAS}};
-
-    #[tokio::test]
-    async fn test_change_chain_alias() -> Result<(), Error> {
-        let mut client = TezosRpc::new("SOME_RPC");
-        assert_eq!(client.context.chain_alias, DEFAULT_CHAIN_ALIAS);
-
-        let new_chain_alias = "test";
-        client.context.change_chain_alias(new_chain_alias);
-        assert_eq!(client.context.chain_alias, new_chain_alias);
-
-        Ok(())
-    }
 
     #[tokio::test]
     async fn test_get_chain_id() -> Result<(), Error> {
@@ -109,8 +111,8 @@ mod client_tests {
                 .json_body("NetXdQprcVkpaWU");
         });
 
-        let client = TezosRpc::new(rpc_url.as_str());
-        let chain_id = client.chain_id().await?;
+        let client = TezosRPC::new(rpc_url.as_str());
+        let chain_id = client.get_chain_id().await?;
         assert_eq!("NetXdQprcVkpaWU", chain_id.base58());
 
         Ok(())
@@ -145,18 +147,56 @@ mod client_tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRpc::new(rpc_url.as_str());
-        let response = client.invalid_blocks().await?;
+        let client = TezosRPC::new(rpc_url.as_str());
+        let response = client.get_invalid_blocks().await?;
 
         assert_eq!(response.len(), 1, "Expects a single invalid block.");
 
         let invalid_block = &response[0];
-        assert_eq!(invalid_block.block, "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
+        assert_eq!(invalid_block.block.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
         assert_eq!(invalid_block.level, 2424833);
         assert_eq!(invalid_block.errors.len(), 1, "Expects a single error.");
         assert_eq!(invalid_block.errors[0].kind, "permanent");
         assert_eq!(invalid_block.errors[0].id, "proto.alpha.Failed_to_get_script");
         assert_eq!(invalid_block.errors[0].contract, Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_blocks() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        let valid_response = serde_json::json!(
+            [
+                [
+                    "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
+                ]
+            ]
+        );
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path("/chains/main/blocks")
+                .query_param("length", "1")
+                .query_param("head", "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8")
+                .query_param("min_date", "1");
+            then.status(200)
+                .header("content-type", "application/json")
+                .json_body(valid_response);
+        });
+
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        let req_query = &GetBlocksQuery{
+            length: Some(1),
+            head: Some(BlockHash::new("BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())?),
+            min_date: Some(1)
+        };
+        let response = client.get_blocks(req_query).await?;
+
+        assert_eq!(response[0][0].base58(), "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8");
 
         Ok(())
     }
@@ -179,10 +219,10 @@ mod client_tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRpc::new(rpc_url.as_str());
-        let response = client.checkpoint().await?;
+        let client = TezosRPC::new(rpc_url.as_str());
+        let response = client.get_checkpoint().await?;
 
-        assert_eq!(response.block_hash, "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
+        assert_eq!(response.block_hash.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
         assert_eq!(response.level, 2424833);
 
         Ok(())
