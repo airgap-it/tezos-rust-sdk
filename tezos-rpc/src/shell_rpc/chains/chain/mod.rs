@@ -10,11 +10,9 @@ fn path(chain_id: String) -> String {
     format!("/chains/{}", chain_id)
 }
 
-/// `PatchChainRequest` is used as body in request:
-///
-/// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
+/// `PatchChainPayload` used in request [`PATCH /chains/<chain_id>`](patch)
 #[derive(Serialize)]
-pub struct PatchChainRequest {
+pub struct PatchChainPayload {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
     bootstrapped: bool,
 }
@@ -22,7 +20,7 @@ pub struct PatchChainRequest {
 /// Forcefully set the bootstrapped flag of the node.
 ///
 /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainRequest) -> Result<(), Error> {
+pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainPayload) -> Result<(), Error> {
     let path = self::path(ctx.chain_id.to_string());
 
     ctx.http_client
@@ -35,7 +33,7 @@ pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainRequest) -> Result<()
 #[cfg(test)]
 mod tests {
     use {
-        super::PatchChainRequest, crate::client::TezosRPC, crate::error::Error,
+        super::PatchChainPayload, crate::client::TezosRPC, crate::error::Error,
         crate::shell_rpc::ShellRPC, httpmock::prelude::*,
     };
 
@@ -54,7 +52,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let req = PatchChainRequest {
+        let req = PatchChainPayload {
             bootstrapped: false,
         };
 

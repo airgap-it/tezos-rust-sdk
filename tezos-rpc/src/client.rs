@@ -1,17 +1,19 @@
-use async_trait::async_trait;
-use std::result::Result;
-use tezos_core::types::encoded::{BlockHash, ChainID, OperationHash};
-
-use crate::active_rpc::ActiveRPC;
-use crate::constants;
-use crate::error::Error;
-use crate::models::bootstrapped_status::BootstrappedStatus;
-use crate::models::checkpoint::Checkpoint;
-use crate::models::invalid_block::InvalidBlock;
-use crate::shell_rpc::chains::chain::blocks::GetBlocksQuery;
-use crate::shell_rpc::chains::chain::PatchChainRequest;
-use crate::shell_rpc::ShellRPC;
-use crate::{http, shell_rpc};
+use {
+    crate::active_rpc::ActiveRPC,
+    crate::constants,
+    crate::error::Error,
+    crate::models::bootstrapped_status::BootstrappedStatus,
+    crate::models::checkpoint::Checkpoint,
+    crate::models::invalid_block::InvalidBlock,
+    crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
+    crate::shell_rpc::chains::chain::PatchChainPayload,
+    crate::shell_rpc::injection::block::InjectionBlockPayload,
+    crate::shell_rpc::ShellRPC,
+    crate::{http, shell_rpc},
+    async_trait::async_trait,
+    std::result::Result,
+    tezos_core::types::encoded::{BlockHash, ChainID, OperationHash},
+};
 
 pub struct TezosRPCContext {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
@@ -69,7 +71,7 @@ impl TezosRPC {
 
 #[async_trait]
 impl<'a> ShellRPC for TezosRPC {
-    async fn patch_chain(&self, body: &PatchChainRequest) -> Result<(), Error> {
+    async fn patch_chain(&self, body: &PatchChainPayload) -> Result<(), Error> {
         shell_rpc::chains::chain::patch(&self.context, body).await
     }
 
@@ -116,6 +118,15 @@ impl<'a> ShellRPC for TezosRPC {
     ) -> Result<OperationHash, Error> {
         shell_rpc::injection::operation::post(&self.context, signed_operation_contents, do_async)
             .await
+    }
+
+    async fn inject_block(
+        &self,
+        payload: &InjectionBlockPayload,
+        force: &bool,
+        do_async: &bool,
+    ) -> Result<BlockHash, Error> {
+        shell_rpc::injection::block::post(&self.context, payload, force, do_async).await
     }
 }
 

@@ -18,7 +18,7 @@ fn path() -> String {
 /// However, if `?async` is true, the function returns immediately.
 /// The optional `?chain` parameter can be used to specify whether to inject on the test chain or the main chain.
 ///
-/// Returns the ID of the operation.
+/// Returns the ID of the operation [OperationHash].
 ///
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
 pub async fn post(
@@ -26,8 +26,6 @@ pub async fn post(
     signed_operation_contents: &String,
     do_async: &bool,
 ) -> Result<OperationHash, Error> {
-    let path = self::path();
-
     let mut query: Vec<(&str, String)> = vec![];
 
     // Add `async` query parameter
@@ -36,7 +34,11 @@ pub async fn post(
     query.push(("chain", ctx.chain_id.to_string()));
 
     ctx.http_client
-        .post(path.as_str(), signed_operation_contents, &Some(query))
+        .post(
+            self::path().as_str(),
+            signed_operation_contents,
+            &Some(query),
+        )
         .await
 }
 
