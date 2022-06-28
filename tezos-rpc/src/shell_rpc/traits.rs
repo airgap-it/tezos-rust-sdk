@@ -1,14 +1,13 @@
-use crate::models::bootstrapped_status::BootstrappedStatus;
-
 use {
+    super::chains::chain::blocks::GetBlocksQuery,
+    super::chains::chain::PatchChainRequest,
+    crate::error::Error,
+    crate::models::bootstrapped_status::BootstrappedStatus,
+    crate::models::checkpoint::Checkpoint,
+    crate::models::invalid_block::InvalidBlock,
     async_trait::async_trait,
     std::result::Result,
-    tezos_core::types::encoded::{ChainID, BlockHash},
-    crate::models::checkpoint::Checkpoint,
-    crate::error::{Error},
-    crate::models::invalid_block::InvalidBlock,
-    super::chains::chain::PatchChainRequest,
-    super::chains::chain::blocks::GetBlocksQuery
+    tezos_core::types::encoded::{BlockHash, ChainID, OperationHash},
 };
 
 /// Tezos protocol-independent RPCs.
@@ -68,4 +67,25 @@ pub trait ShellRPC {
     ///
     /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
     async fn get_savepoint(&self) -> Result<Checkpoint, Error>;
+
+    /// Inject an operation in node and broadcast it.
+    ///
+    /// The `signed_operation_contents` should be constructed using contextual RPCs
+    /// from the latest block and signed by the client.
+    ///
+    /// The injection of the operation will apply it on the current mempool context.
+    /// This context may change at each operation injection or operation reception from peers.
+    ///
+    /// By default, the RPC will wait for the operation to be (pre-)validated before returning.
+    /// However, if `?async` is true, the function returns immediately.
+    /// The optional `?chain` parameter can be used to specify whether to inject on the test chain or the main chain.
+    ///
+    /// Returns the ID of the operation.
+    ///
+    /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
+    async fn inject_operation(
+        &self,
+        signed_operation_contents: &String,
+        do_async: &bool,
+    ) -> Result<OperationHash, Error>;
 }

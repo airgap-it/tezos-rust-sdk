@@ -1,11 +1,7 @@
-use {
-    tezos_core::types::encoded::ChainID,
-    crate::client::TezosRPCContext,
-    crate::error::Error,
-};
+use {crate::client::TezosRPCContext, crate::error::Error, tezos_core::types::encoded::ChainID};
 
 fn path(chain_id: String) -> String {
-    format!("{}{}", super::path(chain_id),"/chain_id")
+    format!("{}{}", super::path(chain_id), "/chain_id")
 }
 
 /// Get the chain unique identifier.
@@ -20,11 +16,8 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<ChainID, Error> {
 #[cfg(test)]
 mod tests {
     use {
-        httpmock::prelude::*,
-        tezos_core::types::encoded::Encoded,
-        crate::client::TezosRPC,
-        crate::error::Error,
-        crate::shell_rpc::ShellRPC,
+        crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
+        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
     };
 
     #[tokio::test]

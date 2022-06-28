@@ -4,6 +4,4 @@ use async_trait::async_trait;
 ///
 /// See [RPCs - Reference](https://tezos.gitlab.io/active/rpc.html) for more details.
 #[async_trait]
-pub trait ActiveRPC {
-
-}
+pub trait ActiveRPC {}

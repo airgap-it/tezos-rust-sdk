@@ -6,7 +6,7 @@ pub struct Checkpoint {
     /// A block identifier (Base58Check-encoded)
     pub block_hash: BlockHash,
     /// The block level
-    pub level: u64
+    pub level: u64,
 }
 
 #[cfg(test)]
@@ -25,18 +25,25 @@ mod test {
         };
         let json = serde_json::to_string(&invalid_block)?;
 
-        assert_eq!(json, "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}");
+        assert_eq!(
+            json,
+            "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}"
+        );
 
         Ok(())
     }
 
     #[test]
     fn test_serde_deserialize() -> Result<(), crate::error::Error> {
-        let json = "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}";
+        let json =
+            "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}";
 
         let invalid_block: Checkpoint = serde_json::from_str(&json)?;
 
-        assert_eq!(invalid_block.block_hash.base58(), "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA");
+        assert_eq!(
+            invalid_block.block_hash.base58(),
+            "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA"
+        );
         assert_eq!(invalid_block.level, 1);
 
         Ok(())

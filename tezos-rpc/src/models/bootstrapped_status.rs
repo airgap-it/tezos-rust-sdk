@@ -14,19 +14,19 @@ use serde::{Deserialize, Serialize};
 pub enum ChainStatus {
     Stuck,
     Synced,
-    Unsynced
+    Unsynced,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct BootstrappedStatus {
     pub bootstrapped: bool,
-    pub sync_state: ChainStatus
+    pub sync_state: ChainStatus,
 }
 
 #[cfg(test)]
 mod test {
-    use crate::error::Error;
     use super::*;
+    use crate::error::Error;
 
     #[test]
     fn test_serde_serialize() -> Result<(), Error> {

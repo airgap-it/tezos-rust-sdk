@@ -7,7 +7,7 @@ use super::error::RPCError;
 pub struct InvalidBlock {
     pub block: BlockHash,
     pub level: u64,
-    pub errors: Vec<RPCError>
+    pub errors: Vec<RPCError>,
 }
 
 #[cfg(test)]
@@ -21,7 +21,7 @@ mod test {
         let invalid_block = InvalidBlock {
             block: "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA".try_into()?,
             level: 1,
-            errors: vec![]
+            errors: vec![],
         };
         let json = serde_json::to_string(&invalid_block)?;
 
@@ -36,7 +36,10 @@ mod test {
 
         let invalid_block: InvalidBlock = serde_json::from_str(&json)?;
 
-        assert_eq!(invalid_block.block.base58(), "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA");
+        assert_eq!(
+            invalid_block.block.base58(),
+            "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA"
+        );
         assert_eq!(invalid_block.level, 1);
         assert_eq!(invalid_block.errors, vec![]);
 
