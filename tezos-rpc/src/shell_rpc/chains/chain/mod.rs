@@ -1,14 +1,10 @@
+pub mod blocks;
 pub mod chain_id;
 pub mod invalid_blocks;
-pub mod levels;
-pub mod blocks;
 pub mod is_bootstrapped;
+pub mod levels;
 
-use {
-    serde::Serialize,
-    crate::client::TezosRPCContext,
-    crate::error::Error
-};
+use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
 
 fn path(chain_id: String) -> String {
     format!("/chains/{}", chain_id)
@@ -20,7 +16,7 @@ fn path(chain_id: String) -> String {
 #[derive(Serialize)]
 pub struct PatchChainRequest {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
-    bootstrapped: bool
+    bootstrapped: bool,
 }
 
 /// Forcefully set the bootstrapped flag of the node.
@@ -29,7 +25,9 @@ pub struct PatchChainRequest {
 pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainRequest) -> Result<(), Error> {
     let path = self::path(ctx.chain_id.to_string());
 
-    ctx.http_client.patch::<_, serde_json::Value>(path.as_str(), &Some(body)).await?;
+    ctx.http_client
+        .patch::<_, serde_json::Value>(path.as_str(), &Some(body))
+        .await?;
 
     Ok(())
 }
@@ -37,11 +35,8 @@ pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainRequest) -> Result<()
 #[cfg(test)]
 mod tests {
     use {
-        httpmock::prelude::*,
-        crate::client::TezosRPC,
-        crate::error::Error,
-        crate::shell_rpc::ShellRPC,
-        super::PatchChainRequest
+        super::PatchChainRequest, crate::client::TezosRPC, crate::error::Error,
+        crate::shell_rpc::ShellRPC, httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -50,7 +45,8 @@ mod tests {
         let rpc_url = server.base_url();
 
         server.mock(|when, then| {
-            when.method(httpmock::Method::PATCH).path(super::path("main".to_string()));
+            when.method(httpmock::Method::PATCH)
+                .path(super::path("main".to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(serde_json::json!({}));
@@ -59,7 +55,7 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         let req = PatchChainRequest {
-            bootstrapped: false
+            bootstrapped: false,
         };
 
         client.patch_chain(&req).await

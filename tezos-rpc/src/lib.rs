@@ -1,7 +1,7 @@
-pub mod client;
-pub mod error;
-pub mod shell_rpc;
 pub mod active_rpc;
+pub mod client;
 pub mod constants;
-pub mod models;
+pub mod error;
 mod http;
+pub mod models;
+pub mod shell_rpc;

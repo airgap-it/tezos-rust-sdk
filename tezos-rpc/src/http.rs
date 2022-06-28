@@ -1,6 +1,8 @@
-use serde::{de::DeserializeOwned, Serialize};
-
-use crate::{error::Error};
+use {
+    reqwest::Response,
+    serde::{de::DeserializeOwned, Serialize},
+    crate::error::{self, Error}
+};
 
 pub struct TezosHttp {
     rpc_endpoint: String,
@@ -20,54 +22,83 @@ impl TezosHttp {
         format!("{}{}", self.rpc_endpoint, path)
     }
 
+    async fn handle_response<T: DeserializeOwned>(&self, response: Response) -> Result<T, Error> {
+        if response.status() != 200 {
+            // Do not parse JSON when the content type is `plain/text`
+            if response.headers()["content-type"] == "application/json" {
+                return Err(error::Error::RPCErrors(response.json().await?));
+            }
+            return Err(error::Error::RPCErrorPlain(response.text().await?));
+        }
+
+        Ok(response.json().await?)
+    }
+
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: String) {
         self.rpc_endpoint = rpc_endpoint;
     }
 
     /// Convenience method to make a `GET` request to a URL.
     pub async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
-        let req = self.client.get(self.url(url));
-
-        Ok(req.send().await?.json::<T>().await?)
+        self.handle_response(self.client.get(self.url(url)).send().await?)
+            .await
     }
 
     /// Convenience method to make a `GET` request with query parameters to a URL.
-    pub async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized>(&self, url: &str, query: &Q) -> Result<T, Error> {
-        let req = self.client.get(self.url(url));
-
-        Ok(req.query(query).send().await?.json::<T>().await?)
+    pub async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized>(
+        &self,
+        url: &str,
+        query: &Q,
+    ) -> Result<T, Error> {
+        self.handle_response(self.client.get(self.url(url)).query(query).send().await?)
+            .await
     }
 
     /// Convenience method to make a `POST` request to a URL.
-    pub async fn post<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &B) -> Result<T, Error> {
-        Ok(self.client
-            .post(self.url(url))
-            .json(body)
-            .send()
-            .await?
-            .json::<T>()
-            .await?)
+    pub async fn post<B: Serialize, T: DeserializeOwned, Q: Serialize>(
+        &self,
+        url: &str,
+        body: &B,
+        query: &Option<Q>,
+    ) -> Result<T, Error> {
+        self.handle_response(
+            self.client
+                .post(self.url(url))
+                .query(query)
+                .json(body)
+                .send()
+                .await?,
+        )
+        .await
     }
 
     /// Convenience method to make a `PATCH` request to a URL.
-    pub async fn patch<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &Option<B>) -> Result<T, Error> {
+    pub async fn patch<B: Serialize, T: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &Option<B>,
+    ) -> Result<T, Error> {
         let mut req = self.client.patch(self.url(url));
 
         if let Some(json) = body {
             req = req.json(json);
         }
 
-        Ok(req.send().await?.json::<T>().await?)
+        self.handle_response(req.send().await?).await
     }
 
     /// Convenience method to make a `DELETE` request to a URL.
-    pub async fn delete<B: Serialize, T: DeserializeOwned>(&self, url: &str, body: &Option<B>) -> Result<T, Error> {
+    pub async fn delete<B: Serialize, T: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &Option<B>,
+    ) -> Result<T, Error> {
         let mut req = self.client.delete(self.url(url));
 
         if let Some(json) = body {
             req = req.json(json);
         }
 
-        Ok(req.send().await?.json::<T>().await?)
+        self.handle_response(req.send().await?).await
     }
 }

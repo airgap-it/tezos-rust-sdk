@@ -1,17 +1,17 @@
-use std::result::Result;
 use async_trait::async_trait;
-use tezos_core::types::encoded::{ChainID, BlockHash};
+use std::result::Result;
+use tezos_core::types::encoded::{BlockHash, ChainID, OperationHash};
 
+use crate::active_rpc::ActiveRPC;
+use crate::constants;
+use crate::error::Error;
 use crate::models::bootstrapped_status::BootstrappedStatus;
-use crate::shell_rpc::chains::chain::PatchChainRequest;
-use crate::shell_rpc::chains::chain::blocks::GetBlocksQuery;
-use crate::{http, shell_rpc};
-use crate::error::{Error};
+use crate::models::checkpoint::Checkpoint;
 use crate::models::invalid_block::InvalidBlock;
-use crate::{constants};
-use crate::models::checkpoint::{Checkpoint};
-use crate::shell_rpc::{ShellRPC};
-use crate::active_rpc::{ActiveRPC};
+use crate::shell_rpc::chains::chain::blocks::GetBlocksQuery;
+use crate::shell_rpc::chains::chain::PatchChainRequest;
+use crate::shell_rpc::ShellRPC;
+use crate::{http, shell_rpc};
 
 pub struct TezosRPCContext {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
@@ -21,7 +21,8 @@ pub struct TezosRPCContext {
 impl TezosRPCContext {
     /// Changes the rpc endpoint used in RPC requests.
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
-        self.http_client.change_rpc_endpoint(rpc_endpoint.to_string());
+        self.http_client
+            .change_rpc_endpoint(rpc_endpoint.to_string());
     }
 }
 
@@ -107,8 +108,16 @@ impl<'a> ShellRPC for TezosRPC {
     async fn get_savepoint(&self) -> Result<Checkpoint, Error> {
         shell_rpc::chains::chain::levels::savepoint::get(&self.context).await
     }
+
+    async fn inject_operation(
+        &self,
+        signed_operation_contents: &String,
+        do_async: &bool,
+    ) -> Result<OperationHash, Error> {
+        shell_rpc::injection::operation::post(&self.context, signed_operation_contents, do_async)
+            .await
+    }
 }
 
 #[async_trait]
-impl<'a> ActiveRPC for TezosRPC {
-}
+impl<'a> ActiveRPC for TezosRPC {}

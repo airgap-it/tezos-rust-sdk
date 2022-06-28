@@ -1,8 +1,4 @@
-use {
-    crate::models::checkpoint::Checkpoint,
-    crate::client::TezosRPCContext,
-    crate::error::Error
-};
+use {crate::client::TezosRPCContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
 
 fn path(chain_id: String) -> String {
     format!("{}{}", super::path(chain_id), "/caboose")
@@ -20,11 +16,8 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<Checkpoint, Error> {
 #[cfg(test)]
 mod tests {
     use {
-        httpmock::prelude::*,
-        tezos_core::types::encoded::Encoded,
-        crate::client::TezosRPC,
-        crate::error::Error,
-        crate::shell_rpc::ShellRPC,
+        crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
+        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
     };
 
     #[tokio::test]
@@ -47,7 +40,10 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
         let response = client.get_caboose().await?;
 
-        assert_eq!(response.block_hash.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
+        assert_eq!(
+            response.block_hash.base58(),
+            "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+        );
         assert_eq!(response.level, 2424833);
 
         Ok(())

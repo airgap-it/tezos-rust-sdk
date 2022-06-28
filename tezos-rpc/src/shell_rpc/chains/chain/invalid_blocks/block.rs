@@ -1,8 +1,8 @@
 use {
-    tezos_core::types::encoded::{BlockHash, Encoded},
     crate::client::TezosRPCContext,
+    crate::error::Error,
     crate::models::invalid_block::InvalidBlock,
-    crate::error::Error
+    tezos_core::types::encoded::{BlockHash, Encoded},
 };
 
 fn path(chain_id: String, block_hash: String) -> String {
@@ -24,7 +24,9 @@ pub async fn get(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<Invali
 pub async fn delete(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<(), Error> {
     let path = self::path(ctx.chain_id.to_string(), block_hash.base58().to_string());
 
-    ctx.http_client.delete::<(), serde_json::Value>(path.as_str(), &None).await?;
+    ctx.http_client
+        .delete::<(), serde_json::Value>(path.as_str(), &None)
+        .await?;
 
     Ok(())
 }
@@ -32,11 +34,11 @@ pub async fn delete(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<(),
 #[cfg(test)]
 mod tests {
     use {
-        httpmock::prelude::*,
-        tezos_core::types::encoded::{Encoded, BlockHash},
         crate::client::TezosRPC,
         crate::error::Error,
-        crate::shell_rpc::ShellRPC
+        crate::shell_rpc::ShellRPC,
+        httpmock::prelude::*,
+        tezos_core::types::encoded::{BlockHash, Encoded},
     };
 
     #[tokio::test]
@@ -60,22 +62,32 @@ mod tests {
         );
 
         server.mock(|when, then| {
-            when.method(GET)
-                .path(super::path("main".to_string(), invalid_block_hash.to_string()));
+            when.method(GET).path(super::path(
+                "main".to_string(),
+                invalid_block_hash.to_string(),
+            ));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(valid_response);
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let response = client.get_invalid_block(&BlockHash::new(invalid_block_hash.to_string())?).await?;
+        let response = client
+            .get_invalid_block(&BlockHash::new(invalid_block_hash.to_string())?)
+            .await?;
 
-        assert_eq!(response.block.base58(), "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2");
+        assert_eq!(
+            response.block.base58(),
+            "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+        );
         assert_eq!(response.level, 2424833);
         assert_eq!(response.errors.len(), 1, "Expects a single error.");
         assert_eq!(response.errors[0].kind, "permanent");
         assert_eq!(response.errors[0].id, "proto.alpha.Failed_to_get_script");
-        assert_eq!(response.errors[0].contract, Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string()));
+        assert_eq!(
+            response.errors[0].contract,
+            Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string())
+        );
 
         Ok(())
     }
@@ -88,8 +100,10 @@ mod tests {
         let invalid_block_hash = "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2";
 
         server.mock(|when, then| {
-            when.method(DELETE)
-                .path(super::path("main".to_string(), invalid_block_hash.to_string()));
+            when.method(DELETE).path(super::path(
+                "main".to_string(),
+                invalid_block_hash.to_string(),
+            ));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(serde_json::json!({}));
@@ -97,6 +111,8 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
 
-        client.remove_invalid_block(&BlockHash::new(invalid_block_hash.to_string())?).await
+        client
+            .remove_invalid_block(&BlockHash::new(invalid_block_hash.to_string())?)
+            .await
     }
 }

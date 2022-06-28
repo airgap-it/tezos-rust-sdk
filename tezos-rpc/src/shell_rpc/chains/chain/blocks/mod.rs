@@ -1,10 +1,10 @@
-use serde::Serialize;
-use tezos_core::types::encoded::{BlockHash};
 use crate::client::TezosRPCContext;
 use crate::error::Error;
+use serde::Serialize;
+use tezos_core::types::encoded::BlockHash;
 
 fn path(chain_id: String) -> String {
-    format!("{}{}", super::path(chain_id),"/blocks")
+    format!("{}{}", super::path(chain_id), "/blocks")
 }
 
 /// `GetBlocksQuery` query parameters for request:
@@ -18,7 +18,7 @@ pub struct GetBlocksQuery {
     pub head: Option<BlockHash>,
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
-    pub min_date: Option<u64>
+    pub min_date: Option<u64>,
 }
 
 /// Lists block hashes from `<chain>`, up to the last checkpoint, sorted with
@@ -27,7 +27,10 @@ pub struct GetBlocksQuery {
 /// Optional arguments [GetBlocksQuery] allow to return the list of predecessors of a given block or of a set of blocks.
 ///
 /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
-pub async fn get(ctx: &TezosRPCContext, query: &GetBlocksQuery) -> Result<Vec<Vec<BlockHash>>, Error> {
+pub async fn get(
+    ctx: &TezosRPCContext,
+    query: &GetBlocksQuery,
+) -> Result<Vec<Vec<BlockHash>>, Error> {
     let path = self::path(ctx.chain_id.to_string());
 
     ctx.http_client.get_with_query(path.as_str(), query).await
@@ -36,12 +39,12 @@ pub async fn get(ctx: &TezosRPCContext, query: &GetBlocksQuery) -> Result<Vec<Ve
 #[cfg(test)]
 mod tests {
     use {
-        httpmock::prelude::*,
-        tezos_core::types::encoded::{BlockHash, Encoded},
         crate::client::TezosRPC,
         crate::error::Error,
+        crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
         crate::shell_rpc::ShellRPC,
-        crate::shell_rpc::chains::chain::blocks::GetBlocksQuery
+        httpmock::prelude::*,
+        tezos_core::types::encoded::{BlockHash, Encoded},
     };
 
     #[tokio::test]
@@ -49,19 +52,17 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let valid_response = serde_json::json!(
-            [
-                [
-                    "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
-                ]
-            ]
-        );
+        let valid_response =
+            serde_json::json!([["BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"]]);
 
         server.mock(|when, then| {
             when.method(GET)
                 .path(super::path("main".to_string()))
                 .query_param("length", "1")
-                .query_param("head", "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8")
+                .query_param(
+                    "head",
+                    "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8",
+                )
                 .query_param("min_date", "1");
             then.status(200)
                 .header("content-type", "application/json")
@@ -70,14 +71,19 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let req_query = &GetBlocksQuery{
+        let req_query = &GetBlocksQuery {
             length: Some(1),
-            head: Some(BlockHash::new("BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())?),
-            min_date: Some(1)
+            head: Some(BlockHash::new(
+                "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string(),
+            )?),
+            min_date: Some(1),
         };
         let response = client.get_blocks(req_query).await?;
 
-        assert_eq!(response[0][0].base58(), "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8");
+        assert_eq!(
+            response[0][0].base58(),
+            "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
+        );
 
         Ok(())
     }

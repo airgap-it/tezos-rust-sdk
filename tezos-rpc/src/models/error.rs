@@ -1,6 +1,6 @@
-use derive_more::{Error};
-use std::fmt::Display;
+use derive_more::Error;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 /// The error schema for all the RPC errors can be found at:
 ///

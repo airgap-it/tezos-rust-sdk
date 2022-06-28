@@ -1,11 +1,10 @@
 use {
-    crate::client::TezosRPCContext,
-    crate::error::Error,
-    crate::models::bootstrapped_status::BootstrappedStatus
+    crate::client::TezosRPCContext, crate::error::Error,
+    crate::models::bootstrapped_status::BootstrappedStatus,
 };
 
 fn path(chain_id: String) -> String {
-    format!("{}{}", super::path(chain_id),"/is_bootstrapped")
+    format!("{}{}", super::path(chain_id), "/is_bootstrapped")
 }
 
 /// Get the bootstrap status of a chain.
@@ -20,11 +19,9 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<BootstrappedStatus, Error> {
 #[cfg(test)]
 mod tests {
     use {
+        crate::client::TezosRPC, crate::error::Error,
+        crate::models::bootstrapped_status::ChainStatus, crate::shell_rpc::ShellRPC,
         httpmock::prelude::*,
-        crate::client::TezosRPC,
-        crate::error::Error,
-        crate::shell_rpc::ShellRPC,
-        crate::models::bootstrapped_status::ChainStatus
     };
 
     #[tokio::test]
