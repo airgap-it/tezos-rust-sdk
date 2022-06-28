@@ -1,7 +1,7 @@
 use {
+    crate::error::{self, Error},
     reqwest::Response,
     serde::{de::DeserializeOwned, Serialize},
-    crate::error::{self, Error}
 };
 
 pub struct TezosHttp {
