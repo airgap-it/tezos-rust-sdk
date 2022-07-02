@@ -15,13 +15,13 @@ pub struct ContractHashBytesCoder;
 impl ContractHashBytesCoder {
     pub fn decode_with_meta(value: &[u8], _meta: &MetaEncoded) -> Result<ContractHash> {
         Self::decode_with_configuration(
-            &value.to_vec(),
+            value,
             ContractHashBytesCoderConfiguration { with_suffix: false },
         )
     }
 
-    pub fn decode_consuming_with_meta(
-        value: &mut Vec<u8>,
+    pub fn decode_consuming_with_meta<CL: ConsumableList<u8>>(
+        value: &mut CL,
         _meta: &MetaEncoded,
     ) -> Result<ContractHash> {
         Self::decode_consuming_with_configuration(
@@ -55,11 +55,11 @@ impl Encoder<ContractHash, Vec<u8>, Error> for ContractHashBytesCoder {
     }
 }
 
-impl ConfigurableDecoder<ContractHash, Vec<u8>, ContractHashBytesCoderConfiguration, Error>
+impl ConfigurableDecoder<ContractHash, [u8], ContractHashBytesCoderConfiguration, Error>
     for ContractHashBytesCoder
 {
     fn decode_with_configuration(
-        value: &Vec<u8>,
+        value: &[u8],
         configuration: ContractHashBytesCoderConfiguration,
     ) -> Result<ContractHash> {
         if configuration.with_suffix && !value.ends_with(&[0]) {
@@ -77,8 +77,8 @@ impl ConfigurableDecoder<ContractHash, Vec<u8>, ContractHashBytesCoderConfigurat
 impl ConfigurableConsumingDecoder<ContractHash, u8, ContractHashBytesCoderConfiguration, Error>
     for ContractHashBytesCoder
 {
-    fn decode_consuming_with_configuration(
-        value: &mut Vec<u8>,
+    fn decode_consuming_with_configuration<CL: ConsumableList<u8>>(
+        value: &mut CL,
         configuration: ContractHashBytesCoderConfiguration,
     ) -> Result<ContractHash> {
         let meta = ContractHash::meta_value();
@@ -88,12 +88,12 @@ impl ConfigurableConsumingDecoder<ContractHash, u8, ContractHashBytesCoderConfig
             meta.bytes_length
         };
         let bytes = value.consume_until(end_index)?;
-        Self::decode_with_configuration(&bytes, configuration)
+        Self::decode_with_configuration(bytes, configuration)
     }
 }
 
-impl Decoder<ContractHash, Vec<u8>, Error> for ContractHashBytesCoder {
-    fn decode(value: &Vec<u8>) -> std::result::Result<ContractHash, Error> {
+impl Decoder<ContractHash, [u8], Error> for ContractHashBytesCoder {
+    fn decode(value: &[u8]) -> std::result::Result<ContractHash, Error> {
         Self::decode_with_configuration(
             value,
             ContractHashBytesCoderConfiguration { with_suffix: false },
@@ -102,7 +102,9 @@ impl Decoder<ContractHash, Vec<u8>, Error> for ContractHashBytesCoder {
 }
 
 impl ConsumingDecoder<ContractHash, u8, Error> for ContractHashBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> std::result::Result<ContractHash, Error> {
+    fn decode_consuming<CL: ConsumableList<u8>>(
+        value: &mut CL,
+    ) -> std::result::Result<ContractHash, Error> {
         Self::decode_consuming_with_configuration(
             value,
             ContractHashBytesCoderConfiguration { with_suffix: false },

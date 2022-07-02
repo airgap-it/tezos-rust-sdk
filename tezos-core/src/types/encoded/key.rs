@@ -46,6 +46,16 @@ impl Encoded for Key {
             Key::Public(value) => value.to_bytes(),
         }
     }
+
+    fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        if SecretKey::is_valid_bytes(bytes) {
+            return Ok(Self::Secret(SecretKey::from_bytes(bytes)?));
+        }
+        if PublicKey::is_valid_bytes(bytes) {
+            return Ok(Self::Public(PublicKey::from_bytes(bytes)?));
+        }
+        Err(Error::InvalidBytes)
+    }
 }
 
 impl TryFrom<&Vec<u8>> for Key {
@@ -131,6 +141,19 @@ impl Encoded for SecretKey {
             return Ok(Self::P256(P256SecretKey::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
+    }
+
+    fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        if Ed25519SecretKey::is_valid_bytes(bytes) {
+            return Ok(Self::Ed25519(Ed25519SecretKey::from_bytes(bytes)?));
+        }
+        if Secp256K1SecretKey::is_valid_bytes(bytes) {
+            return Ok(Self::Secp256K1(Secp256K1SecretKey::from_bytes(bytes)?));
+        }
+        if P256SecretKey::is_valid_bytes(bytes) {
+            return Ok(Self::P256(P256SecretKey::from_bytes(bytes)?));
+        }
+        Err(Error::InvalidBytes)
     }
 }
 

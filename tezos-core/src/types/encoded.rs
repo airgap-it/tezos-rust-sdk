@@ -19,21 +19,21 @@ use crate::{
 use macros::{make_encoded_struct, make_encoded_structs};
 
 pub trait Encoded: Sized {
-    type Coder: Encoder<Self, Vec<u8>, Error> + Decoder<Self, Vec<u8>, Error>;
+    type Coder: Encoder<Self, Vec<u8>, Error> + Decoder<Self, [u8], Error>;
 
     fn value(&self) -> &str;
     fn meta(&self) -> &'static MetaEncoded;
     fn new(value: String) -> Result<Self>;
 
-    fn to_string(&self) -> String {
-        self.value().to_string()
+    fn into_string(&self) -> String {
+        self.value().into()
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>> {
         Self::Coder::encode(self)
     }
 
-    fn from_bytes(bytes: &Vec<u8>) -> Result<Self> {
+    fn from_bytes(bytes: &[u8]) -> Result<Self> {
         Self::Coder::decode(bytes)
     }
 }

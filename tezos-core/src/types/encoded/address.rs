@@ -227,6 +227,16 @@ impl ContractAddress {
         false
     }
 
+    pub fn is_valid_bytes(value: &[u8]) -> bool {
+        let meta = Self::meta_value();
+        let bytes = if value.len() > meta.prefixed_bytes_length() {
+            &value[0..meta.bytes_length]
+        } else {
+            value
+        };
+        return ContractHash::is_valid_bytes(bytes);
+    }
+
     fn split_to_components(value: &str) -> Result<(&str, Option<&str>)> {
         let components = value.split("%").collect::<Vec<_>>();
         if components.len() > 2 {

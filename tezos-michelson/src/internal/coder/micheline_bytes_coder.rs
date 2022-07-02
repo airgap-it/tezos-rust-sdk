@@ -1,6 +1,6 @@
 use tezos_core::internal::{
     coder::{ConsumingDecoder, Decoder, Encoder, IntegerBytesCoder},
-    consumable_list::ConsumableList,
+    consumable_list::{ConsumableBytes, ConsumableList},
 };
 
 use crate::{
@@ -24,17 +24,17 @@ impl Encoder<Micheline, Vec<u8>, Error> for MichelineBytesCoder {
     }
 }
 
-impl Decoder<Micheline, Vec<u8>, Error> for MichelineBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Micheline> {
-        let mut value = value.clone();
+impl Decoder<Micheline, [u8], Error> for MichelineBytesCoder {
+    fn decode(value: &[u8]) -> Result<Micheline> {
+        let value = &mut ConsumableBytes::new(value);
 
-        Self::decode_consuming(&mut value)
+        Self::decode_consuming(value)
     }
 }
 
 impl ConsumingDecoder<Micheline, u8, Error> for MichelineBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Micheline> {
-        let byte = *value.first().ok_or(Error::InvalidBytes)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Micheline> {
+        let byte = *value.inner_value().first().ok_or(Error::InvalidBytes)?;
         let tag = Tag::from_bytes(&[byte])?;
         match tag {
             Tag::Int | Tag::String | Tag::Bytes => {
@@ -71,17 +71,17 @@ impl Encoder<Literal, Vec<u8>, Error> for MichelineBytesCoder {
     }
 }
 
-impl Decoder<Literal, Vec<u8>, Error> for MichelineBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Literal> {
-        let mut value = value.clone();
+impl Decoder<Literal, [u8], Error> for MichelineBytesCoder {
+    fn decode(value: &[u8]) -> Result<Literal> {
+        let value = &mut ConsumableBytes::new(value);
 
-        Self::decode_consuming(&mut value)
+        Self::decode_consuming(value)
     }
 }
 
 impl ConsumingDecoder<Literal, u8, Error> for MichelineBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Literal> {
-        let byte = value.consume_at(0)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Literal> {
+        let byte = value.consume_first()?;
         let tag = Tag::from_bytes(&[byte])?;
         match tag {
             Tag::Int => Ok(Literal::Int(IntegerBytesCoder::decode_consuming(value)?)),
@@ -228,8 +228,10 @@ impl MichelineBytesCoder {
         utils::encode_string(&annots)
     }
 
-    fn decode_prim_no_args_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_no_args_no_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
 
         Ok(PrimitiveApplication::new(
             prim.name().to_owned(),
@@ -238,8 +240,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_no_args_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_no_args_some_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
         let annots = utils::decode_annots(bytes)?;
 
         Ok(PrimitiveApplication::new(
@@ -249,8 +253,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_1_arg_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_1_arg_no_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
         let arg = Self::decode_consuming(bytes)?;
 
         Ok(PrimitiveApplication::new(
@@ -260,8 +266,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_1_arg_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_1_arg_some_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
         let arg = Self::decode_consuming(bytes)?;
         let annots = utils::decode_annots(bytes)?;
 
@@ -272,8 +280,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_2_args_no_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_2_args_no_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
         let first_arg = Self::decode_consuming(bytes)?;
         let second_arg = Self::decode_consuming(bytes)?;
 
@@ -284,8 +294,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_2_args_some_annots(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
+    fn decode_prim_2_args_some_annots<CL: ConsumableList<u8>>(
+        bytes: &mut CL,
+    ) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
         let first_arg = Self::decode_consuming(bytes)?;
         let second_arg = Self::decode_consuming(bytes)?;
         let annots = utils::decode_annots(bytes)?;
@@ -297,9 +309,10 @@ impl MichelineBytesCoder {
         ))
     }
 
-    fn decode_prim_generic(bytes: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let prim: Primitive = bytes.consume_at(0)?.try_into()?;
-        let mut args_bytes = utils::decode_bytes(bytes)?;
+    fn decode_prim_generic<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<PrimitiveApplication> {
+        let prim: Primitive = bytes.consume_first()?.try_into()?;
+        let decoded_bytes = utils::decode_bytes(bytes)?;
+        let mut args_bytes = ConsumableBytes::new(&decoded_bytes);
         let mut args: Vec<Micheline> = Vec::new();
         while !args_bytes.is_empty() {
             let arg = Self::decode_consuming(&mut args_bytes)?;
@@ -338,16 +351,16 @@ impl Encoder<PrimitiveApplication, Vec<u8>, Error> for MichelineBytesCoder {
     }
 }
 
-impl Decoder<PrimitiveApplication, Vec<u8>, Error> for MichelineBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<PrimitiveApplication> {
-        let mut value = value.clone();
+impl Decoder<PrimitiveApplication, [u8], Error> for MichelineBytesCoder {
+    fn decode(value: &[u8]) -> Result<PrimitiveApplication> {
+        let mut value = ConsumableBytes::new(value);
         Self::decode_consuming(&mut value)
     }
 }
 
 impl ConsumingDecoder<PrimitiveApplication, u8, Error> for MichelineBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<PrimitiveApplication> {
-        let byte = value.consume_at(0)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<PrimitiveApplication> {
+        let byte = value.consume_first()?;
         let tag = Tag::from_bytes(&[byte])?;
 
         match tag {
@@ -378,21 +391,22 @@ impl Encoder<Sequence, Vec<u8>, Error> for MichelineBytesCoder {
     }
 }
 
-impl Decoder<Sequence, Vec<u8>, Error> for MichelineBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Sequence> {
-        let mut value = value.clone();
+impl Decoder<Sequence, [u8], Error> for MichelineBytesCoder {
+    fn decode(value: &[u8]) -> Result<Sequence> {
+        let mut value = ConsumableBytes::new(value);
         Self::decode_consuming(&mut value)
     }
 }
 
 impl ConsumingDecoder<Sequence, u8, Error> for MichelineBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Sequence> {
-        let byte = value.consume_at(0)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Sequence> {
+        let byte = value.consume_first()?;
         let tag = Tag::from_bytes(&[byte])?;
         if tag != Tag::Sequence {
             return Err(Error::InvalidBytes);
         }
-        let mut bytes = utils::decode_bytes(value)?;
+        let decoded_bytes = utils::decode_bytes(value)?;
+        let mut bytes = ConsumableBytes::new(&decoded_bytes);
         let mut sequence = Vec::<Micheline>::new();
         while !bytes.is_empty() {
             let item = Self::decode_consuming(&mut bytes)?;
@@ -478,22 +492,22 @@ mod utils {
         [&length, bytes].concat()
     }
 
-    pub fn decode_string(bytes: &mut Vec<u8>) -> Result<String> {
+    pub fn decode_string<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<String> {
         let string_bytes = decode_bytes(bytes)?;
         Ok(String::from_utf8(string_bytes)?)
     }
 
-    pub fn decode_bytes(bytes: &mut Vec<u8>) -> Result<Vec<u8>> {
+    pub fn decode_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Vec<u8>> {
         let length_bytes: [u8; 4] = bytes
             .consume_until(4)?
             .try_into()
             .map_err(|_error| Error::InvalidBytes)?;
         let length = u32::from_be_bytes(length_bytes);
 
-        Ok(bytes.consume_until(length as usize)?)
+        Ok(bytes.consume_until(length as usize)?.into())
     }
 
-    pub fn decode_annots(bytes: &mut Vec<u8>) -> Result<Option<Vec<String>>> {
+    pub fn decode_annots<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Option<Vec<String>>> {
         let annots = decode_string(bytes)?;
         if annots.is_empty() {
             return Ok(None);
@@ -541,23 +555,23 @@ mod test {
     #[test]
     fn decode() -> Result<()> {
         for (value, bytes) in int_values() {
-            assert_eq!(value, MichelineBytesCoder::decode(&bytes.to_vec())?);
+            assert_eq!(value, MichelineBytesCoder::decode(bytes)?);
         }
 
         for (value, bytes) in string_values() {
-            assert_eq!(value, MichelineBytesCoder::decode(&bytes.to_vec())?);
+            assert_eq!(value, MichelineBytesCoder::decode(bytes)?);
         }
 
         for (value, bytes) in bytes_values() {
-            assert_eq!(value, MichelineBytesCoder::decode(&bytes.to_vec())?);
+            assert_eq!(value, MichelineBytesCoder::decode(bytes)?);
         }
 
         for (value, bytes) in primitive_application_values() {
-            assert_eq!(value, MichelineBytesCoder::decode(&bytes.to_vec())?);
+            assert_eq!(value, MichelineBytesCoder::decode(bytes)?);
         }
 
         for (value, bytes) in sequence_values() {
-            assert_eq!(value, MichelineBytesCoder::decode(&bytes.to_vec())?);
+            assert_eq!(value, MichelineBytesCoder::decode(bytes)?);
         }
 
         Ok(())

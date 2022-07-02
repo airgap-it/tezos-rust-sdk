@@ -36,6 +36,10 @@ impl MetaEncoded {
         self.bytes_prefix
     }
 
+    pub fn prefixed_bytes_length(&self) -> usize {
+        self.bytes_length + self.versioned_bytes_prefix().len()
+    }
+
     pub fn is_valid_base58(&self, value: &str) -> bool {
         value.starts_with(self.base58_prefix) && value.len() == self.base58_length
     }
@@ -46,7 +50,7 @@ impl MetaEncoded {
 
     pub fn is_valid_prefixed_bytes(&self, value: &[u8]) -> bool {
         value.starts_with(&self.versioned_bytes_prefix())
-            && value.len() == (self.bytes_length + self.versioned_bytes_prefix().len())
+            && value.len() == self.prefixed_bytes_length()
     }
 
     pub fn is_valid_consumable_bytes(&self, value: &[u8]) -> bool {

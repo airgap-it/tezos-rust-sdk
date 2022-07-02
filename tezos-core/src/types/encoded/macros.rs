@@ -156,6 +156,10 @@ macro_rules! make_encoded_struct {
                     }
                     return Err(Error::InvalidBase58EncodedData);
                 }
+
+                fn from_bytes(bytes: &[u8]) -> Result<Self> {
+                    <Self as Encoded>::Coder::decode_with_meta(bytes, &META)
+                }
             }
 
             impl TraitMetaEncoded for $name {
@@ -170,7 +174,7 @@ macro_rules! make_encoded_struct {
                 type Error = Error;
 
                 fn try_from(value: &Vec<u8>) -> Result<Self> {
-                    <Self as Encoded>::Coder::decode_with_meta(value, &META)
+                    Self::from_bytes(value)
                 }
             }
 

@@ -29,8 +29,8 @@ impl EncodedBytesCoder {
         return Err(Error::InvalidBytes);
     }
 
-    pub fn decode_consuming_with_meta<E: Encoded>(
-        value: &mut Vec<u8>,
+    pub fn decode_consuming_with_meta<E: Encoded, CL: ConsumableList<u8>>(
+        value: &mut CL,
         meta: &MetaEncoded,
     ) -> Result<E> {
         let bytes = value.consume_until(meta.bytes_length)?;
@@ -71,16 +71,16 @@ impl<E: Encoded> Encoder<E, Vec<u8>, Error> for EncodedBytesCoder {
     }
 }
 
-impl<E: Encoded> Decoder<E, Vec<u8>, Error> for EncodedBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<E> {
+impl<E: Encoded> Decoder<E, [u8], Error> for EncodedBytesCoder {
+    fn decode(value: &[u8]) -> Result<E> {
         let meta = MetaEncoded::recognize_bytes(value)?;
         Self::decode_with_meta(value, meta)
     }
 }
 
 impl<E: Encoded> ConsumingDecoder<E, u8, Error> for EncodedBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<E> {
-        let meta = MetaEncoded::recognize_consumable_bytes(value)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<E> {
+        let meta = MetaEncoded::recognize_consumable_bytes(value.inner_value())?;
         Self::decode_consuming_with_meta(value, meta)
     }
 }

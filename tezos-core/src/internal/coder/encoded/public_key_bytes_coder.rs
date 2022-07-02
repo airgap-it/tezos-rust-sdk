@@ -24,14 +24,14 @@ impl Encoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
     }
 }
 
-impl Decoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<PublicKey> {
+impl Decoder<PublicKey, [u8], Error> for PublicKeyBytesCoder {
+    fn decode(value: &[u8]) -> Result<PublicKey> {
         EncodedGroupBytesCoder::<Self>::decode(value)
     }
 }
 
 impl ConsumingDecoder<PublicKey, u8, Error> for PublicKeyBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<PublicKey> {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<PublicKey> {
         EncodedGroupBytesCoder::<Self>::decode_consuming(value)
     }
 }
@@ -96,8 +96,8 @@ impl TagProvider for PublicKeyBytesCoder {
         Self::T::recognize(bytes)
     }
 
-    fn tag_consuming(bytes: &mut Vec<u8>) -> Option<Self::T> {
-        if let Some(tag) = Self::T::recognize_consumable(bytes) {
+    fn tag_consuming<CL: ConsumableList<u8>>(bytes: &mut CL) -> Option<Self::T> {
+        if let Some(tag) = Self::T::recognize_consumable(bytes.inner_value()) {
             let _ = bytes.consume_until(tag.value().len());
             return Some(tag);
         }

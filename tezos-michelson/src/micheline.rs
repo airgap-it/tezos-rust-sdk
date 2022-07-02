@@ -4,7 +4,10 @@ pub mod sequence;
 mod utils;
 
 use serde::{Deserialize, Serialize};
-use tezos_core::internal::{coder::Encoder, normalizer::Normalizer};
+use tezos_core::internal::{
+    coder::{Decoder, Encoder},
+    normalizer::Normalizer,
+};
 
 pub use self::utils::{
     bytes, int, primitive_application, sequence, string, try_bytes, try_int, try_string,
@@ -35,6 +38,10 @@ impl Micheline {
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MichelineBytesCoder::encode(self)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        MichelineBytesCoder::decode(bytes)
     }
 
     pub fn is_micheline_literal(&self) -> bool {
@@ -113,6 +120,14 @@ impl TryFrom<&Micheline> for Vec<u8> {
 
     fn try_from(value: &Micheline) -> Result<Self> {
         value.to_bytes()
+    }
+}
+
+impl TryFrom<&[u8]> for Micheline {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
+        Micheline::from_bytes(value)
     }
 }
 

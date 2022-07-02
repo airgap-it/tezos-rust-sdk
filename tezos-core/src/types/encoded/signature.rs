@@ -72,6 +72,22 @@ impl Encoded for Signature {
             Self::P256(value) => value.to_bytes(),
         }
     }
+
+    fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        if GenericSignature::is_valid_bytes(bytes) {
+            return Ok(Self::Generic(GenericSignature::from_bytes(bytes)?));
+        }
+        if Ed25519Signature::is_valid_bytes(bytes) {
+            return Ok(Self::Ed25519(Ed25519Signature::from_bytes(bytes)?));
+        }
+        if Secp256K1Signature::is_valid_bytes(bytes) {
+            return Ok(Self::Secp256K1(Secp256K1Signature::from_bytes(bytes)?));
+        }
+        if P256Signature::is_valid_bytes(bytes) {
+            return Ok(Self::P256(P256Signature::from_bytes(bytes)?));
+        }
+        Err(Error::InvalidBytes)
+    }
 }
 
 impl TryFrom<&Vec<u8>> for Signature {

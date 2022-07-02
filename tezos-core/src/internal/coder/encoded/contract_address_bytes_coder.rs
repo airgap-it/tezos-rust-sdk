@@ -23,8 +23,8 @@ impl Encoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
     }
 }
 
-impl Decoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
-    fn decode(value: &Vec<u8>) -> std::result::Result<ContractAddress, Error> {
+impl Decoder<ContractAddress, [u8], Error> for ContractAddressBytesCoder {
+    fn decode(value: &[u8]) -> std::result::Result<ContractAddress, Error> {
         let meta = ContractAddress::meta_value();
         let (contract_hash_bytes, entrypoint_bytes) = value.split_at(meta.bytes_length + 1);
         let contract_hash = ContractHashBytesCoder::decode_with_configuration(

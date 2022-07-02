@@ -28,8 +28,8 @@ impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
     }
 }
 
-impl Decoder<Address, Vec<u8>, Error> for AddressBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Address> {
+impl Decoder<Address, [u8], Error> for AddressBytesCoder {
+    fn decode(value: &[u8]) -> Result<Address> {
         let tag = AddressTag::recognize(&value).ok_or(Error::InvalidBytes)?;
         let bytes = value[tag.value().len()..].to_vec();
 
