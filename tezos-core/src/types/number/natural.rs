@@ -5,7 +5,7 @@ use num_traits::{Num, Unsigned};
 use regex::Regex;
 
 use crate::{
-    internal::coder::{number::natural::NaturalBytesCoder, Decoder, Encoder},
+    internal::coder::{Decoder, Encoder, NaturalBytesCoder},
     types::mutez::Mutez,
     Error, Result,
 };

@@ -6,7 +6,10 @@ use crate::{
         consumable_list::ConsumableList,
         types::{BytesTag, EncodedTag},
     },
-    types::encoded::{self, ImplicitAddress, MetaEncoded},
+    types::encoded::{
+        Ed25519PublicKeyHash, ImplicitAddress, MetaEncoded, P256PublicKeyHash,
+        Secp256K1PublicKeyHash, TraitMetaEncoded,
+    },
     Error, Result,
 };
 
@@ -20,14 +23,14 @@ impl Encoder<ImplicitAddress, Vec<u8>, Error> for ImplicitAddressBytesCoder {
     }
 }
 
-impl Decoder<ImplicitAddress, Vec<u8>, Error> for ImplicitAddressBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<ImplicitAddress> {
+impl Decoder<ImplicitAddress, [u8], Error> for ImplicitAddressBytesCoder {
+    fn decode(value: &[u8]) -> Result<ImplicitAddress> {
         EncodedGroupBytesCoder::<Self>::decode(value)
     }
 }
 
 impl ConsumingDecoder<ImplicitAddress, u8, Error> for ImplicitAddressBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<ImplicitAddress> {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<ImplicitAddress> {
         EncodedGroupBytesCoder::<Self>::decode_consuming(value)
     }
 }
@@ -56,9 +59,9 @@ impl EncodedTag for ImplicitAddressTag {
 
     fn meta(&self) -> &MetaEncoded {
         match self {
-            Self::TZ1 => &encoded::META_ED25519_PUBLIC_KEY_HASH,
-            Self::TZ2 => &encoded::META_SECP256_K1_PUBLIC_KEY_HASH,
-            Self::TZ3 => &encoded::META_P256_PUBLIC_KEY_HASH,
+            Self::TZ1 => Ed25519PublicKeyHash::meta_value(),
+            Self::TZ2 => Secp256K1PublicKeyHash::meta_value(),
+            Self::TZ3 => P256PublicKeyHash::meta_value(),
         }
     }
 }
@@ -83,8 +86,8 @@ impl TagProvider for ImplicitAddressBytesCoder {
         Self::T::recognize(bytes)
     }
 
-    fn tag_consuming(bytes: &mut Vec<u8>) -> Option<Self::T> {
-        if let Some(tag) = Self::T::recognize_consumable(bytes) {
+    fn tag_consuming<CL: ConsumableList<u8>>(bytes: &mut CL) -> Option<Self::T> {
+        if let Some(tag) = Self::T::recognize_consumable(bytes.inner_value()) {
             let _ = bytes.consume_until(tag.value().len());
             return Some(tag);
         }

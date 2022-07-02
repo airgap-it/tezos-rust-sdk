@@ -25,6 +25,7 @@ pub enum Error {
     InvalidMicheline,
     InvalidPrimitiveApplication,
     InvalidMichelineLiteral,
+    MichelineValueSchemaMismatch,
     JSON { source: serde_json::Error },
 }
 

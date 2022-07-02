@@ -108,6 +108,9 @@ impl TryFrom<micheline::sequence::Sequence> for Sequence {
     }
 }
 
-pub fn sequence(values: Vec<Data>) -> Michelson {
+pub fn sequence<Output>(values: Vec<Data>) -> Output
+where
+    Output: From<Sequence>,
+{
     Sequence::new(values).into()
 }

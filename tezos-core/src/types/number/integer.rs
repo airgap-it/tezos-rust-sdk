@@ -5,7 +5,7 @@ use regex::Regex;
 use std::{fmt::Debug, str::FromStr};
 
 use crate::{
-    internal::coder::{number::integer::IntegerBytesCoder, Decoder, Encoder},
+    internal::coder::{Decoder, Encoder, IntegerBytesCoder},
     Error, Result,
 };
 
