@@ -181,32 +181,32 @@ make_instructions!(
         IF_CONS,
         if_cons,
         45,
-        (if_branch: crate::michelson::types::Type),
-        (else_branch: crate::michelson::types::Type)
+        (if_branch: crate::michelson::data::Sequence),
+        (else_branch: crate::michelson::data::Sequence)
     ),
     (
         IfLeft,
         IF_LEFT,
         if_left,
         46,
-        (if_branch: crate::michelson::types::Type),
-        (else_branch: crate::michelson::types::Type)
+        (if_branch: crate::michelson::data::Sequence),
+        (else_branch: crate::michelson::data::Sequence)
     ),
     (
         IfNone,
         IF_NONE,
         if_none,
         47,
-        (if_branch: crate::michelson::types::Type),
-        (else_branch: crate::michelson::types::Type)
+        (if_branch: crate::michelson::data::Sequence),
+        (else_branch: crate::michelson::data::Sequence)
     ),
     (
         If,
         IF,
         r#if,
         44,
-        (if_branch: crate::michelson::types::Type),
-        (else_branch: crate::michelson::types::Type)
+        (if_branch: crate::michelson::data::Sequence),
+        (else_branch: crate::michelson::data::Sequence)
     ),
     (
         Lambda,
@@ -610,3 +610,9 @@ make_instructions!(
     (JoinTickets, JOIN_TICKETS, join_ticket, 139),
     (OpenChest, OPEN_CHEST, open_chest, 143),
 );
+
+impl From<Primitive> for crate::michelson::Primitive {
+    fn from(value: Primitive) -> Self {
+        Self::Instruction(value)
+    }
+}

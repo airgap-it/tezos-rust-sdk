@@ -1,4 +1,5 @@
 use crate::{
+    internal::consumable_list::ConsumableList,
     types::{mutez::Mutez, number::natural::Natural},
     Error, Result,
 };
@@ -22,7 +23,7 @@ impl Decoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
 }
 
 impl ConsumingDecoder<Mutez, u8, Error> for MutezBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Mutez> {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Mutez> {
         let nat = NaturalBytesCoder::decode_consuming(value)?;
         (&nat).try_into()
     }

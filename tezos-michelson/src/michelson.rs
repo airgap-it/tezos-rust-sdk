@@ -6,6 +6,11 @@ pub mod types;
 use annotations::Annotation;
 use std::str::FromStr;
 
+pub use self::{
+    data::instructions::Primitive as InstructionPrimitive,
+    data::Primitive as DataPrimitive,
+    types::{ComparableTypePrimitive, Primitive as TypePrimitive},
+};
 use self::{
     data::{instructions::Instruction, Data},
     types::Type,
@@ -22,10 +27,6 @@ pub enum Michelson {
 }
 
 impl Michelson {
-    pub fn prim_values() -> Vec<&'static Prim> {
-        vec![Data::prim_values(), Type::prim_values()].concat()
-    }
-
     pub fn is_michelson_data(&self) -> bool {
         if let Self::Data(_) = self {
             return true;
@@ -66,23 +67,6 @@ impl Michelson {
             return value.is_michelson_elt();
         }
         return false;
-    }
-}
-
-impl From<Data> for Michelson {
-    fn from(value: Data) -> Self {
-        Self::Data(value)
-    }
-}
-
-impl TryFrom<Michelson> for Data {
-    type Error = Error;
-
-    fn try_from(value: Michelson) -> Result<Self> {
-        if let Michelson::Data(value) = value {
-            return Ok(value);
-        }
-        Err(Error::InvalidMichelson)
     }
 }
 
@@ -136,7 +120,7 @@ impl TryFrom<Vec<Micheline>> for Michelson {
 
     fn try_from(value: Vec<Micheline>) -> Result<Self> {
         if value.is_empty() {
-            return Ok(data::sequence(vec![]).into());
+            return Ok(data::sequence(vec![]));
         }
 
         let michelson_values = value
@@ -200,86 +184,67 @@ impl TryFrom<Vec<Micheline>> for Michelson {
     }
 }
 
-pub struct Prim {
-    name: &'static str,
-    tag: &'static [u8],
+#[derive(Debug, Clone)]
+pub enum Primitive {
+    Data(DataPrimitive),
+    Instruction(InstructionPrimitive),
+    Type(TypePrimitive),
+    ComparableType(ComparableTypePrimitive),
 }
 
-impl Prim {
-    pub const fn new(name: &'static str, tag: &'static [u8]) -> Self {
-        Self { name, tag }
+impl Primitive {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Data(primitive) => primitive.to_str(),
+            Self::Instruction(primitive) => primitive.to_str(),
+            Self::Type(primitive) => primitive.to_str(),
+            Self::ComparableType(primitive) => primitive.to_str(),
+        }
     }
 
-    pub const fn name(&self) -> &'static str {
-        self.name
+    pub fn tag(&self) -> u8 {
+        match self {
+            Self::Data(primitive) => primitive.to_u8(),
+            Self::Instruction(primitive) => primitive.to_u8(),
+            Self::Type(primitive) => primitive.to_u8(),
+            Self::ComparableType(primitive) => primitive.to_u8(),
+        }
     }
 
-    pub const fn tag(&self) -> &'static [u8] {
-        self.tag
+    pub fn from_data_name(name: &str) -> Result<Self> {
+        Ok(Self::Data(name.parse()?))
     }
 
-    pub fn from_data_name(name: &str) -> Result<&'static Self> {
-        Data::prim_values()
-            .into_iter()
-            .find(|prim| prim.name() == name)
-            .ok_or(Error::UnknownMichelsonPrimName)
+    pub fn from_data_tag(tag: u8) -> Result<Self> {
+        Ok(Self::Data(tag.try_into()?))
     }
 
-    pub fn from_data_tag(tag: &[u8]) -> Result<&'static Self> {
-        Data::prim_values()
-            .into_iter()
-            .find(|prim| prim.tag() == tag)
-            .ok_or(Error::UnknownMichelsonPrimTag)
+    pub fn from_instruction_name(name: &str) -> Result<Self> {
+        Ok(Self::Instruction(name.parse()?))
     }
 
-    pub fn from_instruction_name(name: &str) -> Result<&'static Self> {
-        Instruction::prim_values()
-            .into_iter()
-            .find(|prim| prim.name() == name)
-            .map(|prim| *prim)
-            .ok_or(Error::UnknownMichelsonPrimName)
+    pub fn from_instruction_tag(tag: u8) -> Result<Self> {
+        Ok(Self::Instruction(tag.try_into()?))
     }
 
-    pub fn from_instruction_tag(tag: &[u8]) -> Result<&'static Self> {
-        Instruction::prim_values()
-            .into_iter()
-            .find(|prim| prim.tag() == tag)
-            .map(|prim| *prim)
-            .ok_or(Error::UnknownMichelsonPrimTag)
+    pub fn from_type_name(name: &str) -> Result<Self> {
+        Ok(Self::Type(name.parse()?))
     }
 
-    pub fn from_type_name(name: &str) -> Result<&'static Self> {
-        Type::prim_values()
-            .into_iter()
-            .find(|prim| prim.name() == name)
-            .ok_or(Error::UnknownMichelsonPrimName)
+    pub fn from_type_tag(tag: u8) -> Result<Self> {
+        Ok(Self::Type(tag.try_into()?))
     }
 
-    pub fn from_type_tag(tag: &[u8]) -> Result<&'static Self> {
-        Type::prim_values()
-            .into_iter()
-            .find(|prim| prim.tag() == tag)
-            .ok_or(Error::UnknownMichelsonPrimTag)
+    pub fn from_comparable_type_name(name: &str) -> Result<Self> {
+        Ok(Self::ComparableType(name.parse()?))
     }
 
-    pub fn from_comparable_type_name(name: &str) -> Result<&'static Self> {
-        types::comparables::Type::prim_values()
-            .into_iter()
-            .find(|prim| prim.name() == name)
-            .map(|prim| *prim)
-            .ok_or(Error::UnknownMichelsonPrimName)
-    }
-
-    pub fn from_comparable_type_tag(tag: &[u8]) -> Result<&'static Self> {
-        types::comparables::Type::prim_values()
-            .into_iter()
-            .find(|prim| prim.tag() == tag)
-            .map(|prim| *prim)
-            .ok_or(Error::UnknownMichelsonPrimTag)
+    pub fn from_comparable_type_tag(tag: u8) -> Result<Self> {
+        Ok(Self::ComparableType(tag.try_into()?))
     }
 }
 
-impl FromStr for &'static Prim {
+impl FromStr for Primitive {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
@@ -287,31 +252,63 @@ impl FromStr for &'static Prim {
     }
 }
 
-impl TryFrom<&str> for &'static Prim {
+impl TryFrom<&str> for Primitive {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        Michelson::prim_values()
-            .into_iter()
-            .find(|prim| prim.name() == value)
-            .ok_or(Error::UnknownMichelsonPrimName)
+        let primitive = value.parse::<data::Primitive>();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Data(primitive));
+        }
+        let primitive = value.parse::<data::instructions::Primitive>();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Instruction(primitive));
+        }
+        let primitive = value.parse::<types::Primitive>();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Type(primitive));
+        }
+        let primitive = value.parse::<types::ComparableTypePrimitive>();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::ComparableType(primitive));
+        }
+        Err(Error::InvalidStringValue)
     }
 }
 
-impl TryFrom<&[u8]> for &'static Prim {
+impl TryFrom<u8> for Primitive {
     type Error = Error;
 
-    fn try_from(value: &[u8]) -> Result<Self> {
-        Michelson::prim_values()
-            .into_iter()
-            .find(|prim| prim.tag == value)
-            .ok_or(Error::UnknownMichelsonPrimTag)
+    fn try_from(value: u8) -> Result<Self> {
+        let primitive: Result<data::Primitive> = value.try_into();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Data(primitive));
+        }
+        let primitive: Result<data::instructions::Primitive> = value.try_into();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Instruction(primitive));
+        }
+        let primitive: Result<types::Primitive> = value.try_into();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::Type(primitive));
+        }
+        let primitive: Result<types::ComparableTypePrimitive> = value.try_into();
+        if let Ok(primitive) = primitive {
+            return Ok(Primitive::ComparableType(primitive));
+        }
+        Err(Error::InvalidBytes)
+    }
+}
+
+impl From<Primitive> for String {
+    fn from(value: Primitive) -> Self {
+        value.name().into()
     }
 }
 
 pub trait PrimType {
-    fn prim_value() -> &'static Prim;
-    fn prim(&self) -> &'static Prim {
+    fn prim_value() -> Primitive;
+    fn prim(&self) -> Primitive {
         Self::prim_value()
     }
 }

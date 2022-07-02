@@ -4,7 +4,7 @@ use num_traits::{Signed, ToPrimitive, Zero};
 use crate::{
     internal::{
         coder::{ConsumingDecoder, Decoder, Encoder},
-        consumable_list::ConsumableList,
+        consumable_list::{ConsumableBytes, ConsumableList},
     },
     types::number::integer::Integer,
     Error, Result,
@@ -46,15 +46,15 @@ impl Encoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
 
 impl Decoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
     fn decode(value: &Vec<u8>) -> Result<Integer> {
-        let value: &mut Vec<u8> = &mut (value.clone());
+        let value = &mut ConsumableBytes::new(value);
 
         Self::decode_consuming(value)
     }
 }
 
 impl ConsumingDecoder<Integer, u8, Error> for IntegerBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Integer> {
-        let byte = value.consume_at(0)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Integer> {
+        let byte = value.consume_first()?;
         let part = BigInt::from(byte & 0b0011_1111u8);
         let sign = if (byte & 0b0100_0000u8) == 0b0100_0000u8 {
             -1i8

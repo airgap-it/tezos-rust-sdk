@@ -1,23 +1,21 @@
-pub mod comparables;
+mod comparables;
 mod macros;
 
 use macros::{make_type, make_types};
 
 use super::Michelson;
 use crate::{Error, Result};
+pub use comparables::{Primitive as ComparableTypePrimitive, Type as ComparableType, *};
 
 make_types!(
-    Comparable(crate::michelson::types::comparables::Type),
+    type_enum: Comparable(crate::michelson::types::ComparableType),
     [
-        pub fn prim_values() -> Vec<&'static crate::michelson::Prim> {
-            [PRIMS, crate::michelson::types::comparables::Type::prim_values()].concat()
-        }
-
         pub fn is_valid_prim_name(name: &str) -> bool {
-            Self::prim_values()
-                .iter()
-                .find(|prim| prim.name() == name)
-                .is_some()
+            let primitive = name.parse::<Primitive>();
+            if primitive.is_err() {
+                return name.parse::<comparables::Primitive>().is_ok();
+            }
+            primitive.is_ok()
         }
 
         fn fallback(value: PrimitiveApplication) -> Result<Self> {
@@ -94,5 +92,11 @@ impl TryFrom<Michelson> for Type {
             return Ok(value);
         }
         Err(Error::InvalidMichelson)
+    }
+}
+
+impl From<Primitive> for crate::michelson::Primitive {
+    fn from(value: Primitive) -> Self {
+        Self::Type(value)
     }
 }

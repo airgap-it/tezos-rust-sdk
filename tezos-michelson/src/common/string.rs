@@ -28,6 +28,10 @@ impl String {
     pub fn to_str(&self) -> &str {
         self.0.as_str()
     }
+
+    pub fn into_string(self) -> std::string::String {
+        self.0
+    }
 }
 
 impl FromStr for String {
@@ -50,7 +54,7 @@ impl TryFrom<&str> for String {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        Self::from_string(value.to_owned())
+        Self::from_string(value.into())
     }
 }
 

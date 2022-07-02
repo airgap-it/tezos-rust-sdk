@@ -1,44 +1,41 @@
 use super::{
     contract_hash::ContractHash, ed25519_public_key_hash::Ed25519PublicKeyHash,
     p256_public_key_hash::P256PublicKeyHash, secp256_k1_public_key_hash::Secp256K1PublicKeyHash,
-    Encoded, MetaEncoded,
+    Encoded, MetaEncoded, TraitMetaEncoded,
 };
 use crate::{
-    internal::coder::encoded::{
-        address_bytes_coder::AddressBytesCoder,
-        implicit_address_bytes_coder::ImplicitAddressBytesCoder,
-    },
+    internal::coder::{AddressBytesCoder, ContractAddressBytesCoder, ImplicitAddressBytesCoder},
     Error, Result,
 };
 
 pub enum Address {
     Implicit(ImplicitAddress),
-    Originated(ContractHash),
+    Originated(ContractAddress),
 }
 
 impl Encoded for Address {
     type Coder = AddressBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::Implicit(address) => address.base58(),
-            Self::Originated(address) => address.base58(),
+            Self::Implicit(address) => address.value(),
+            Self::Originated(address) => address.value(),
         }
     }
 
-    fn meta(&self) -> &MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::Implicit(address) => address.meta(),
             Self::Originated(address) => address.meta(),
         }
     }
 
-    fn new(base58: String) -> Result<Self> {
-        if ImplicitAddress::is_valid_base58(&base58) {
-            return Ok(Self::Implicit(ImplicitAddress::new(base58)?));
+    fn new(value: String) -> Result<Self> {
+        if ImplicitAddress::is_valid_base58(&value) {
+            return Ok(Self::Implicit(ImplicitAddress::new(value)?));
         }
-        if ContractHash::is_valid_base58(&base58) {
-            return Ok(Self::Originated(ContractHash::new(base58)?));
+        if ContractAddress::is_valid_base58(&value) {
+            return Ok(Self::Originated(ContractAddress::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
     }
@@ -76,6 +73,18 @@ impl TryFrom<&Address> for Vec<u8> {
     }
 }
 
+impl From<ImplicitAddress> for Address {
+    fn from(value: ImplicitAddress) -> Self {
+        Self::Implicit(value)
+    }
+}
+
+impl From<ContractAddress> for Address {
+    fn from(value: ContractAddress) -> Self {
+        Self::Originated(value)
+    }
+}
+
 pub enum ImplicitAddress {
     TZ1(Ed25519PublicKeyHash),
     TZ2(Secp256K1PublicKeyHash),
@@ -99,15 +108,15 @@ impl ImplicitAddress {
 impl Encoded for ImplicitAddress {
     type Coder = ImplicitAddressBytesCoder;
 
-    fn base58(&self) -> &str {
+    fn value(&self) -> &str {
         match self {
-            Self::TZ1(address) => address.base58(),
-            Self::TZ2(address) => address.base58(),
-            Self::TZ3(address) => address.base58(),
+            Self::TZ1(address) => address.value(),
+            Self::TZ2(address) => address.value(),
+            Self::TZ3(address) => address.value(),
         }
     }
 
-    fn meta(&self) -> &MetaEncoded {
+    fn meta(&self) -> &'static MetaEncoded {
         match self {
             Self::TZ1(address) => address.meta(),
             Self::TZ2(address) => address.meta(),
@@ -115,15 +124,15 @@ impl Encoded for ImplicitAddress {
         }
     }
 
-    fn new(base58: String) -> Result<Self> {
-        if Ed25519PublicKeyHash::is_valid_base58(&base58) {
-            return Ok(Self::TZ1(Ed25519PublicKeyHash::new(base58)?));
+    fn new(value: String) -> Result<Self> {
+        if Ed25519PublicKeyHash::is_valid_base58(&value) {
+            return Ok(Self::TZ1(Ed25519PublicKeyHash::new(value)?));
         }
-        if Secp256K1PublicKeyHash::is_valid_base58(&base58) {
-            return Ok(Self::TZ2(Secp256K1PublicKeyHash::new(base58)?));
+        if Secp256K1PublicKeyHash::is_valid_base58(&value) {
+            return Ok(Self::TZ2(Secp256K1PublicKeyHash::new(value)?));
         }
-        if P256PublicKeyHash::is_valid_base58(&base58) {
-            return Ok(Self::TZ3(P256PublicKeyHash::new(base58)?));
+        if P256PublicKeyHash::is_valid_base58(&value) {
+            return Ok(Self::TZ3(P256PublicKeyHash::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData)
     }
@@ -161,6 +170,153 @@ impl TryFrom<&ImplicitAddress> for Vec<u8> {
     }
 }
 
+impl TryFrom<Address> for ImplicitAddress {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        if let Address::Implicit(value) = value {
+            return Ok(value);
+        }
+        Err(Error::InvalidAddress)
+    }
+}
+
+impl From<Ed25519PublicKeyHash> for ImplicitAddress {
+    fn from(value: Ed25519PublicKeyHash) -> Self {
+        Self::TZ1(value)
+    }
+}
+
+impl From<Secp256K1PublicKeyHash> for ImplicitAddress {
+    fn from(value: Secp256K1PublicKeyHash) -> Self {
+        Self::TZ2(value)
+    }
+}
+
+impl From<P256PublicKeyHash> for ImplicitAddress {
+    fn from(value: P256PublicKeyHash) -> Self {
+        Self::TZ3(value)
+    }
+}
+
+pub struct ContractAddress(String);
+
+impl ContractAddress {
+    pub fn contract_hash(&self) -> &str {
+        let (address, _) = Self::split_to_components(&self.0).unwrap();
+        address
+    }
+
+    pub fn entrypoint(&self) -> Option<&str> {
+        let (_, entrypoint) = Self::split_to_components(&self.0).unwrap();
+        entrypoint
+    }
+
+    pub fn from_components(contract_hash: &ContractHash, entrypoint: Option<&str>) -> Self {
+        let tail = entrypoint
+            .map(|entrypoint| format!("%{}", entrypoint))
+            .unwrap_or("".into());
+        let value = format!("{}{}", contract_hash.value(), tail);
+        Self(value)
+    }
+
+    pub fn is_valid_base58(value: &str) -> bool {
+        if let Ok((value, _)) = Self::split_to_components(value) {
+            return ContractHash::is_valid_base58(value);
+        }
+        false
+    }
+
+    pub fn is_valid_bytes(value: &[u8]) -> bool {
+        let meta = Self::meta_value();
+        let bytes = if value.len() > meta.prefixed_bytes_length() {
+            &value[0..meta.bytes_length]
+        } else {
+            value
+        };
+        return ContractHash::is_valid_bytes(bytes);
+    }
+
+    fn split_to_components(value: &str) -> Result<(&str, Option<&str>)> {
+        let components = value.split("%").collect::<Vec<_>>();
+        if components.len() > 2 {
+            return Err(Error::InvalidContractAddress);
+        }
+        Ok((
+            components[0],
+            if components.len() == 2 {
+                Some(components[1])
+            } else {
+                None
+            },
+        ))
+    }
+}
+
+impl Encoded for ContractAddress {
+    type Coder = ContractAddressBytesCoder;
+
+    fn value(&self) -> &str {
+        &self.0
+    }
+
+    fn meta(&self) -> &'static MetaEncoded {
+        ContractHash::meta_value()
+    }
+
+    fn new(value: String) -> Result<Self> {
+        let (address, _) = Self::split_to_components(value.as_str())?;
+        if !ContractHash::is_valid_base58(address) {
+            return Err(Error::InvalidBase58EncodedData);
+        }
+        Ok(Self(value))
+    }
+}
+
+impl TraitMetaEncoded for ContractAddress {
+    fn meta_value() -> &'static MetaEncoded {
+        ContractHash::meta_value()
+    }
+}
+
+impl TryFrom<&Vec<u8>> for ContractAddress {
+    type Error = Error;
+
+    fn try_from(value: &Vec<u8>) -> Result<Self> {
+        Self::from_bytes(value)
+    }
+}
+
+impl TryFrom<String> for ContractAddress {
+    type Error = Error;
+
+    fn try_from(value: String) -> Result<Self> {
+        Self::new(value)
+    }
+}
+
+impl TryFrom<&str> for ContractAddress {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self> {
+        Self::new(value.into())
+    }
+}
+
+impl TryFrom<&ContractAddress> for Vec<u8> {
+    type Error = Error;
+
+    fn try_from(value: &ContractAddress) -> Result<Self> {
+        value.to_bytes()
+    }
+}
+
+impl From<ContractAddress> for ContractHash {
+    fn from(value: ContractAddress) -> Self {
+        value.contract_hash().try_into().unwrap()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -169,7 +325,7 @@ mod test {
     fn test_tz1_address() -> Result<()> {
         let address: Address = "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT".try_into()?;
         if let Address::Implicit(value) = address {
-            assert_eq!(value.base58(), "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT");
+            assert_eq!(value.value(), "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -179,7 +335,7 @@ mod test {
     fn test_tz1_implicit_address() -> Result<()> {
         let address: Address = "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT".try_into()?;
         if let Address::Implicit(ImplicitAddress::TZ1(value)) = address {
-            assert_eq!(value.base58(), "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT");
+            assert_eq!(value.value(), "tz1Mj7RzPmMAqDUNFBn5t5VbXmWW4cSUAdtT");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -189,7 +345,7 @@ mod test {
     fn test_kt1_address() -> Result<()> {
         let address: Address = "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo".try_into()?;
         if let Address::Originated(value) = address {
-            assert_eq!(value.base58(), "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo");
+            assert_eq!(value.value(), "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -199,7 +355,7 @@ mod test {
     fn test_tz2_address() -> Result<()> {
         let address: Address = "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot".try_into()?;
         if let Address::Implicit(value) = address {
-            assert_eq!(value.base58(), "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot");
+            assert_eq!(value.value(), "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -209,7 +365,7 @@ mod test {
     fn test_tz2_implicit_address() -> Result<()> {
         let address: Address = "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot".try_into()?;
         if let Address::Implicit(ImplicitAddress::TZ2(value)) = address {
-            assert_eq!(value.base58(), "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot");
+            assert_eq!(value.value(), "tz2MgpiRm5NB1rpGf5nCURbC11UNrneScoot");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -219,7 +375,7 @@ mod test {
     fn test_tz3_address() -> Result<()> {
         let address: Address = "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q".try_into()?;
         if let Address::Implicit(value) = address {
-            assert_eq!(value.base58(), "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q");
+            assert_eq!(value.value(), "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q");
             return Ok(());
         }
         Err(Error::InvalidConversion)
@@ -229,7 +385,7 @@ mod test {
     fn test_tz3_implicit_address() -> Result<()> {
         let address: Address = "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q".try_into()?;
         if let Address::Implicit(ImplicitAddress::TZ3(value)) = address {
-            assert_eq!(value.base58(), "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q");
+            assert_eq!(value.value(), "tz3hw2kqXhLUvY65ca1eety2oQTpAvd34R9Q");
             return Ok(());
         }
         Err(Error::InvalidConversion)
