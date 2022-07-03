@@ -9,8 +9,6 @@ pub use map::{map, Map};
 pub use sequence::{sequence, Sequence};
 pub use tezos_core::types::number::{integer::Integer as Int, natural::Natural as Nat};
 
-use super::types::Type;
-
 make_all_data!(
     custom_cases: {
         Int(Int),
@@ -33,12 +31,6 @@ make_all_data!(
 );
 
 impl Data {
-    pub fn pack(self, schema: Option<Type>) -> Result<Vec<u8>> {
-        let micheline: Micheline = self.into();
-        let schema: Option<Micheline> = schema.map(|schema| schema.into());
-        micheline.pack(schema.as_ref())
-    }
-
     pub fn is_valid_prim_name(name: &str) -> bool {
         let primitive = name.parse::<Primitive>();
         if primitive.is_err() {

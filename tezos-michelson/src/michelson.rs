@@ -27,6 +27,18 @@ pub enum Michelson {
 }
 
 impl Michelson {
+    pub fn pack(self, schema: Option<Type>) -> Result<Vec<u8>> {
+        let micheline: Micheline = self.into();
+        let schema: Option<Micheline> = schema.map(|schema| schema.into());
+        micheline.pack(schema.as_ref())
+    }
+
+    pub fn unpack(bytes: &[u8], schema: Option<Type>) -> Result<Self> {
+        let schema: Option<Micheline> = schema.map(|value| value.into());
+        let micheline = Micheline::unpack(bytes, schema.as_ref())?;
+        micheline.try_into()
+    }
+
     pub fn is_michelson_data(&self) -> bool {
         if let Self::Data(_) = self {
             return true;

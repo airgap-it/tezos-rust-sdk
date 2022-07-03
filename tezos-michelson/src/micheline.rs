@@ -36,6 +36,10 @@ impl Micheline {
         MichelinePacker::pack(self, schema)
     }
 
+    pub fn unpack(bytes: &[u8], schema: Option<&Micheline>) -> Result<Self> {
+        MichelinePacker::unpack(bytes, schema)
+    }
+
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MichelineBytesCoder::encode(self)
     }
