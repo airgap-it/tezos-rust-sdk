@@ -13,7 +13,7 @@ fn path(chain_id: String) -> String {
 /// `PatchChainPayload` used in request [`PATCH /chains/<chain_id>`](patch)
 #[derive(Serialize)]
 pub struct PatchChainPayload {
-    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
+    /// A chain identifier. This is either a chain hash in Ba&se58Check notation or a one the predefined aliases: 'main', 'test'.
     bootstrapped: bool,
 }
 
@@ -32,10 +32,9 @@ pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainPayload) -> Result<()
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::PatchChainPayload, crate::client::TezosRPC, crate::error::Error,
-        crate::shell_rpc::ShellRPC, httpmock::prelude::*,
-    };
+    use crate::constants::DEFAULT_CHAIN_ALIAS;
+
+    use {crate::client::TezosRPC, crate::error::Error, httpmock::MockServer};
 
     #[tokio::test]
     async fn test_patch_chain() -> Result<(), Error> {
@@ -44,7 +43,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(httpmock::Method::PATCH)
-                .path(super::path("main".to_string()));
+                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(serde_json::json!({}));
@@ -52,10 +51,10 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let req = PatchChainPayload {
+        let req = super::PatchChainPayload {
             bootstrapped: false,
         };
 
-        client.patch_chain(&req).await
+        super::patch(&client.context, &req).await
     }
 }

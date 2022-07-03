@@ -1,15 +1,17 @@
 use {
-    crate::active_rpc::ActiveRPC,
     crate::constants,
     crate::error::Error,
+    crate::http,
+    crate::models::block::Block,
     crate::models::bootstrapped_status::BootstrappedStatus,
     crate::models::checkpoint::Checkpoint,
     crate::models::invalid_block::InvalidBlock,
+    crate::protocol_rpc,
+    crate::protocol_rpc::block::{BlockID, MetadataRPCArg},
+    crate::protocol_rpc::ProtocolRPC,
+    crate::shell_rpc,
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
-    crate::shell_rpc::chains::chain::PatchChainPayload,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
-    crate::shell_rpc::ShellRPC,
-    crate::{http, shell_rpc},
     async_trait::async_trait,
     std::result::Result,
     tezos_core::types::encoded::{BlockHash, ChainID, OperationHash},
@@ -70,11 +72,7 @@ impl TezosRPC {
 }
 
 #[async_trait]
-impl<'a> ShellRPC for TezosRPC {
-    async fn patch_chain(&self, body: &PatchChainPayload) -> Result<(), Error> {
-        shell_rpc::chains::chain::patch(&self.context, body).await
-    }
-
+impl<'a> shell_rpc::ShellRPC for TezosRPC {
     async fn get_chain_id(&self) -> Result<ChainID, Error> {
         shell_rpc::chains::chain::chain_id::get(&self.context).await
     }
@@ -131,4 +129,12 @@ impl<'a> ShellRPC for TezosRPC {
 }
 
 #[async_trait]
-impl<'a> ActiveRPC for TezosRPC {}
+impl<'a> ProtocolRPC for TezosRPC {
+    async fn get_block(
+        &self,
+        block_id: &Option<BlockID>,
+        metadata: MetadataRPCArg,
+    ) -> Result<Block, Error> {
+        protocol_rpc::block::get(&self.context, block_id, metadata).await
+    }
+}

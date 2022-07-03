@@ -1,6 +1,5 @@
 use {
     super::chains::chain::blocks::GetBlocksQuery,
-    super::chains::chain::PatchChainPayload,
     super::injection::block::InjectionBlockPayload,
     crate::error::Error,
     crate::models::bootstrapped_status::BootstrappedStatus,
@@ -16,11 +15,6 @@ use {
 /// See [RPCs - Reference](https://tezos.gitlab.io/shell/rpc.html) for more details.
 #[async_trait]
 pub trait ShellRPC {
-    /// Forcefully set the bootstrapped flag of the node.
-    ///
-    /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-    async fn patch_chain(&self, body: &PatchChainPayload) -> Result<(), Error>;
-
     /// Get the chain unique identifier.
     ///
     /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
