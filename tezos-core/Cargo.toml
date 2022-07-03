@@ -16,6 +16,9 @@ sodiumoxide = { version = "0.2", optional = true }
 k256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
 p256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
 sha2 = { version = "0.10", optional = true }
+chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+
 
 [features]
 default = ["crypto"]
