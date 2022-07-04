@@ -12,6 +12,7 @@ use {
         operation_contents_and_result::double_endorsement_evidence::DoubleEndorsementEvidence,
         operation_contents_and_result::double_preendorsement_evidence::DoublePreendorsementEvidence,
         operation_contents_and_result::endorsement::Endorsement,
+        operation_contents_and_result::failing_noop::FailingNoop,
         operation_contents_and_result::origination::Origination,
         operation_contents_and_result::preendorsement::Preendorsement,
         operation_contents_and_result::proposals::Proposals,
@@ -20,7 +21,6 @@ use {
         operation_contents_and_result::seed_nonce_revelation::SeedNonceRevelation,
         operation_contents_and_result::set_deposits_limits::SetDepositsLimit,
         operation_contents_and_result::transaction::Transaction,
-        operation_contents_and_result::failing_noop::FailingNoop,
     },
     serde::{Deserialize, Serialize},
 };

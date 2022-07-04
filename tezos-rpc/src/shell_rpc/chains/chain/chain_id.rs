@@ -17,10 +17,7 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<ChainId, Error> {
 mod tests {
     use tezos_core::types::encoded::Encoded;
 
-    use {
-        crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*,
-    };
+    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_chain_id() -> Result<(), Error> {

@@ -20,8 +20,7 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<BootstrappedStatus, Error> {
 mod tests {
     use {
         crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        crate::models::bootstrapped_status::ChainStatus, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*,
+        crate::models::bootstrapped_status::ChainStatus, httpmock::prelude::*,
     };
 
     #[tokio::test]

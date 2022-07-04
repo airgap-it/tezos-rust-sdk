@@ -61,10 +61,7 @@ mod tests {
 
     use super::{InjectionBlockPayload, OperationPayload};
 
-    use {
-        crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*,
-    };
+    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_block_injection() -> Result<(), Error> {
