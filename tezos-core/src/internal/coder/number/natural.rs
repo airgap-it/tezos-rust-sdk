@@ -4,7 +4,7 @@ use num_traits::{ToPrimitive, Zero};
 use crate::{
     internal::{
         coder::{ConsumingDecoder, Decoder, Encoder},
-        consumable_list::ConsumableList,
+        consumable_list::{ConsumableBytes, ConsumableList},
     },
     types::number::natural::Natural,
     Error, Result,
@@ -39,8 +39,12 @@ impl NaturalBytesCoder {
         Self::encode_with(next_value, [encoded, vec![encoded_byte]].concat())
     }
 
-    fn decode_with(value: &mut Vec<u8>, decoded: BigUint, shift: u8) -> Result<BigUint> {
-        let byte = value.consume_at(0)?;
+    fn decode_with<CL: ConsumableList<u8>>(
+        value: &mut CL,
+        decoded: BigUint,
+        shift: u8,
+    ) -> Result<BigUint> {
+        let byte = value.consume_first()?;
         let part = BigUint::from(byte & 0b0111_1111u8);
         let has_next = (byte & 0b1000_0000) == 0b1000_0000;
         let decoded = decoded + (part << shift);
@@ -63,14 +67,14 @@ impl Encoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
 
 impl Decoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
     fn decode(value: &Vec<u8>) -> Result<Natural> {
-        let value: &mut Vec<u8> = &mut (value.clone());
+        let value = &mut ConsumableBytes::new(value);
 
         Self::decode_consuming(value)
     }
 }
 
 impl ConsumingDecoder<Natural, u8, Error> for NaturalBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Natural> {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Natural> {
         if value.is_empty() {
             return Err(Error::InvalidNaturalBytes);
         }

@@ -1,69 +1,42 @@
-mod elt;
-mod r#false;
 pub mod instructions;
-mod left;
+mod macros;
 mod map;
-mod none;
-mod pair;
-mod right;
 mod sequence;
-mod some;
-mod r#true;
-mod unit;
 
-pub use self::{
-    elt::{elt, Elt},
-    left::{left, Left},
-    map::{map, Map},
-    none::{none, None},
-    pair::{pair, Pair},
-    r#false::{r#false, False},
-    r#true::{r#true, True},
-    right::{right, Right},
-    sequence::{sequence, Sequence},
-    some::{some, Some},
-    unit::{unit, Unit},
-};
+use self::macros::{make_all_data, make_data};
 pub use crate::common::{bytes::Bytes, string::String};
+pub use map::{map, Map};
+pub use sequence::{sequence, Sequence};
 pub use tezos_core::types::number::{integer::Integer as Int, natural::Natural as Nat};
 
-use super::{Michelson, Prim};
-use crate::{
-    micheline::{literals::Literal, primitive_application::PrimitiveApplication, Micheline},
-    Error, Result,
-};
-use instructions::Instruction;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Data {
-    Int(Int),
-    Nat(Nat),
-    String(String),
-    Bytes(Bytes),
-    Unit(Unit),
-    True(True),
-    False(False),
-    Pair(Pair),
-    Left(Left),
-    Right(Right),
-    Some(Some),
-    None(None),
-    Sequence(Sequence),
-    Elt(Elt),
-    Map(Map),
-    Instruction(Instruction),
-}
+make_all_data!(
+    custom_cases: {
+        Int(Int),
+        Nat(Nat),
+        String(String),
+        Bytes(Bytes),
+        Sequence(Sequence),
+        Map(Map),
+        Instruction(Instruction),
+    },
+    (Unit, unit, 11),
+    (True, r#true, 10),
+    (False, r#false, 3),
+    (Pair, pair, 7, vec: (values: Data)),
+    (Left, left, 5, boxed: (value: Data)),
+    (Right, right, 8, boxed: (value: Data)),
+    (Some, some, 9, boxed: (value: Data)),
+    (None, none, 6),
+    (Elt, elt, 4, boxed: (key: Data), boxed: (value: Data)),
+);
 
 impl Data {
-    pub fn prim_values() -> Vec<&'static Prim> {
-        [PRIMS, Instruction::prim_values()].concat()
-    }
-
     pub fn is_valid_prim_name(name: &str) -> bool {
-        Self::prim_values()
-            .iter()
-            .find(|prim| prim.name() == name)
-            .is_some()
+        let primitive = name.parse::<Primitive>();
+        if primitive.is_err() {
+            return name.parse::<instructions::Primitive>().is_ok();
+        }
+        primitive.is_ok()
     }
 
     pub fn is_michelson_int(&self) -> bool {
@@ -291,17 +264,15 @@ impl Data {
     }
 }
 
-const PRIMS: &[&'static Prim] = &[
-    &unit::PRIM,
-    &r#true::PRIM,
-    &r#false::PRIM,
-    &pair::PRIM,
-    &left::PRIM,
-    &right::PRIM,
-    &some::PRIM,
-    &none::PRIM,
-    &elt::PRIM,
-];
+impl From<Literal> for Data {
+    fn from(value: Literal) -> Self {
+        match value {
+            Literal::Int(value) => Self::Int(value),
+            Literal::String(value) => Self::String(value),
+            Literal::Bytes(value) => Self::Bytes(value),
+        }
+    }
+}
 
 impl From<Int> for Michelson {
     fn from(value: Int) -> Self {
@@ -519,116 +490,92 @@ impl From<Bytes> for Michelson {
     }
 }
 
-impl TryFrom<Micheline> for Data {
-    type Error = Error;
-
-    fn try_from(value: Micheline) -> Result<Self> {
-        match value {
-            Micheline::Literal(value) => Ok(value.into()),
-            Micheline::PrimitiveApplication(value) => Ok(value.try_into()?),
-            Micheline::Sequence(value) => Ok(Data::Sequence(value.try_into()?)),
-        }
+impl From<Unit> for () {
+    fn from(_: Unit) -> Self {
+        ()
     }
 }
 
-impl From<Literal> for Data {
-    fn from(value: Literal) -> Self {
-        match value {
-            Literal::Int(value) => Self::Int(value),
-            Literal::String(value) => Self::String(value),
-            Literal::Bytes(value) => Self::Bytes(value),
-        }
+impl From<()> for Data {
+    fn from(_: ()) -> Self {
+        Unit.into()
     }
 }
 
-impl TryFrom<PrimitiveApplication> for Data {
-    type Error = Error;
-
-    fn try_from(value: PrimitiveApplication) -> Result<Self> {
-        const UNIT: &str = unit::PRIM.name();
-        const TRUE: &str = r#true::PRIM.name();
-        const FALSE: &str = r#false::PRIM.name();
-        const PAIR: &str = pair::PRIM.name();
-        const LEFT: &str = left::PRIM.name();
-        const RIGHT: &str = right::PRIM.name();
-        const SOME: &str = some::PRIM.name();
-        const NONE: &str = none::PRIM.name();
-        const ELT: &str = elt::PRIM.name();
-        match value.prim() {
-            UNIT => Ok(Data::Unit(value.try_into()?)),
-            TRUE => Ok(Data::True(value.try_into()?)),
-            FALSE => Ok(Data::False(value.try_into()?)),
-            PAIR => Ok(Data::Pair(value.try_into()?)),
-            LEFT => Ok(Data::Left(value.try_into()?)),
-            RIGHT => Ok(Data::Right(value.try_into()?)),
-            SOME => Ok(Data::Some(value.try_into()?)),
-            NONE => Ok(Data::None(value.try_into()?)),
-            ELT => Ok(Data::Elt(value.try_into()?)),
-            _ => Ok(Data::Instruction(value.try_into()?)),
-        }
+impl From<Primitive> for crate::michelson::Primitive {
+    fn from(value: Primitive) -> Self {
+        Self::Data(value)
     }
 }
 
-pub fn int<T>(value: T) -> Michelson
+pub fn int<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Int>,
+    Output: From<Int>,
 {
-    let int: Int = value.into();
-    int.into()
+    let value: Int = value.into();
+    value.into()
 }
 
-pub fn try_int<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_int<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Int, Error = Error>,
+    Output: From<Int>,
 {
-    let int: Int = value.try_into()?;
-    Ok(int.into())
+    let value: Int = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn nat<T>(value: T) -> Michelson
+pub fn nat<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Nat>,
+    Output: From<Nat>,
 {
-    let nat: Nat = value.into();
-    nat.into()
+    let value: Nat = value.into();
+    value.into()
 }
 
-pub fn try_nat<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_nat<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Nat, Error = Error>,
+    Output: From<Nat>,
 {
-    let nat: Nat = value.try_into()?;
-    Ok(nat.into())
+    let value: Nat = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn string<T>(value: T) -> Michelson
+pub fn string<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<String>,
+    Output: From<String>,
 {
-    let string: String = value.into();
-    string.into()
+    let value: String = value.into();
+    value.into()
 }
 
-pub fn try_string<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_string<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<String, Error = Error>,
+    Output: From<String>,
 {
-    let string: String = value.try_into()?;
-    Ok(string.into())
+    let value: String = value.try_into()?;
+    Ok(value.into())
 }
 
-pub fn bytes<T>(value: T) -> Michelson
+pub fn bytes<T, Output>(value: T) -> Output
 where
     T: std::convert::Into<Bytes>,
+    Output: From<Bytes>,
 {
-    let bytes: Bytes = value.into();
-    bytes.into()
+    let value: Bytes = value.into();
+    value.into()
 }
 
-pub fn try_bytes<T, Error>(value: T) -> std::result::Result<Michelson, Error>
+pub fn try_bytes<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
 where
     T: std::convert::TryInto<Bytes, Error = Error>,
+    Output: From<Bytes>,
 {
-    let bytes: Bytes = value.try_into()?;
-    Ok(bytes.into())
+    let value: Bytes = value.try_into()?;
+    Ok(value.into())
 }

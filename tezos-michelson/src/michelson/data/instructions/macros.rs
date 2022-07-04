@@ -10,7 +10,7 @@ macro_rules! make_instructions {
             ),
         )+
     ) => {
-        use crate::{michelson::{Michelson, Data}, Result, Error, micheline::{Micheline, primitive_application::PrimitiveApplication}};
+        use crate::{michelson::{Michelson, Data}, Result, Error, micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
         pub use self::{
             sequence::{Sequence, sequence},
             $($mod_name::{$name, $mod_name},)*
@@ -20,12 +20,6 @@ macro_rules! make_instructions {
         pub enum Instruction {
             Sequence(Sequence),
             $($name($name),)*
-        }
-
-        impl Instruction {
-            pub fn prim_values() -> &'static [&'static crate::michelson::Prim] {
-                &PRIMS
-            }
         }
 
         impl From<Instruction> for Data {
@@ -86,9 +80,7 @@ macro_rules! make_instructions {
             }
         }
 
-        const PRIMS: &[&'static crate::michelson::Prim] = &[
-            $(&$mod_name::PRIM,)*
-        ];
+        make_primitive_enum!($($name, $code, $tag)+);
 
         $(
             make_instruction!(
@@ -112,7 +104,7 @@ macro_rules! make_instruction {
     ) => {
         mod $mod_name {
             use crate::{
-                michelson::{Prim, PrimType, Michelson, Data, Instruction},
+                michelson::{PrimType, Michelson, Data, Instruction, data::instructions::Primitive},
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
                 Error, Result,
             };
@@ -175,16 +167,21 @@ macro_rules! make_instruction {
             }
 
             impl PrimType for $name {
-                fn prim_value() -> &'static Prim {
-                    &PRIM
+                fn prim_value() -> crate::michelson::Primitive {
+                    Primitive::$name.into()
                 }
             }
-
-            pub const PRIM: Prim = Prim::new(stringify!($code), &[$tag]);
 
             impl From<$name> for Instruction {
                 fn from(value: $name) -> Self {
                     Instruction::$name(value)
+                }
+            }
+
+            impl From<$name> for Data {
+                fn from(value: $name) -> Self {
+                    let value: Instruction = value.into();
+                    Self::Instruction(value)
                 }
             }
 
@@ -238,7 +235,7 @@ macro_rules! make_instruction {
                         let metadata: $metadata_type = value.metadata;
                         annots = metadata.annotations().into_iter().map(|annot| annot.value().into()).collect();
                     )?
-                    let primitive_application = PrimitiveApplication::new(PRIM.name().into(), Some(args), Some(annots));
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));
 
                     primitive_application.into()
                 }
@@ -249,13 +246,13 @@ macro_rules! make_instruction {
 
                 #[allow(unused)]
                 fn try_from(value: PrimitiveApplication) -> Result<Self> {
-                    if value.prim() != PRIM.name() {
+                    if value.prim() != Self::prim_value().name() {
                         return Err(Error::InvalidPrimitiveApplication);
                     }
                     $(
                         let metadata: $metadata_type = (&value).try_into()?;
                     )?
-                    let mut args = value.to_args().unwrap_or(vec![]);
+                    let mut args = value.into_args().unwrap_or(vec![]);
                     Ok(Self {
                         $(
                             $field_name: if !args.is_empty() { args.remove(0).try_into()? } else { Err(Error::InvalidPrimitiveApplication)? },
@@ -273,7 +270,7 @@ macro_rules! make_instruction {
                 }
             }
 
-            pub fn $mod_name($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)*) -> Michelson {
+            pub fn $mod_name<Output>($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)*) -> Output where Output: From<$name> {
                 $name::new(
                     $($field_name, )*
                     $($opt_field_name, )*

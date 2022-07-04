@@ -32,6 +32,8 @@ pub enum Error {
     InvalidSignatureBytes,
     InvalidIntegerConversion,
     InvalidNaturalConversion,
+    InvalidAddress,
+    InvalidContractAddress,
 }
 
 pub type Result<T> = result::Result<T, Error>;

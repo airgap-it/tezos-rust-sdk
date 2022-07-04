@@ -1,5 +1,7 @@
-use crate::internal::coder::{ConfigurableEncoder, ConsumingDecoder, Decoder, Encoder};
-use crate::internal::consumable_list::ConsumableList;
+use crate::internal::{
+    coder::{ConfigurableEncoder, ConsumingDecoder, Decoder, Encoder},
+    consumable_list::ConsumableList,
+};
 use crate::types::encoded::{Encoded, MetaEncoded};
 use crate::{Error, Result};
 
@@ -27,8 +29,8 @@ impl EncodedBytesCoder {
         return Err(Error::InvalidBytes);
     }
 
-    pub fn decode_consuming_with_meta<E: Encoded>(
-        value: &mut Vec<u8>,
+    pub fn decode_consuming_with_meta<E: Encoded, CL: ConsumableList<u8>>(
+        value: &mut CL,
         meta: &MetaEncoded,
     ) -> Result<E> {
         let bytes = value.consume_until(meta.bytes_length)?;
@@ -36,14 +38,14 @@ impl EncodedBytesCoder {
     }
 }
 
-impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
+impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncodedBytesCoderConfiguration, Error>
     for EncodedBytesCoder
 {
     fn encode_with_configuration(
         value: &E,
-        configuration: EncoderConfiguration,
+        configuration: EncodedBytesCoderConfiguration,
     ) -> Result<Vec<u8>> {
-        let bytes = bs58::decode(value.base58())
+        let bytes = bs58::decode(value.value())
             .with_check(Some(value.meta().version()))
             .into_vec()?;
         if bytes.len() <= value.meta().versioned_bytes_prefix().len()
@@ -62,24 +64,27 @@ impl<E: Encoded> ConfigurableEncoder<E, Vec<u8>, EncoderConfiguration, Error>
 
 impl<E: Encoded> Encoder<E, Vec<u8>, Error> for EncodedBytesCoder {
     fn encode(value: &E) -> Result<Vec<u8>> {
-        Self::encode_with_configuration(value, EncoderConfiguration { keep_prefix: false })
+        Self::encode_with_configuration(
+            value,
+            EncodedBytesCoderConfiguration { keep_prefix: false },
+        )
     }
 }
 
-impl<E: Encoded> Decoder<E, Vec<u8>, Error> for EncodedBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<E> {
+impl<E: Encoded> Decoder<E, [u8], Error> for EncodedBytesCoder {
+    fn decode(value: &[u8]) -> Result<E> {
         let meta = MetaEncoded::recognize_bytes(value)?;
         Self::decode_with_meta(value, meta)
     }
 }
 
 impl<E: Encoded> ConsumingDecoder<E, u8, Error> for EncodedBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<E> {
-        let meta = MetaEncoded::recognize_consumable_bytes(value)?;
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<E> {
+        let meta = MetaEncoded::recognize_consumable_bytes(value.inner_value())?;
         Self::decode_consuming_with_meta(value, meta)
     }
 }
 
-pub struct EncoderConfiguration {
+pub struct EncodedBytesCoderConfiguration {
     pub keep_prefix: bool,
 }

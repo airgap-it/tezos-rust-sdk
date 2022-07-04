@@ -1,16 +1,19 @@
 macro_rules! make_types {
     (
+        $(type_enum: $enum_case_name:ident($enum_case_type:ty),)?
+        [$($type_impl:tt)*],
+        conversion_fallback: $fallback:ident,
         $(
-            $enum_case_name:ident($enum_case_type:ty),)?
-            [$($type_impl:tt)*],
-            conversion_fallback: $fallback:ident,
-            $(($name:ident, $code:ident, $tag:literal
+            (
+                $name:ident, $code:ident, $tag:literal
+                $(, super_enum: $super_enum_type:ty, $super_enum_case:ident)?
                 $(, ($field_name:ident: $field_type:ty))*
                 $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
-                $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*),
-            )+
+                $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
+            ),
+        )+
     ) => {
-        use crate::micheline::{Micheline, primitive_application::PrimitiveApplication};
+        use crate::{micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
         pub use self::{
             $($code::{$name, $code},)*
         };
@@ -61,13 +64,12 @@ macro_rules! make_types {
             }
         }
 
-        const PRIMS: &[&'static crate::michelson::Prim] = &[
-            $(&$code::PRIM,)*
-        ];
+        make_primitive_enum!($($name, $code, $tag)+);
 
         $(
             make_type!(
                 $name, $code, $tag
+                $(, super_enum: $super_enum_type, $super_enum_case)?
                 $(, ($field_name, $field_type))*
                 $(, boxed: ($boxed_field_name: $boxed_field_type))*
                 $(, vec: ($vec_field_name: $vec_field_type))*
@@ -79,6 +81,7 @@ macro_rules! make_types {
 macro_rules! make_type {
     (
         $name:ident, $code:ident, $tag:literal
+        $(, super_enum: $super_enum_type:ty, $super_enum_case:ident)?
         $(, ($field_name:ident, $field_type:ty))*
         $(, boxed: ($boxed_field_name:ident: $boxed_field_type:ty))*
         $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
@@ -86,10 +89,10 @@ macro_rules! make_type {
         mod $code {
             use crate::{
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
-                michelson::{Annotation, Prim, metadata::TypeFieldMetadata, PrimType, Michelson},
+                michelson::{Annotation, metadata::TypeFieldMetadata, PrimType, Michelson},
                 Error, Result,
             };
-            use super::Type;
+            use super::{Type, Primitive};
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
@@ -132,23 +135,21 @@ macro_rules! make_type {
                     self.metadata.annotations()
                 }
 
-                pub fn new($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)* metadata: TypeFieldMetadata) -> Self {
+                pub fn new($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)* metadata: core::option::Option<TypeFieldMetadata>) -> Self {
                     Self {
                         $($field_name,)*
                         $($boxed_field_name: Box::new($boxed_field_name),)*
                         $($vec_field_name,)*
-                        metadata
+                        metadata: metadata.unwrap_or_default()
                     }
                 }
             }
 
             impl PrimType for $name {
-                fn prim_value() -> &'static Prim {
-                    &PRIM
+                fn prim_value() -> crate::michelson::Primitive {
+                    Primitive::$name.into()
                 }
             }
-
-            pub const PRIM: Prim = Prim::new(stringify!($code), &[$tag]);
 
             impl From<$name> for Michelson {
                 fn from(value: $name) -> Self {
@@ -162,6 +163,14 @@ macro_rules! make_type {
                     Self::$name(value)
                 }
             }
+
+            $(
+                impl From<$name> for $super_enum_type {
+                    fn from(value: $name) -> Self {
+                        Self::$super_enum_case(value.into())
+                    }
+                }
+            )?
 
             impl TryFrom<Type> for $name {
                 type Error = Error;
@@ -189,11 +198,11 @@ macro_rules! make_type {
 
                 #[allow(unused)]
                 fn try_from(value: PrimitiveApplication) -> Result<Self> {
-                    if value.prim() != PRIM.name() {
+                    if value.prim() != Self::prim_value().name() {
                         return Err(Error::InvalidPrimitiveApplication);
                     }
                     let metadata: TypeFieldMetadata = (&value).try_into()?;
-                    let mut args = value.to_args().unwrap_or(vec![]);
+                    let mut args = value.into_args().unwrap_or(vec![]);
                     Ok(Self {
                         $(
                             $field_name: if !args.is_empty() { args.remove(0).try_into()? } else { Err(Error::InvalidPrimitiveApplication)? },
@@ -224,18 +233,18 @@ macro_rules! make_type {
                         let mut values = value.$vec_field_name.into_iter().map(|value| value.into()).collect::<Vec<Micheline>>();
                         args.append(&mut values);
                     )*
-                    let primitive_application = PrimitiveApplication::new(PRIM.name().into(), Some(args), Some(annots));
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));
 
                     primitive_application.into()
                 }
             }
 
-            pub fn $code($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Michelson {
+            pub fn $code<Output>($($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Output where Output: From<$name> {
                 $name::new(
                     $($field_name,)*
                     $($boxed_field_name,)*
                     $($vec_field_name,)*
-                    TypeFieldMetadata::default()
+                    None,
                 ).into()
             }
         }

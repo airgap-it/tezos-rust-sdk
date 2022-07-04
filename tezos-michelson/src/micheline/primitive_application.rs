@@ -23,8 +23,24 @@ impl PrimitiveApplication {
         &self.args
     }
 
-    pub fn to_args(self) -> Option<Vec<Micheline>> {
+    pub fn args_count(&self) -> usize {
+        self.args.as_ref().map(|args| args.len()).unwrap_or(0)
+    }
+
+    pub fn into_args(self) -> Option<Vec<Micheline>> {
         self.args
+    }
+
+    pub fn first_arg(&self) -> Option<&Micheline> {
+        self.args.as_ref().map(|args| args.first()).flatten()
+    }
+
+    pub fn second_arg(&self) -> Option<&Micheline> {
+        self.args.as_ref().map(|args| args.iter().nth(1)).flatten()
+    }
+
+    pub fn nth_arg(&self, n: usize) -> Option<&Micheline> {
+        self.args.as_ref().map(|args| args.iter().nth(n)).flatten()
     }
 
     pub fn annots(&self) -> &Option<Vec<String>> {
@@ -51,6 +67,12 @@ impl PrimitiveApplication {
         MichelineNormalizer::normalize(self)
     }
 
+    pub fn with_args(mut self, args: Vec<Micheline>) -> Self {
+        self.args = if !args.is_empty() { Some(args) } else { None };
+
+        self
+    }
+
     pub fn with_mutated_args<F>(mut self, mutator: F) -> Self
     where
         F: FnOnce(Vec<Micheline>) -> Vec<Micheline>,
@@ -58,6 +80,41 @@ impl PrimitiveApplication {
         if let Some(args) = self.args {
             self.args = Some(mutator(args))
         }
+        self
+    }
+
+    pub fn try_with_mutated_args<F, Error>(mut self, mutator: F) -> std::result::Result<Self, Error>
+    where
+        F: FnOnce(Vec<Micheline>) -> std::result::Result<Vec<Micheline>, Error>,
+    {
+        if let Some(args) = self.args {
+            self.args = Some(mutator(args)?)
+        }
+        Ok(self)
+    }
+
+    pub fn try_with_replaced_arg_at<F, Error>(
+        mut self,
+        index: usize,
+        replacer: F,
+    ) -> std::result::Result<Self, Error>
+    where
+        F: FnOnce(Micheline) -> std::result::Result<Micheline, Error>,
+    {
+        if let Some(args) = self.args.as_mut() {
+            let element = args.remove(index);
+            args.insert(index, replacer(element)?);
+        }
+        Ok(self)
+    }
+
+    pub fn with_annots(mut self, annots: Vec<String>) -> Self {
+        self.annots = if !annots.is_empty() {
+            Some(annots)
+        } else {
+            None
+        };
+
         self
     }
 }

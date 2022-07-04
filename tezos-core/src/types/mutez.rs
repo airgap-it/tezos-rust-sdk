@@ -9,8 +9,7 @@ use derive_more::{
 use num_traits::ToPrimitive;
 use regex::Regex;
 
-use crate::internal::coder::mutez::MutezBytesCoder;
-use crate::internal::coder::{Decoder, Encoder};
+use crate::internal::coder::{Decoder, Encoder, MutezBytesCoder};
 use crate::{Error, Result};
 
 use super::number::natural::Natural;

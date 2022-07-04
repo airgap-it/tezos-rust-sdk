@@ -4,18 +4,22 @@ pub mod sequence;
 mod utils;
 
 use serde::{Deserialize, Serialize};
-use tezos_core::internal::{coder::Encoder, normalizer::Normalizer};
+use tezos_core::internal::{
+    coder::{Decoder, Encoder},
+    normalizer::Normalizer,
+};
 
 pub use self::utils::{
-    bytes, int, prim, prim_with_annots, prim_with_args, prim_with_args_and_annots, sequence,
-    string, try_bytes, try_int, try_string,
+    bytes, int, primitive_application, sequence, string, try_bytes, try_int, try_string,
 };
 use self::{literals::Literal, primitive_application::PrimitiveApplication, sequence::Sequence};
 use crate::{
     internal::{
-        coder::micheline_bytes_coder::MichelineBytesCoder, normalizer::MichelineNormalizer,
+        coder::micheline_bytes_coder::MichelineBytesCoder,
+        normalizer::MichelineNormalizer,
+        packer::{MichelinePacker, Packer},
     },
-    michelson::{data::Data, types::Type, Michelson},
+    michelson::{types::Type, Michelson},
     Error, Result,
 };
 
@@ -28,8 +32,20 @@ pub enum Micheline {
 }
 
 impl Micheline {
+    pub fn pack(self, schema: Option<&Micheline>) -> Result<Vec<u8>> {
+        MichelinePacker::pack(self, schema)
+    }
+
+    pub fn unpack(bytes: &[u8], schema: Option<&Micheline>) -> Result<Self> {
+        MichelinePacker::unpack(bytes, schema)
+    }
+
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MichelineBytesCoder::encode(self)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        MichelineBytesCoder::decode(bytes)
     }
 
     pub fn is_micheline_literal(&self) -> bool {
@@ -111,6 +127,14 @@ impl TryFrom<&Micheline> for Vec<u8> {
     }
 }
 
+impl TryFrom<&[u8]> for Micheline {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
+        Micheline::from_bytes(value)
+    }
+}
+
 impl From<Michelson> for Micheline {
     fn from(value: Michelson) -> Self {
         match value {
@@ -143,29 +167,6 @@ impl From<Michelson> for Micheline {
     }
 }
 
-impl From<Data> for Micheline {
-    fn from(value: Data) -> Self {
-        match value {
-            Data::Int(value) => value.into(),
-            Data::Nat(value) => value.into(),
-            Data::String(value) => value.into(),
-            Data::Bytes(value) => value.into(),
-            Data::Unit(value) => value.into(),
-            Data::True(value) => value.into(),
-            Data::False(value) => value.into(),
-            Data::Pair(value) => value.into(),
-            Data::Left(value) => value.into(),
-            Data::Right(value) => value.into(),
-            Data::Some(value) => value.into(),
-            Data::None(value) => value.into(),
-            Data::Sequence(value) => value.into(),
-            Data::Elt(value) => value.into(),
-            Data::Map(value) => value.into(),
-            Data::Instruction(value) => value.into(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use serde_json::json;
@@ -194,27 +195,34 @@ mod test {
             (try_string("string").unwrap(), json!({"string": "string"})),
             (try_bytes("0x").unwrap(), json!({"bytes": ""})),
             (try_bytes("0x00").unwrap(), json!({"bytes": "00"})),
-            (prim("Unit"), json!({"prim": "Unit"})),
             (
-                prim_with_args("Dig", vec![int(0)]),
+                primitive_application("Unit").into(),
+                json!({"prim": "Unit"}),
+            ),
+            (
+                primitive_application("Dig").with_args(vec![int(0)]).into(),
                 json!({"prim": "Dig", "args": [{"int": "0"}]}),
             ),
             (
-                prim_with_annots("Unit", vec!["%annot".into()]),
+                primitive_application("Unit")
+                    .with_annots(vec!["%annot".into()])
+                    .into(),
                 json!({"prim": "Unit", "annots": ["%annot"]}),
             ),
             (
-                prim_with_args_and_annots("Dig", vec![int(0)], vec!["%annot".into()]),
+                primitive_application("Dig")
+                    .with_args(vec![int(0)])
+                    .with_annots(vec!["%annot".into()])
+                    .into(),
                 json!({"prim": "Dig", "args": [{"int": "0"}], "annots": ["%annot"]}),
             ),
             (vec![].into(), json!([])),
             (vec![int(0)].into(), json!([{"int": "0"}])),
             (
-                vec![prim_with_args_and_annots(
-                    "Dig",
-                    vec![int(0)],
-                    vec!["%annot".into()],
-                )]
+                vec![primitive_application("Dig")
+                    .with_args(vec![int(0)])
+                    .with_annots(vec!["%annot".into()])
+                    .into()]
                 .into(),
                 json!([{"prim": "Dig", "args": [{"int": "0"}], "annots": ["%annot"]}]),
             ),

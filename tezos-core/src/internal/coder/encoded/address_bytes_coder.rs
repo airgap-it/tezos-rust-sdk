@@ -3,23 +3,17 @@ use std::ops::Add;
 use crate::{
     internal::{
         coder::{
-            encoded::{
-                encoded_bytes_coder::EncodedBytesCoder,
-                implicit_address_bytes_coder::ImplicitAddressBytesCoder,
-            },
-            ConsumingDecoder, Decoder, Encoder,
+            encoded::implicit_address_bytes_coder::ImplicitAddressBytesCoder, Decoder, Encoder,
         },
-        consumable_list::ConsumableList,
         types::BytesTag,
     },
-    types::encoded::{Address, META_CONTRACT_HASH},
+    types::encoded::Address,
     Error, Result,
 };
 
-pub struct AddressBytesCoder {
-    implicit_address_coder: ImplicitAddressBytesCoder,
-    originated_address_coder: EncodedBytesCoder,
-}
+use super::contract_address_bytes_coder::ContractAddressBytesCoder;
+
+pub struct AddressBytesCoder;
 
 impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
     fn encode(value: &Address) -> Result<Vec<u8>> {
@@ -28,14 +22,14 @@ impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
                 Ok(AddressTag::Implicit + ImplicitAddressBytesCoder::encode(address)?)
             }
             Address::Originated(address) => {
-                Ok(AddressTag::Originated + EncodedBytesCoder::encode(address)?)
+                Ok(AddressTag::Originated + ContractAddressBytesCoder::encode(address)?)
             }
         }
     }
 }
 
-impl Decoder<Address, Vec<u8>, Error> for AddressBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Address> {
+impl Decoder<Address, [u8], Error> for AddressBytesCoder {
+    fn decode(value: &[u8]) -> Result<Address> {
         let tag = AddressTag::recognize(&value).ok_or(Error::InvalidBytes)?;
         let bytes = value[tag.value().len()..].to_vec();
 
@@ -43,25 +37,9 @@ impl Decoder<Address, Vec<u8>, Error> for AddressBytesCoder {
             AddressTag::Implicit => Ok(Address::Implicit(ImplicitAddressBytesCoder::decode(
                 &bytes,
             )?)),
-            AddressTag::Originated => {
-                EncodedBytesCoder::decode_with_meta(&bytes, &META_CONTRACT_HASH)
-            }
-        }
-    }
-}
-
-impl ConsumingDecoder<Address, u8, Error> for AddressBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<Address> {
-        let tag = AddressTag::recognize(&value).ok_or(Error::InvalidBytes)?;
-        _ = value.consume_until(tag.value().len())?;
-
-        match tag {
-            AddressTag::Implicit => Ok(Address::Implicit(
-                ImplicitAddressBytesCoder::decode_consuming(value)?,
-            )),
-            AddressTag::Originated => Ok(Address::Originated(
-                EncodedBytesCoder::decode_consuming_with_meta(value, &META_CONTRACT_HASH)?,
-            )),
+            AddressTag::Originated => Ok(Address::Originated(ContractAddressBytesCoder::decode(
+                &bytes,
+            )?)),
         }
     }
 }
@@ -133,7 +111,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz1fJGtrdmckD3VkiDxqUEci5h4gGcvocw6e");
+        assert_eq!(address.value(), "tz1fJGtrdmckD3VkiDxqUEci5h4gGcvocw6e");
         Ok(())
     }
 
@@ -159,7 +137,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz2AjVPbMHdDF1XwHVhUrTg6ZvqY83AYhJEy");
+        assert_eq!(address.value(), "tz2AjVPbMHdDF1XwHVhUrTg6ZvqY83AYhJEy");
         Ok(())
     }
 
@@ -185,7 +163,7 @@ mod test {
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "tz3Nk25g51knuzFZZz2DeA5PveaQYmCtV68B");
+        assert_eq!(address.value(), "tz3Nk25g51knuzFZZz2DeA5PveaQYmCtV68B");
         Ok(())
     }
 
@@ -197,7 +175,7 @@ mod test {
             bytes,
             [
                 1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5,
-                210, 0, 75
+                210, 0, 75, 0
             ]
         );
         Ok(())
@@ -207,11 +185,37 @@ mod test {
     fn test_decode_4() -> Result<()> {
         let bytes = [
             1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5, 210,
-            0, 75,
+            0, 75, 0,
         ]
         .to_vec();
         let address = AddressBytesCoder::decode(&bytes)?;
-        assert_eq!(address.base58(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7");
+        assert_eq!(address.value(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7");
+        Ok(())
+    }
+
+    #[test]
+    fn test_encode_5() -> Result<()> {
+        let address: Address = "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7%mint".try_into()?;
+        let bytes = AddressBytesCoder::encode(&address)?;
+        assert_eq!(
+            bytes,
+            [
+                1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5,
+                210, 0, 75, 0, 109, 105, 110, 116
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_decode_5() -> Result<()> {
+        let bytes = [
+            1, 96, 119, 205, 152, 253, 138, 202, 148, 133, 27, 131, 164, 196, 66, 3, 183, 5, 210,
+            0, 75, 0, 109, 105, 110, 116,
+        ]
+        .to_vec();
+        let address = AddressBytesCoder::decode(&bytes)?;
+        assert_eq!(address.value(), "KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7%mint");
         Ok(())
     }
 }

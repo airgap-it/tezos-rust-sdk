@@ -9,7 +9,10 @@ use crate::{
         consumable_list::ConsumableList,
         types::{BytesTag, EncodedTag},
     },
-    types::encoded::{self, MetaEncoded, PublicKey},
+    types::encoded::{
+        Ed25519PublicKey, MetaEncoded, P256PublicKey, PublicKey, Secp256K1PublicKey,
+        TraitMetaEncoded,
+    },
     Error, Result,
 };
 
@@ -21,14 +24,14 @@ impl Encoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
     }
 }
 
-impl Decoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<PublicKey> {
+impl Decoder<PublicKey, [u8], Error> for PublicKeyBytesCoder {
+    fn decode(value: &[u8]) -> Result<PublicKey> {
         EncodedGroupBytesCoder::<Self>::decode(value)
     }
 }
 
 impl ConsumingDecoder<PublicKey, u8, Error> for PublicKeyBytesCoder {
-    fn decode_consuming(value: &mut Vec<u8>) -> Result<PublicKey> {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<PublicKey> {
         EncodedGroupBytesCoder::<Self>::decode_consuming(value)
     }
 }
@@ -66,9 +69,9 @@ impl EncodedTag for PublicKeyTag {
 
     fn meta(&self) -> &MetaEncoded {
         match self {
-            Self::EdPK => &encoded::META_ED25519_PUBLIC_KEY,
-            Self::SpPK => &encoded::META_SECP256_K1_PUBLIC_KEY,
-            Self::P2PK => &encoded::META_P256_PUBLIC_KEY,
+            Self::EdPK => Ed25519PublicKey::meta_value(),
+            Self::SpPK => Secp256K1PublicKey::meta_value(),
+            Self::P2PK => P256PublicKey::meta_value(),
         }
     }
 }
@@ -93,8 +96,8 @@ impl TagProvider for PublicKeyBytesCoder {
         Self::T::recognize(bytes)
     }
 
-    fn tag_consuming(bytes: &mut Vec<u8>) -> Option<Self::T> {
-        if let Some(tag) = Self::T::recognize_consumable(bytes) {
+    fn tag_consuming<CL: ConsumableList<u8>>(bytes: &mut CL) -> Option<Self::T> {
+        if let Some(tag) = Self::T::recognize_consumable(bytes.inner_value()) {
             let _ = bytes.consume_until(tag.value().len());
             return Some(tag);
         }
@@ -131,7 +134,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "edpkuHhTYggbo1d3vRJTtoKy9hFnZGc8Vpr6qEzbZMXWV69odaM3a4"
         );
         Ok(())
@@ -161,7 +164,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "sppkCVP3G6y4SsGAiHdR8UUd9dpawhAMpe5RT87F8wHKT7izLgrUncF"
         );
         Ok(())
@@ -191,7 +194,7 @@ mod test {
         .to_vec();
         let key = PublicKeyBytesCoder::decode(&bytes)?;
         assert_eq!(
-            key.base58(),
+            key.value(),
             "p2pkE3k5ZLRUvXTtjqGesGCZQBQjPE1cZghFFAmZTeQm7WNTwfsqeZg"
         );
         Ok(())
