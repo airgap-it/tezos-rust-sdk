@@ -117,12 +117,17 @@ macro_rules! make_encoded_struct {
                     $($type_path, )+
                 };
             )?
-            use $crate::{
-                types::encoded::{Encoded, MetaEncoded, TraitMetaEncoded},
-                Error, Result,
+            use {
+                $crate::{
+                    types::encoded::{Encoded, MetaEncoded, TraitMetaEncoded},
+                    Error, Result,
+                },
+                serde::{Deserialize, Serialize}
             };
 
-            #[derive(Debug)]
+            #[derive(Debug, Clone, Serialize, Deserialize)]
+            #[serde(try_from = "String")]
+            #[serde(into = "String")]
             pub struct $name(String);
 
             impl $name {
@@ -207,6 +212,12 @@ macro_rules! make_encoded_struct {
 
                 fn try_from(value: &$name) -> Result<Self> {
                     value.to_bytes()
+                }
+            }
+
+            impl Into<String> for $name {
+                fn into(self) -> String {
+                    self.0
                 }
             }
 
