@@ -13,3 +13,4 @@ pub mod reveal;
 pub mod seed_nonce_revelation;
 pub mod set_deposits_limits;
 pub mod transaction;
+pub mod failing_noop;
