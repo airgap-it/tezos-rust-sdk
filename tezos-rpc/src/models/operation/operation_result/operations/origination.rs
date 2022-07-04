@@ -2,11 +2,11 @@ use {
     crate::models::{
         balance_update::BalanceUpdate,
         error::RPCError,
+        operation::kind::OperationKind,
         operation::operation_result::OperationResultStatus,
         operation::operation_result::{
             big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff,
         },
-        operation::kind::OperationKind
     },
     serde::{Deserialize, Serialize},
 };
@@ -53,5 +53,5 @@ pub struct OriginationSuccessfulManagerOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub paid_storage_size_diff: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lazy_storage_diff: Option<LazyStorageDiff>
+    pub lazy_storage_diff: Option<LazyStorageDiff>,
 }

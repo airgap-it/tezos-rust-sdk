@@ -1,6 +1,6 @@
 use {
     super::Kind,
-    crate::models::operation::operation_result::Action,
+    crate::models::operation::operation_result::DiffAction,
     serde::{Deserialize, Serialize},
     tezos_michelson::micheline::Micheline,
 };
@@ -14,7 +14,7 @@ pub struct BigMap {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Diff {
-    pub action: Action,
+    pub action: DiffAction,
     pub updates: Vec<Update>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key_hash: Option<String>,

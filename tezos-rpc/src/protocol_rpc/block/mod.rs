@@ -1,7 +1,10 @@
 use {
-    crate::client::TezosRPCContext,
-    crate::error::Error,
-    crate::models::block::Block,
+    crate::{
+        client::TezosRPCContext,
+        constants::{BLOCK_GENESIS_ALIAS, BLOCK_HEAD_ALIAS},
+        error::Error,
+        models::block::Block,
+    },
     derive_more::Display,
     serde::{Deserialize, Serialize},
 };
@@ -10,9 +13,10 @@ fn path(chain_id: String, block_id: String) -> String {
     format!("/chains/{}/blocks/{}", chain_id, block_id)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BlockID {
     Head,
+    Genesis,
     Hash(String),
     Level(i32),
 }
@@ -23,10 +27,17 @@ impl Default for BlockID {
     }
 }
 
+impl Default for &BlockID {
+    fn default() -> Self {
+        &BlockID::Head
+    }
+}
+
 impl BlockID {
     fn value(&self) -> String {
         match self {
-            Self::Head => "head".into(),
+            Self::Head => BLOCK_HEAD_ALIAS.into(),
+            Self::Genesis => BLOCK_GENESIS_ALIAS.into(),
             Self::Hash(hash) => hash.into(),
             Self::Level(level) => {
                 if level.is_negative() {
@@ -59,12 +70,12 @@ pub enum MetadataRPCArg {
 /// [`GET /chains/<chain_id>/blocks/<block_id>?[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
 pub async fn get(
     ctx: &TezosRPCContext,
-    block_id: &Option<BlockID>,
+    block_id: Option<&BlockID>,
     metadata: MetadataRPCArg,
 ) -> Result<Block, Error> {
     let path = self::path(
         ctx.chain_id.to_string(),
-        block_id.clone().unwrap_or_default().value(),
+        block_id.unwrap_or_default().value(),
     );
 
     let mut query: Vec<(&str, String)> = vec![];
@@ -80,40 +91,141 @@ pub async fn get(
 #[cfg(test)]
 mod tests {
     use {
-        crate::constants::{DEFAULT_CHAIN_ALIAS, BLOCK_HEAD_ALIAS},
-        crate::models::block::Block,
-        crate::client::TezosRPC, crate::error::Error,
-        crate::protocol_rpc::ProtocolRPC,
+        super::*,
+        crate::{
+            client::TezosRPC,
+            constants::{BLOCK_GENESIS_ALIAS, DEFAULT_CHAIN_ALIAS},
+            error::Error,
+            models::block::TestChainStatusName,
+            protocol_rpc::ProtocolRPC,
+        },
         httpmock::prelude::*,
     };
 
     #[tokio::test]
-    async fn test_get_block() -> Result<(), Error> {
+    async fn test_get_genesis_block() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_json = include_str!("test_data/block_simple.json");
-        let block: Block = serde_json::from_str(&block_json)?;
-
         server.mock(|when, then| {
-            when.method(GET)
-                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string(), BLOCK_HEAD_ALIAS.to_string()));
+            when.method(GET).path(super::path(
+                DEFAULT_CHAIN_ALIAS.to_string(),
+                BLOCK_GENESIS_ALIAS.to_string(),
+            ));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(block_json);
+                .body(include_str!("__TEST_DATA__/block_genesis.json"));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let response = client.get_block(&None, super::MetadataRPCArg::Always).await?;
+        let block_id = BlockID::Genesis;
+        let response = client
+            .get_block(Some(&block_id), super::MetadataRPCArg::Always)
+            .await?;
 
-        assert!(response.protocol.starts_with("P"));
-        assert!(response.chain_id.starts_with("Net"));
-        assert!(response.hash.starts_with("B"));
-        assert_eq!(response.header, block.header);
+        assert_eq!(
+            response.protocol,
+            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i".to_string()
+        );
+        assert_eq!(response.chain_id, "NetXdQprcVkpaWU".to_string());
+        assert_eq!(
+            response.hash,
+            "BLockGenesisGenesisGenesisGenesisGenesisf79b5d1CoW2".to_string()
+        );
+        assert_eq!(
+            response.header.context,
+            "CoV8SQumiVU9saiu3FVNeDNewJaJH8yWdsGF3WLdsRr2P9S7MzCj".to_string()
+        );
 
-        let expected_block_metadata = block.metadata.expect("Block has metadata");
         let block_metadata = response.metadata.expect("Block has metadata");
-        assert_eq!(block_metadata, expected_block_metadata);
+        assert_eq!(
+            block_metadata.protocol,
+            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i".to_string()
+        );
+        assert_eq!(block_metadata.baker, None);
+        assert_eq!(
+            block_metadata.test_chain_status.status,
+            TestChainStatusName::NotRunning
+        );
+
+        assert_eq!(
+            response.operations.len(),
+            0,
+            "No operations on genesis block."
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_2nd_block() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string(), "1".into()));
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(include_str!("__TEST_DATA__/block_1.json"));
+        });
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        client
+            .get_block(Some(&BlockID::Level(1)), super::MetadataRPCArg::Always)
+            .await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_ithaca_block() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        server.mock(|when, then| {
+            when.method(GET).path(super::path(
+                DEFAULT_CHAIN_ALIAS.to_string(),
+                "2490368".into(),
+            ));
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(include_str!("__TEST_DATA__/block_ithaca.json"));
+        });
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        client
+            .get_block(
+                Some(&BlockID::Level(2490368)),
+                super::MetadataRPCArg::Always,
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_jakarta_block() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        server.mock(|when, then| {
+            when.method(GET).path(super::path(
+                DEFAULT_CHAIN_ALIAS.to_string(),
+                "2504461".into(),
+            ));
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(include_str!("__TEST_DATA__/block_jakarta.json"));
+        });
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        client
+            .get_block(
+                Some(&BlockID::Level(2504461)),
+                super::MetadataRPCArg::Always,
+            )
+            .await?;
 
         Ok(())
     }

@@ -132,7 +132,7 @@ impl<'a> shell_rpc::ShellRPC for TezosRPC {
 impl<'a> ProtocolRPC for TezosRPC {
     async fn get_block(
         &self,
-        block_id: &Option<BlockID>,
+        block_id: Option<&BlockID>,
         metadata: MetadataRPCArg,
     ) -> Result<Block, Error> {
         protocol_rpc::block::get(&self.context, block_id, metadata).await

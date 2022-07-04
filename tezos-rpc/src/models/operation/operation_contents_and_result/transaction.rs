@@ -1,10 +1,7 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate,
-        models::operation::kind::OperationKind,
-        models::operation::operation_result::{
-            operations::transaction::TransactionOperationResult
-        },
+        models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
+        models::operation::operation_result::operations::transaction::TransactionOperationResult,
     },
     serde::{Deserialize, Serialize},
     tezos_michelson::micheline::Micheline,
@@ -26,9 +23,10 @@ pub struct Transaction {
     pub counter: String,
     pub gas_limit: String,
     pub storage_limit: String,
-    pub amount: u64,
+    pub amount: String,
     /// Base58Check-encoded
     pub destination: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub parameters: Option<TransactionParameters>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<TransactionMetadata>,
@@ -36,11 +34,11 @@ pub struct Transaction {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransactionMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
     pub operation_result: TransactionOperationResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<InternalTransactionOperationResult>,
+    #[serde(default)]
+    pub balance_updates: Vec<BalanceUpdate>,
+    #[serde(default)]
+    pub internal_operation_results: Vec<InternalTransactionOperationResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -52,16 +50,19 @@ pub struct InternalTransactionOperationResult {
     /// integer ∈ [0, 2^16-1]
     pub nonce: u16,
     /// Mutez
-    pub amount: u64,
+    pub amount: String,
     /// Address (Base58Check-encoded)
     pub destination: String,
-    pub result: TransactionOperationResult,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parameters: Option<TransactionParameters>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<TransactionOperationResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransactionParameters {
     pub entrypoint: Entrypoint,
-    pub value: Micheline, // FIXME: This should be Michelson
+    pub value: Micheline,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
@@ -124,5 +125,24 @@ impl Into<String> for Entrypoint {
             Entrypoint::RemoveDelegate => REMOVE_DELEGATE.to_string(),
             Entrypoint::Named(value) => value,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {super::*, crate::error::Error};
+
+    #[tokio::test]
+    async fn test_transaction_deserialization() -> Result<(), Error> {
+        let result =
+            serde_json::from_str::<Transaction>(include_str!("__TEST_DATA__/transaction.json"));
+
+        let transaction = result.expect("Transaction is valid");
+        assert_eq!(transaction.kind, OperationKind::Transaction);
+
+        let metadata = transaction.metadata.expect("Transaction has metadata");
+        assert!(metadata.operation_result.big_map_diff.is_some());
+        assert!(metadata.operation_result.lazy_storage_diff.is_some());
+        Ok(())
     }
 }
