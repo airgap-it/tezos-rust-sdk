@@ -42,7 +42,6 @@ mod tests {
         crate::client::TezosRPC,
         crate::error::Error,
         crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
-        crate::shell_rpc::ShellRPC,
         httpmock::prelude::*,
         tezos_core::types::encoded::{BlockHash, Encoded},
     };

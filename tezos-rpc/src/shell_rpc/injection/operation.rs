@@ -45,8 +45,8 @@ pub async fn post(
 #[cfg(test)]
 mod tests {
     use {
-        crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*,
+        tezos_core::types::encoded::Encoded,
     };
 
     #[tokio::test]

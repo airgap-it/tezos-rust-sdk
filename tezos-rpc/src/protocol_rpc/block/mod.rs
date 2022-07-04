@@ -1,3 +1,5 @@
+pub mod context;
+
 use {
     crate::{
         client::TezosRPCContext,
@@ -97,7 +99,6 @@ mod tests {
             constants::{BLOCK_GENESIS_ALIAS, DEFAULT_CHAIN_ALIAS},
             error::Error,
             models::block::TestChainStatusName,
-            protocol_rpc::ProtocolRPC,
         },
         httpmock::prelude::*,
     };

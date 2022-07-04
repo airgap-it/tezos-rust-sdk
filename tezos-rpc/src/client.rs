@@ -8,11 +8,9 @@ use {
     crate::models::invalid_block::InvalidBlock,
     crate::protocol_rpc,
     crate::protocol_rpc::block::{BlockID, MetadataRPCArg},
-    crate::protocol_rpc::ProtocolRPC,
     crate::shell_rpc,
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
-    async_trait::async_trait,
     std::result::Result,
     tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
 };
@@ -71,45 +69,91 @@ impl TezosRPC {
     }
 }
 
-#[async_trait]
-impl<'a> shell_rpc::ShellRPC for TezosRPC {
-    async fn get_chain_id(&self) -> Result<ChainId, Error> {
+// Tezos protocol-independent RPCs
+// See [RPCs - Reference](https://tezos.gitlab.io/shell/rpc.html) for more details.
+impl TezosRPC {
+    /// Get the chain unique identifier.
+    ///
+    /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
+    pub async fn get_chain_id(&self) -> Result<ChainId, Error> {
         shell_rpc::chains::chain::chain_id::get(&self.context).await
     }
 
-    async fn get_blocks(&self, query: &GetBlocksQuery) -> Result<Vec<Vec<BlockHash>>, Error> {
+    /// Get a list of block hashes from `<chain>`, up to the last checkpoint, sorted with
+    /// decreasing fitness. Without arguments it returns the head of the chain.
+    ///
+    /// Optional arguments allow to return the list of predecessors of a given block or of a set of blocks.
+    ///
+    /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
+    pub async fn get_blocks(&self, query: &GetBlocksQuery) -> Result<Vec<Vec<BlockHash>>, Error> {
         shell_rpc::chains::chain::blocks::get(&self.context, query).await
     }
 
-    async fn get_invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
+    /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
+    ///
+    /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
+    pub async fn get_invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
         shell_rpc::chains::chain::invalid_blocks::get(&self.context).await
     }
 
-    async fn get_invalid_block(&self, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
+    /// Get the errors that appeared during the block (in)validation.
+    ///
+    /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
+    pub async fn get_invalid_block(&self, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
         shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash).await
     }
 
-    async fn remove_invalid_block(&self, block_hash: &BlockHash) -> Result<(), Error> {
+    /// Remove an invalid block for the tezos storage.
+    ///
+    /// [`DELETE /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
+    pub async fn remove_invalid_block(&self, block_hash: &BlockHash) -> Result<(), Error> {
         shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash).await
     }
 
-    async fn is_bootstrapped(&self) -> Result<BootstrappedStatus, Error> {
+    /// Get the bootstrap status of a chain.
+    ///
+    /// [`DELETE /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
+    pub async fn is_bootstrapped(&self) -> Result<BootstrappedStatus, Error> {
         shell_rpc::chains::chain::is_bootstrapped::get(&self.context).await
     }
 
-    async fn get_caboose(&self) -> Result<Checkpoint, Error> {
+    /// Get the current caboose for this chain.
+    ///
+    /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
+    pub async fn get_caboose(&self) -> Result<Checkpoint, Error> {
         shell_rpc::chains::chain::levels::caboose::get(&self.context).await
     }
 
-    async fn get_checkpoint(&self) -> Result<Checkpoint, Error> {
+    /// Get the current checkpoint for this chain.
+    ///
+    /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
+    pub async fn get_checkpoint(&self) -> Result<Checkpoint, Error> {
         shell_rpc::chains::chain::levels::checkpoint::get(&self.context).await
     }
 
-    async fn get_savepoint(&self) -> Result<Checkpoint, Error> {
+    /// Get the current savepoint for this chain.
+    ///
+    /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
+    pub async fn get_savepoint(&self) -> Result<Checkpoint, Error> {
         shell_rpc::chains::chain::levels::savepoint::get(&self.context).await
     }
 
-    async fn inject_operation(
+    /// Inject an operation in node and broadcast it.
+    ///
+    /// The `signed_operation_contents` should be constructed using contextual RPCs
+    /// from the latest block and signed by the client.
+    ///
+    /// The injection of the operation will apply it on the current mempool context.
+    /// This context may change at each operation injection or operation reception from peers.
+    ///
+    /// By default, the RPC will wait for the operation to be (pre-)validated before returning.
+    /// However, if `?async` is true, the function returns immediately.
+    /// The optional `?chain` parameter can be used to specify whether to inject on the test chain or the main chain.
+    ///
+    /// Returns the ID of the operation.
+    ///
+    /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
+    pub async fn inject_operation(
         &self,
         signed_operation_contents: &String,
         do_async: &bool,
@@ -118,7 +162,18 @@ impl<'a> shell_rpc::ShellRPC for TezosRPC {
             .await
     }
 
-    async fn inject_block(
+    /// Inject a block in the node and broadcast it.
+    ///
+    /// The `operations` might be pre-validated using a contextual RPCs
+    /// from the latest block (e.g. `/blocks/head/context/preapply`).
+    ///
+    /// By default, the RPC will wait for the block to be validated before answering.
+    /// If `?async` is true, the function returns immediately. Otherwise, the block will be validated before the result is returned. If ?force is true, it will be injected even on non strictly increasing fitness. An optional ?chain parameter can be used to specify whether to inject on the test chain or the main chain.
+    ///
+    /// Returns the ID of the block [BlockHash].
+    ///
+    /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
+    pub async fn inject_block(
         &self,
         payload: &InjectionBlockPayload,
         force: &bool,
@@ -128,13 +183,27 @@ impl<'a> shell_rpc::ShellRPC for TezosRPC {
     }
 }
 
-#[async_trait]
-impl<'a> ProtocolRPC for TezosRPC {
-    async fn get_block(
+// Tezos protocol-dependent RPCs
+// See [RPCs - Reference](https://tezos.gitlab.io/active/rpc.html) for more details.
+impl TezosRPC {
+    /// Get all the information about a block.
+    /// The associated metadata may not be present depending on the history mode and block's distance from the head.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>?[force_metadata]&[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
+    pub async fn get_block(
         &self,
         block_id: Option<&BlockID>,
         metadata: MetadataRPCArg,
     ) -> Result<Block, Error> {
         protocol_rpc::block::get(&self.context, block_id, metadata).await
+    }
+
+    /// Access the balance of a contract.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
+    pub async fn get_balance(&self, address: &String) -> Result<u64, Error> {
+        protocol_rpc::block::context::contract::balance::get(&self.context, address)
+            .send()
+            .await
     }
 }

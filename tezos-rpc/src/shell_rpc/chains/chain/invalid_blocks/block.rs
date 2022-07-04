@@ -36,7 +36,6 @@ mod tests {
     use {
         crate::client::TezosRPC,
         crate::error::Error,
-        crate::shell_rpc::ShellRPC,
         httpmock::prelude::*,
         tezos_core::types::encoded::{BlockHash, Encoded},
     };
