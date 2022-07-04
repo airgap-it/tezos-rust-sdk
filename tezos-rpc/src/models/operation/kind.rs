@@ -21,4 +21,5 @@ pub enum OperationKind {
     Delegation,
     RegisterGlobalConstant,
     SetDepositsLimit,
+    FailingNoop,
 }

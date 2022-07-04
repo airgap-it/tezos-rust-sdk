@@ -20,6 +20,7 @@ use {
         operation_contents_and_result::seed_nonce_revelation::SeedNonceRevelation,
         operation_contents_and_result::set_deposits_limits::SetDepositsLimit,
         operation_contents_and_result::transaction::Transaction,
+        operation_contents_and_result::failing_noop::FailingNoop,
     },
     serde::{Deserialize, Serialize},
 };
@@ -56,6 +57,7 @@ pub enum OperationContent {
     Delegation(Delegation),
     RegisterGlobalConstant(RegisterGlobalConstant),
     SetDepositsLimit(SetDepositsLimit),
+    FailingNoop(FailingNoop),
     // Removed in hangzhou protocol (https://tezos.gitlab.io/protocols/tenderbake.html)
     DoubleBakingEvidence(DoubleBakingEvidence),
 }
