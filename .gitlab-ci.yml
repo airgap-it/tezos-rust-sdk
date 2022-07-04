@@ -6,6 +6,7 @@ variables:
 stages:
   - build
   - test
+  - fmt
 
 build:
   stage: build
@@ -23,3 +24,8 @@ test:
     - docker rm -f unit-$CI_COMMIT_SHA || true
   tags:
     - docker
+
+format-check:
+  stage: fmt
+  script:
+    - docker run --rm --name unit-$CI_COMMIT_SHA $TEST_TAG cargo fmt --check
