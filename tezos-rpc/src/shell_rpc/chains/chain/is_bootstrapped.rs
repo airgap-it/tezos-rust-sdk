@@ -19,7 +19,7 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<BootstrappedStatus, Error> {
 #[cfg(test)]
 mod tests {
     use {
-        crate::client::TezosRPC, crate::error::Error,
+        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         crate::models::bootstrapped_status::ChainStatus, crate::shell_rpc::ShellRPC,
         httpmock::prelude::*,
     };
@@ -37,7 +37,8 @@ mod tests {
         );
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path("main".to_string()));
+            when.method(GET)
+                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(valid_response);

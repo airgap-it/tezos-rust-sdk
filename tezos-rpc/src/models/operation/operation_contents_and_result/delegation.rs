@@ -1,15 +1,15 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate, models::error::RPCError,
-        models::operation::kind::Kind, models::operation::operation_result::Status,
+        models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
+        models::operation::operation_result::operations::delegation::DelegationOperationResult,
     },
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Delegation {
-    /// [Kind::Delegation]
-    pub kind: Kind,
+    /// [OperationKind::Delegation]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     pub fee: String,
@@ -33,20 +33,9 @@ pub struct DelegationMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DelegationOperationResult {
-    pub status: Status,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_gas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_milligas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InternalDelegationOperationResult {
-    /// [Kind::Delegation]
-    pub kind: Kind,
+    /// [OperationKind::Delegation]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [0, 2^16-1]

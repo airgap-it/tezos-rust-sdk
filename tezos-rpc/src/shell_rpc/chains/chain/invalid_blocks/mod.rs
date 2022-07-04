@@ -59,7 +59,7 @@ mod tests {
 
         let invalid_block = &response[0];
         assert_eq!(
-            invalid_block.block.base58(),
+            invalid_block.block.into_string(),
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(invalid_block.level, 2424833);

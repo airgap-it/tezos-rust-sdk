@@ -7,7 +7,7 @@ use {
     crate::models::invalid_block::InvalidBlock,
     async_trait::async_trait,
     std::result::Result,
-    tezos_core::types::encoded::{BlockHash, ChainID, OperationHash},
+    tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
 };
 
 /// Tezos protocol-independent RPCs.
@@ -18,7 +18,7 @@ pub trait ShellRPC {
     /// Get the chain unique identifier.
     ///
     /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-    async fn get_chain_id(&self) -> Result<ChainID, Error>;
+    async fn get_chain_id(&self) -> Result<ChainId, Error>;
 
     /// Get a list of block hashes from `<chain>`, up to the last checkpoint, sorted with
     /// decreasing fitness. Without arguments it returns the head of the chain.

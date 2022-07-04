@@ -1,13 +1,13 @@
 use {
     crate::models::balance_update::BalanceUpdate,
-    crate::models::operation::kind::Kind,
+    crate::models::operation::kind::OperationKind,
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Preendorsement {
-    /// [Kind::Preendorsement]
-    pub kind: Kind,
+    /// [OperationKind::Preendorsement]
+    pub kind: OperationKind,
     /// integer ∈ [-2^31-1, 2^31]
     pub level: i32,
     /// integer ∈ [0, 2^16-1]

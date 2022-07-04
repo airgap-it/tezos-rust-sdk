@@ -1,6 +1,7 @@
 pub mod backtracked;
 pub mod big_map_diff;
 pub mod lazy_storage_diff;
+pub mod operations;
 
 use {
     self::{
@@ -15,9 +16,27 @@ use {
     serde::{Deserialize, Serialize},
 };
 
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum OperationResultStatus {
+    Applied,
+    Failed,
+    Skipped,
+    Backtracked,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum Action {
+    Update,
+    Remove,
+    Copy,
+    Alloc,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct OperationResult {
-    pub status: Status,
+    pub status: OperationResultStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub big_map_diff: Option<Vec<BigMapDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,7 +62,7 @@ pub struct OperationResult {
 impl OperationResult {
     pub fn big_map_diffs(&self, matching_indices: Option<&[u32]>) -> Vec<&BigMap> {
         match self.status {
-            Status::Applied => self
+            OperationResultStatus::Applied => self
                 .lazy_storage_diff
                 .as_ref()
                 .map(|diff| {
@@ -110,22 +129,4 @@ impl OperationResult {
 
         return sum;
     }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum Status {
-    Applied,
-    Failed,
-    Skipped,
-    Backtracked,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub enum Action {
-    Update,
-    Remove,
-    Copy,
-    Alloc,
 }

@@ -1,10 +1,9 @@
 use {
     crate::{
         models::balance_update::BalanceUpdate,
-        models::error::RPCError,
-        models::operation::kind::Kind,
+        models::operation::kind::OperationKind,
         models::operation::operation_result::{
-            big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, Status,
+            operations::transaction::TransactionOperationResult
         },
     },
     serde::{Deserialize, Serialize},
@@ -19,8 +18,8 @@ const REMOVE_DELEGATE: &'static str = "remove_delegate";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Transaction {
-    /// [Kind::Transaction]
-    pub kind: Kind,
+    /// [OperationKind::Transaction]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     pub fee: String,
@@ -45,34 +44,9 @@ pub struct TransactionMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TransactionOperationResult {
-    pub status: Status,
-    pub storage: Option<Micheline>, // FIXME: This should be Michelson
-    pub big_map_diff: Option<BigMapDiff>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub originated_contracts: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_gas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_milligas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub storage_size: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub paid_storage_size_diff: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub allocated_destination_contract: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub lazy_storage_diff: Option<LazyStorageDiff>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InternalTransactionOperationResult {
-    /// [Kind::Transaction]
-    pub kind: Kind,
+    /// [OperationKind::Transaction]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [0, 2^16-1]

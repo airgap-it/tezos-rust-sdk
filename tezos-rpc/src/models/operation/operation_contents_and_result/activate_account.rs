@@ -1,13 +1,13 @@
 use {
-    crate::models::operation::kind::Kind,
+    crate::models::operation::kind::OperationKind,
     crate::models::operation::metadata::Metadata,
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ActivateAccount {
-    /// [Kind::ActivateAccount]
-    pub kind: Kind,
+    /// [OperationKind::ActivateAccount]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub pkh: String,
     /// /^([a-zA-Z0-9][a-zA-Z0-9])*$/

@@ -1,7 +1,7 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate, models::error::RPCError,
-        models::operation::kind::Kind, models::operation::operation_result::Status,
+        models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
+        models::operation::operation_result::operations::register_global_constant::RegisterGlobalConstantOperationResult,
     },
     serde::{Deserialize, Serialize},
     tezos_michelson::micheline::Micheline,
@@ -9,8 +9,8 @@ use {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RegisterGlobalConstant {
-    /// [Kind::RegisterGlobalConstant]
-    pub kind: Kind,
+    /// [OperationKind::RegisterGlobalConstant]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     pub fee: String,
@@ -32,23 +32,9 @@ pub struct RegisterGlobalConstantMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RegisterGlobalConstantOperationResult {
-    pub status: Status,
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
-    pub consumed_gas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_milligas: Option<String>,
-    /// Script expression (Base58Check-encoded)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub global_address: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InternalRegisterGlobalConstantOperationResult {
-    /// [Kind::RegisterGlobalConstant]
-    pub kind: Kind,
+    /// [OperationKind::RegisterGlobalConstant]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [0, 2^16-1]

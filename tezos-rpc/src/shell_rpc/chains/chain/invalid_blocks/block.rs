@@ -13,7 +13,7 @@ fn path(chain_id: String, block_hash: String) -> String {
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub async fn get(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
-    let path = self::path(ctx.chain_id.to_string(), block_hash.base58().to_string());
+    let path = self::path(ctx.chain_id.to_string(), block_hash.into_string());
 
     ctx.http_client.get(path.as_str()).await
 }
@@ -22,7 +22,7 @@ pub async fn get(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<Invali
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub async fn delete(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<(), Error> {
-    let path = self::path(ctx.chain_id.to_string(), block_hash.base58().to_string());
+    let path = self::path(ctx.chain_id.to_string(), block_hash.into_string());
 
     ctx.http_client
         .delete::<(), serde_json::Value>(path.as_str(), &None)
@@ -77,7 +77,7 @@ mod tests {
             .await?;
 
         assert_eq!(
-            response.block.base58(),
+            response.block.into_string(),
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(response.level, 2424833);

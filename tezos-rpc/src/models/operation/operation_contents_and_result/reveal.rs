@@ -1,15 +1,16 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate, models::error::RPCError,
-        models::operation::kind::Kind, models::operation::operation_result::Status,
+        models::balance_update::BalanceUpdate,
+        models::operation::kind::OperationKind,
+        models::operation::operation_result::operations::reveal::RevealOperationResult
     },
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Reveal {
-    /// [Kind::Reveal]
-    pub kind: Kind,
+    /// [OperationKind::Reveal]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     pub fee: String,
@@ -32,20 +33,9 @@ pub struct RevealMetadata {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RevealOperationResult {
-    pub status: Status,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_gas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_milligas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InternalRevealOperationResult {
-    /// [Kind::Reveal]
-    pub kind: Kind,
+    /// [OperationKind::Reveal]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [0, 2^16-1]
@@ -58,12 +48,12 @@ pub struct InternalRevealOperationResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::operation::kind::Kind;
+    use crate::models::operation::kind::OperationKind;
 
     #[test]
     fn test_serialize() {
         let reveal: Reveal = Reveal {
-            kind: Kind::Reveal,
+            kind: OperationKind::Reveal,
             source: "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".to_string(),
             fee: "111111111111111111111111111111111".to_string(),
             counter: "222222222222222222222222222222222".to_string(),
@@ -81,7 +71,7 @@ mod tests {
     #[test]
     fn test_deserialize() {
         let expected_reveal: Reveal = Reveal {
-            kind: Kind::Reveal,
+            kind: OperationKind::Reveal,
             source: "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".to_string(),
             fee: "111111111111111111111111111111111".to_string(),
             counter: "222222222222222222222222222222222".to_string(),

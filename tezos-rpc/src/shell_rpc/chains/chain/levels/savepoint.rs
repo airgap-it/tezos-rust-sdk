@@ -15,9 +15,11 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<Checkpoint, Error> {
 
 #[cfg(test)]
 mod tests {
+    use tezos_core::types::encoded::Encoded;
+
     use {
         crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -43,7 +45,7 @@ mod tests {
         let response = client.get_savepoint().await?;
 
         assert_eq!(
-            response.block_hash.base58(),
+            response.block_hash.into_string(),
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(response.level, 2424833);
