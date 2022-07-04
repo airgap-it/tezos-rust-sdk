@@ -1,4 +1,4 @@
-use {crate::client::TezosRPCContext, crate::error::Error, tezos_core::types::encoded::ChainID};
+use {crate::client::TezosRPCContext, crate::error::Error, tezos_core::types::encoded::ChainId};
 
 fn path(chain_id: String) -> String {
     format!("{}{}", super::path(chain_id), "/chain_id")
@@ -7,7 +7,7 @@ fn path(chain_id: String) -> String {
 /// Get the chain unique identifier.
 ///
 /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-pub async fn get(ctx: &TezosRPCContext) -> Result<ChainID, Error> {
+pub async fn get(ctx: &TezosRPCContext) -> Result<ChainId, Error> {
     let path = self::path(ctx.chain_id.to_string());
 
     ctx.http_client.get(path.as_str()).await
@@ -15,9 +15,11 @@ pub async fn get(ctx: &TezosRPCContext) -> Result<ChainID, Error> {
 
 #[cfg(test)]
 mod tests {
+    use tezos_core::types::encoded::Encoded;
+
     use {
         crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -36,7 +38,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let chain_id = client.get_chain_id().await?;
-        assert_eq!(chain_id_string, chain_id.base58());
+        assert_eq!(chain_id_string, chain_id.into_string());
 
         Ok(())
     }

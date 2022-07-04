@@ -1,13 +1,13 @@
 use {
     crate::models::balance_update::BalanceUpdate,
-    crate::models::operation::kind::Kind,
+    crate::models::operation::kind::OperationKind,
     serde::{Deserialize, Serialize},
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Endorsement {
-    /// [Kind::Endorsement]
-    pub kind: Kind,
+    /// [OperationKind::Endorsement]
+    pub kind: OperationKind,
     /// integer ∈ [-2^31-1, 2^31]
     pub level: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -23,7 +23,7 @@ pub struct Endorsement {
     pub block_payload_hash: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EndorsementMetadata {
     /// Public key hash (Base58Check-encoded)
     pub delegate: String,

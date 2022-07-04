@@ -73,7 +73,7 @@ mod tests {
             .inject_operation(&signed_operation_contents.to_string(), &false)
             .await?;
 
-        assert_eq!(operation_hash, op_hash.base58());
+        assert_eq!(operation_hash, op_hash.into_string());
 
         Ok(())
     }

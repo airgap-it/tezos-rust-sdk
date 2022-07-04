@@ -57,11 +57,13 @@ pub async fn post(
 
 #[cfg(test)]
 mod tests {
+    use tezos_core::types::encoded::Encoded;
+
     use super::{InjectionBlockPayload, OperationPayload};
 
     use {
         crate::client::TezosRPC, crate::error::Error, crate::shell_rpc::ShellRPC,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -98,7 +100,7 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
         let op_hash = client.inject_block(&payload, &false, &false).await?;
 
-        assert_eq!(block_hash, op_hash.base58());
+        assert_eq!(block_hash, op_hash.into_string());
 
         Ok(())
     }

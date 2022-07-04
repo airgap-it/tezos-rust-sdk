@@ -1,12 +1,12 @@
 use {
-    crate::models::operation::kind::Kind,
+    crate::models::operation::kind::OperationKind,
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Proposals {
-    /// [Kind::Proposals]
-    pub kind: Kind,
+    /// [OperationKind::Proposals]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [-2^31-1, 2^31]

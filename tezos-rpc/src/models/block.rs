@@ -1,12 +1,22 @@
 use {
     super::balance_update::BalanceUpdate,
-    super::error::RPCError,
     super::operation::OperationGroup,
-    serde::{Deserialize, Serialize},
+    super::operation::operation_result::operations::SuccessfulManagerOperationResult,
     tezos_core::helper::rfc3339_timestamp,
-    tezos_core::types::encoded::BlockHash,
     tezos_core::types::timestamp::Timestamp,
+    serde::{Deserialize, Serialize},
 };
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Block {
+    pub protocol: String,
+    pub chain_id: String,
+    pub hash: String,
+    pub header: Header,
+    pub operations: Vec<Vec<OperationGroup>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Metadata>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Header {
@@ -64,7 +74,7 @@ pub struct FullHeader {
     pub signature: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Metadata {
     pub protocol: String,
     pub next_protocol: String,
@@ -91,16 +101,20 @@ pub struct Metadata {
     pub deactivated: Vec<String>,
     #[serde(default)]
     pub balance_updates: Vec<BalanceUpdate>,
+    /// integer ∈ [-2^31-1, 2^31],
+    pub liquidity_baking_escape_ema: Option<u32>,
+    #[serde(default)]
+    pub implicit_operations_results: Option<Vec<SuccessfulManagerOperationResult>>
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct OperationListLength {
     pub max_size: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_op: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct Level {
     pub level: i32,
     pub level_position: i32,
@@ -125,7 +139,7 @@ impl Default for Level {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct LevelInfo {
     pub level: i32,
     pub level_position: i32,
@@ -134,7 +148,7 @@ pub struct LevelInfo {
     pub expected_commitment: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum VotingPeriodKind {
     Unknown,
@@ -154,34 +168,16 @@ impl Default for VotingPeriodKind {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct VotingPeriodInfo {
     pub voting_period: VotingPeriod,
     pub position: i32,
     pub remaining: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct VotingPeriod {
     pub index: i32,
     pub kind: VotingPeriodKind,
     pub start_position: i32,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Block {
-    pub protocol: String,
-    pub chain_id: String,
-    pub hash: String,
-    pub header: Header,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<Metadata>,
-    pub operations: Vec<Vec<OperationGroup>>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct InvalidBlock {
-    pub block: BlockHash,
-    pub level: u64,
-    pub errors: Vec<RPCError>,
 }

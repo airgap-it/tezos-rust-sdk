@@ -41,7 +41,7 @@ mod test {
         let invalid_block: Checkpoint = serde_json::from_str(&json)?;
 
         assert_eq!(
-            invalid_block.block_hash.base58(),
+            invalid_block.block_hash.into_string(),
             "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA"
         );
         assert_eq!(invalid_block.level, 1);

@@ -1,14 +1,14 @@
 use {
     super::preendorsement::Preendorsement,
-    crate::models::operation::kind::Kind,
+    crate::models::operation::kind::OperationKind,
     crate::models::operation::metadata::Metadata,
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DoublePreendorsementEvidence {
-    /// [Kind::DoublePreendorsementEvidence]
-    pub kind: Kind,
+    /// [OperationKind::DoublePreendorsementEvidence]
+    pub kind: OperationKind,
     pub op1: InlinedPreendorsement,
     pub op2: InlinedPreendorsement,
     #[serde(skip_serializing_if = "Option::is_none")]

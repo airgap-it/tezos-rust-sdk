@@ -23,9 +23,6 @@ impl Default for BlockID {
     }
 }
 
-// impl Copy for BlockID {
-// }
-
 impl BlockID {
     fn value(&self) -> String {
         match self {
@@ -78,4 +75,46 @@ pub async fn get(
     ctx.http_client
         .get_with_query(path.as_str(), &Some(query))
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        crate::constants::{DEFAULT_CHAIN_ALIAS, BLOCK_HEAD_ALIAS},
+        crate::models::block::Block,
+        crate::client::TezosRPC, crate::error::Error,
+        crate::protocol_rpc::ProtocolRPC,
+        httpmock::prelude::*,
+    };
+
+    #[tokio::test]
+    async fn test_get_block() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        let block_json = include_str!("test_data/block_simple.json");
+        let block: Block = serde_json::from_str(&block_json)?;
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string(), BLOCK_HEAD_ALIAS.to_string()));
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(block_json);
+        });
+        let client = TezosRPC::new(rpc_url.as_str());
+
+        let response = client.get_block(&None, super::MetadataRPCArg::Always).await?;
+
+        assert!(response.protocol.starts_with("P"));
+        assert!(response.chain_id.starts_with("Net"));
+        assert!(response.hash.starts_with("B"));
+        assert_eq!(response.header, block.header);
+
+        let expected_block_metadata = block.metadata.expect("Block has metadata");
+        let block_metadata = response.metadata.expect("Block has metadata");
+        assert_eq!(block_metadata, expected_block_metadata);
+
+        Ok(())
+    }
 }

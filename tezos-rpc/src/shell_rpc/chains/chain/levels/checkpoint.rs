@@ -41,7 +41,7 @@ mod tests {
         let response = client.get_checkpoint().await?;
 
         assert_eq!(
-            response.block_hash.base58(),
+            response.block_hash.into_string(),
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(response.level, 2424833);

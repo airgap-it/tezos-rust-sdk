@@ -81,7 +81,7 @@ mod tests {
         let response = client.get_blocks(req_query).await?;
 
         assert_eq!(
-            response[0][0].base58(),
+            response[0][0].into_string(),
             "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
         );
 

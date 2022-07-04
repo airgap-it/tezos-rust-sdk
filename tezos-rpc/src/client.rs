@@ -14,7 +14,7 @@ use {
     crate::shell_rpc::injection::block::InjectionBlockPayload,
     async_trait::async_trait,
     std::result::Result,
-    tezos_core::types::encoded::{BlockHash, ChainID, OperationHash},
+    tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
 };
 
 pub struct TezosRPCContext {
@@ -73,7 +73,7 @@ impl TezosRPC {
 
 #[async_trait]
 impl<'a> shell_rpc::ShellRPC for TezosRPC {
-    async fn get_chain_id(&self) -> Result<ChainID, Error> {
+    async fn get_chain_id(&self) -> Result<ChainId, Error> {
         shell_rpc::chains::chain::chain_id::get(&self.context).await
     }
 

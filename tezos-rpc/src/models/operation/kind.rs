@@ -5,7 +5,7 @@ use {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Display)]
 #[serde(rename_all = "snake_case")]
-pub enum Kind {
+pub enum OperationKind {
     Endorsement,
     Preendorsement,
     SeedNonceRevelation,
@@ -20,5 +20,5 @@ pub enum Kind {
     Origination,
     Delegation,
     RegisterGlobalConstant,
-    SetDepositsLimits,
+    SetDepositsLimit,
 }

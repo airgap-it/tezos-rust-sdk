@@ -1,0 +1,27 @@
+{
+    "protocol": "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i",
+    "chain_id": "NetXdQprcVkpaWU",
+    "hash": "BLockGenesisGenesisGenesisGenesisGenesisf79b5d1CoW2",
+    "header": {
+        "level": 0,
+        "proto": 0,
+        "predecessor": "BLockGenesisGenesisGenesisGenesisGenesisf79b5d1CoW2",
+        "timestamp": "2018-06-30T16:07:32Z",
+        "validation_pass": 0,
+        "operations_hash": "LLoZS2LW3rEi7KYU4ouBQtorua37aWWCtpDmv1n2x3xoKi6sVXLWp",
+        "fitness": [],
+        "context": "CoV8SQumiVU9saiu3FVNeDNewJaJH8yWdsGF3WLdsRr2P9S7MzCj"
+    },
+    "metadata": {
+        "protocol": "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i",
+        "next_protocol": "Ps9mPmXaRzmzk35gbAYNCAw6UXdE2qoABTHbN2oEEc1qM7CwT9P",
+        "test_chain_status": {
+            "status": "not_running"
+        },
+        "max_operations_ttl": 0,
+        "max_operation_data_length": 0,
+        "max_block_header_length": 105,
+        "max_operation_list_length": []
+    },
+    "operations": []
+}

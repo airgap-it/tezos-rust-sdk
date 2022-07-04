@@ -1,15 +1,15 @@
 use {
     crate::models::{
-        balance_update::BalanceUpdate, error::RPCError, operation::kind::Kind,
-        operation::operation_result::Status,
+        balance_update::BalanceUpdate, operation::kind::OperationKind,
+        operation::operation_result::operations::set_deposits_limit::SetDepositsLimitOperationResult,
     },
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SetDepositsLimits {
-    /// [Kind::SetDepositsLimits]
-    pub kind: Kind,
+pub struct SetDepositsLimit {
+    /// [OperationKind::SetDepositsLimit]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     pub fee: String,
@@ -26,31 +26,20 @@ pub struct SetDepositsLimits {
 pub struct SetDepositsLimitsMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance_updates: Option<Vec<BalanceUpdate>>,
-    pub operation_result: SetDepositsLimitsOperationResult,
+    pub operation_result: SetDepositsLimitOperationResult,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<InternalSetDepositsLimitsOperationResult>,
+    pub internal_operation_results: Option<InternalSetDepositsLimitOperationResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SetDepositsLimitsOperationResult {
-    pub status: Status,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_gas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub consumed_milligas: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalSetDepositsLimitsOperationResult {
-    /// [Kind::SetDepositsLimits]
-    pub kind: Kind,
+pub struct InternalSetDepositsLimitOperationResult {
+    /// [OperationKind::SetDepositsLimits]
+    pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,
     /// integer ∈ [0, 2^16-1]
     pub nonce: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    pub result: SetDepositsLimitsOperationResult,
+    pub result: SetDepositsLimitOperationResult,
 }

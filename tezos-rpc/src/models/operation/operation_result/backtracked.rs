@@ -1,12 +1,12 @@
 use {
-    super::{big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, Status},
+    super::{big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, OperationResultStatus},
     crate::{models::balance_update::BalanceUpdate, models::error::RPCError},
     serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Backtracked {
-    pub status: Status,
+    pub status: OperationResultStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RPCError>>,
     #[serde(skip_serializing_if = "Option::is_none")]
