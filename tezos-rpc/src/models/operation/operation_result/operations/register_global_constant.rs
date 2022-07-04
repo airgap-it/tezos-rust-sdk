@@ -1,7 +1,6 @@
 use {
     crate::{
-        models::error::RPCError,
-        models::balance_update::BalanceUpdate,
+        models::balance_update::BalanceUpdate, models::error::RPCError,
         models::operation::operation_result::OperationResultStatus,
     },
     serde::{Deserialize, Serialize},

@@ -1,8 +1,7 @@
 use {
     crate::{
-        models::error::RPCError,
+        models::error::RPCError, models::operation::kind::OperationKind,
         models::operation::operation_result::OperationResultStatus,
-        models::operation::kind::OperationKind
     },
     serde::{Deserialize, Serialize},
 };
@@ -17,7 +16,6 @@ pub struct SetDepositsLimitOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RPCError>>,
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct SetDepositsLimitSuccessfulManagerOperationResult {

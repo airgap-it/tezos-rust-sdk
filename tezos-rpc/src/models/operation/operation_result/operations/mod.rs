@@ -1,17 +1,19 @@
-pub mod transaction;
-pub mod reveal;
 pub mod delegation;
-pub mod set_deposits_limit;
 pub mod origination;
 pub mod register_global_constant;
+pub mod reveal;
+pub mod set_deposits_limit;
+pub mod transaction;
 
 use {
-    self::transaction::{TransactionOperationResult, TransactionSuccessfulManagerOperationResult},
-    self::reveal::{RevealOperationResult, RevealSuccessfulManagerOperationResult},
     self::delegation::{DelegationOperationResult, DelegationSuccessfulManagerOperationResult},
-    self::set_deposits_limit::{SetDepositsLimitOperationResult, SetDepositsLimitSuccessfulManagerOperationResult},
     self::origination::{OriginationOperationResult, OriginationSuccessfulManagerOperationResult},
     self::register_global_constant::RegisterGlobalConstantOperationResult,
+    self::reveal::{RevealOperationResult, RevealSuccessfulManagerOperationResult},
+    self::set_deposits_limit::{
+        SetDepositsLimitOperationResult, SetDepositsLimitSuccessfulManagerOperationResult,
+    },
+    self::transaction::{TransactionOperationResult, TransactionSuccessfulManagerOperationResult},
     serde::{Deserialize, Serialize},
 };
 

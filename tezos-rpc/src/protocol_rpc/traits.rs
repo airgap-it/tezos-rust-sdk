@@ -17,7 +17,7 @@ pub trait ProtocolRPC {
     /// [`GET /chains/<chain_id>/blocks/<block_id>?[force_metadata]&[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
     async fn get_block(
         &self,
-        block_id: &Option<BlockID>,
+        block_id: Option<&BlockID>,
         metadata: MetadataRPCArg,
     ) -> Result<Block, Error>;
 }

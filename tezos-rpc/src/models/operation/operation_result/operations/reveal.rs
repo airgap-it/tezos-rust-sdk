@@ -1,10 +1,7 @@
 use crate::models::operation::kind::OperationKind;
 
 use {
-    crate::{
-        models::error::RPCError,
-        models::operation::operation_result::OperationResultStatus,
-    },
+    crate::{models::error::RPCError, models::operation::operation_result::OperationResultStatus},
     serde::{Deserialize, Serialize},
 };
 

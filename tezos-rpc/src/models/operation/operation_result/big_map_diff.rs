@@ -1,12 +1,12 @@
-use serde::{Deserialize, Serialize};
-
-use tezos_michelson::micheline::Micheline;
-
-use super::Action;
+use {
+    super::DiffAction,
+    serde::{Deserialize, Serialize},
+    tezos_michelson::micheline::Micheline,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct BigMapDiff {
-    pub action: Action,
+    pub action: DiffAction,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub big_map: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

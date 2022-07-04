@@ -1,8 +1,7 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate,
-        models::operation::kind::OperationKind,
-        models::operation::operation_result::operations::reveal::RevealOperationResult
+        models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
+        models::operation::operation_result::operations::reveal::RevealOperationResult,
     },
     serde::{Deserialize, Serialize},
 };

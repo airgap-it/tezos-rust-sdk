@@ -1,10 +1,13 @@
 use {
-    super::balance_update::BalanceUpdate,
-    super::operation::OperationGroup,
-    super::operation::operation_result::operations::SuccessfulManagerOperationResult,
+    super::{
+        balance_update::BalanceUpdate,
+        operation::{
+            operation_result::operations::SuccessfulManagerOperationResult, OperationGroup,
+        },
+    },
+    serde::{Deserialize, Serialize},
     tezos_core::helper::rfc3339_timestamp,
     tezos_core::types::timestamp::Timestamp,
-    serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,33 +81,36 @@ pub struct FullHeader {
 pub struct Metadata {
     pub protocol: String,
     pub next_protocol: String,
+    pub test_chain_status: TestChainStatus,
     pub max_operations_ttl: i32,
     pub max_operation_data_length: i32,
     pub max_block_header_length: i32,
     pub max_operation_list_length: Vec<OperationListLength>,
-    #[serde(default)]
-    pub baker: String,
-    #[serde(default)]
-    pub proposer: String,
-    #[serde(default)]
-    pub level: Level,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baker: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proposer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub level: Option<Level>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub level_info: Option<LevelInfo>,
-    #[serde(default)]
-    pub voting_period_kind: VotingPeriodKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voting_period_kind: Option<VotingPeriodKind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub voting_period_info: Option<VotingPeriodInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nonce_hash: Option<String>,
-    #[serde(default)]
-    pub consumed_gas: String,
-    #[serde(default)]
-    pub deactivated: Vec<String>,
-    #[serde(default)]
-    pub balance_updates: Vec<BalanceUpdate>,
-    /// integer ∈ [-2^31-1, 2^31],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub consumed_gas: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deactivated: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub balance_updates: Option<Vec<BalanceUpdate>>,
+    /// integer ∈ [-2^31-1, 2^31]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub liquidity_baking_escape_ema: Option<u32>,
-    #[serde(default)]
-    pub implicit_operations_results: Option<Vec<SuccessfulManagerOperationResult>>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub implicit_operations_results: Option<Vec<SuccessfulManagerOperationResult>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
@@ -180,4 +186,31 @@ pub struct VotingPeriod {
     pub index: i32,
     pub kind: VotingPeriodKind,
     pub start_position: i32,
+}
+
+/// The status of the test chain:
+///
+/// * `not_running` : There is no test chain at the moment.
+/// * `forking` : The test chain is being setup.
+/// * `running` : The test chain is running.
+///
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct TestChainStatus {
+    pub status: TestChainStatusName,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chain_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub genesis: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiration: Option<Timestamp>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum TestChainStatusName {
+    NotRunning,
+    Forking,
+    Running,
 }
