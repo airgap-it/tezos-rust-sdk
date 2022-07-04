@@ -6,7 +6,6 @@ pub use self::{
     encoded::{
         address_bytes_coder::AddressBytesCoder,
         contract_address_bytes_coder::ContractAddressBytesCoder,
-        contract_hash_bytes_coder::ContractHashBytesCoder,
         encoded_bytes_coder::{EncodedBytesCoder, EncodedBytesCoderConfiguration},
         encoded_group_bytes_coder::{EncodedGroupBytesCoder, TagProvider},
         implicit_address_bytes_coder::ImplicitAddressBytesCoder,
