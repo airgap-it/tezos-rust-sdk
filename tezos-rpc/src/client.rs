@@ -2,7 +2,6 @@ use {
     crate::constants,
     crate::error::Error,
     crate::http,
-    crate::models::bootstrapped_status::BootstrappedStatus,
     crate::models::checkpoint::Checkpoint,
     crate::models::invalid_block::InvalidBlock,
     crate::protocol_rpc,
@@ -110,9 +109,9 @@ impl TezosRPC {
 
     /// Get the bootstrap status of a chain.
     ///
-    /// [`DELETE /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
-    pub async fn is_bootstrapped(&self) -> Result<BootstrappedStatus, Error> {
-        shell_rpc::chains::chain::is_bootstrapped::get(&self.context).await
+    /// [`GET /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
+    pub fn is_bootstrapped(&self) -> shell_rpc::chains::chain::is_bootstrapped::RPCRequestBuilder {
+        shell_rpc::chains::chain::is_bootstrapped::get(&self.context)
     }
 
     /// Get the current caboose for this chain.
