@@ -4,7 +4,7 @@ use {
 };
 
 fn path(chain_id: &String) -> String {
-    format!("{}{}", super::path(chain_id), "/is_bootstrapped")
+    format!("{}/is_bootstrapped", super::path(chain_id))
 }
 
 /// A builder to construct the properties of a request to get the bootstrap status of a chain.

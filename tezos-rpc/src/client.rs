@@ -1,14 +1,7 @@
 use {
-    crate::constants,
-    crate::error::Error,
-    crate::http,
-    crate::models::checkpoint::Checkpoint,
-    crate::models::invalid_block::InvalidBlock,
-    crate::protocol_rpc,
-    crate::shell_rpc,
-    crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
-    crate::shell_rpc::injection::block::InjectionBlockPayload,
-    std::result::Result,
+    crate::constants, crate::error::Error, crate::http, crate::models::invalid_block::InvalidBlock,
+    crate::protocol_rpc, crate::shell_rpc, crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
+    crate::shell_rpc::injection::block::InjectionBlockPayload, std::result::Result,
     tezos_core::types::encoded::BlockHash,
 };
 
@@ -117,22 +110,24 @@ impl TezosRPC {
     /// Get the current caboose for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
-    pub async fn get_caboose(&self) -> Result<Checkpoint, Error> {
-        shell_rpc::chains::chain::levels::caboose::get(&self.context).await
+    pub fn get_caboose(&self) -> shell_rpc::chains::chain::levels::caboose::RPCRequestBuilder {
+        shell_rpc::chains::chain::levels::caboose::get(&self.context)
     }
 
     /// Get the current checkpoint for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
-    pub async fn get_checkpoint(&self) -> Result<Checkpoint, Error> {
-        shell_rpc::chains::chain::levels::checkpoint::get(&self.context).await
+    pub fn get_checkpoint(
+        &self,
+    ) -> shell_rpc::chains::chain::levels::checkpoint::RPCRequestBuilder {
+        shell_rpc::chains::chain::levels::checkpoint::get(&self.context)
     }
 
     /// Get the current savepoint for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
-    pub async fn get_savepoint(&self) -> Result<Checkpoint, Error> {
-        shell_rpc::chains::chain::levels::savepoint::get(&self.context).await
+    pub fn get_savepoint(&self) -> shell_rpc::chains::chain::levels::savepoint::RPCRequestBuilder {
+        shell_rpc::chains::chain::levels::savepoint::get(&self.context)
     }
 
     /// Inject an operation in node and broadcast it.

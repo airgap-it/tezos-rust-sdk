@@ -1,7 +1,7 @@
 use {crate::client::TezosRPCContext, crate::error::Error};
 
 fn path(chain_id: &String) -> String {
-    format!("{}{}", super::path(chain_id), "/chain_id")
+    format!("{}/chain_id", super::path(chain_id))
 }
 
 /// A builder to construct the properties of a request to get the chain unique identifier.

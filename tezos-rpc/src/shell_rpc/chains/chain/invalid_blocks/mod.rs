@@ -5,7 +5,7 @@ use {
 };
 
 fn path(chain_id: &String) -> String {
-    format!("{}{}", super::path(chain_id), "/invalid_blocks")
+    format!("{}/invalid_blocks", super::path(chain_id))
 }
 
 /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.

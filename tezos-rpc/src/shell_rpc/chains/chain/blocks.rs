@@ -4,7 +4,7 @@ use serde::Serialize;
 use tezos_core::types::encoded::BlockHash;
 
 fn path(chain_id: &String) -> String {
-    format!("{}{}", super::path(chain_id), "/blocks")
+    format!("{}/blocks", super::path(chain_id))
 }
 
 /// `GetBlocksQuery` query parameters for request:

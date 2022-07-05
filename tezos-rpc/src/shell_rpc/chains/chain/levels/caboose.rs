@@ -1,23 +1,50 @@
 use {crate::client::TezosRPCContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
 
 fn path(chain_id: &String) -> String {
-    format!("{}{}", super::path(chain_id), "/caboose")
+    format!("{}/caboose", super::path(chain_id))
+}
+
+/// A builder to construct the properties of a request to get the current caboose for this chain.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    pub async fn send(self) -> Result<Checkpoint, Error> {
+        let path = self::path(self.chain_id);
+
+        self.ctx.http_client.get(path.as_str()).await
+    }
 }
 
 /// Get the current caboose for this chain.
 ///
 /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
-pub async fn get(ctx: &TezosRPCContext) -> Result<Checkpoint, Error> {
-    let path = self::path(&ctx.chain_id);
-
-    ctx.http_client.get(path.as_str()).await
+pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+    RPCRequestBuilder::new(ctx)
 }
 
 #[cfg(test)]
 mod tests {
     use {
         crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -39,10 +66,10 @@ mod tests {
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let response = client.get_caboose().await?;
+        let response = client.get_caboose().send().await?;
 
         assert_eq!(
-            response.block_hash.into_string(),
+            response.block_hash,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(response.level, 2424833);
