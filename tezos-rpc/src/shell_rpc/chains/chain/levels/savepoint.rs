@@ -1,6 +1,6 @@
 use {crate::client::TezosRPCContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
 
-fn path(chain_id: String) -> String {
+fn path(chain_id: &String) -> String {
     format!("{}{}", super::path(chain_id), "/savepoint")
 }
 
@@ -8,16 +8,17 @@ fn path(chain_id: String) -> String {
 ///
 /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
 pub async fn get(ctx: &TezosRPCContext) -> Result<Checkpoint, Error> {
-    let path = self::path(ctx.chain_id.to_string());
+    let path = self::path(&ctx.chain_id);
 
     ctx.http_client.get(path.as_str()).await
 }
 
 #[cfg(test)]
 mod tests {
-    use tezos_core::types::encoded::Encoded;
-
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {
+        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
+        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+    };
 
     #[tokio::test]
     async fn test_get_savepoint() -> Result<(), Error> {
@@ -32,7 +33,8 @@ mod tests {
         );
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path("main".to_string()));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(valid_response);

@@ -64,8 +64,8 @@ mod tests {
         crate::client::TezosRPC,
         crate::error::Error,
         crate::{constants::DEFAULT_CHAIN_ALIAS, protocol_rpc::block::BlockID},
-        num_bigint::BigInt,
         httpmock::prelude::*,
+        num_bigint::BigInt,
     };
 
     #[tokio::test]

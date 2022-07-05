@@ -5,7 +5,7 @@ use {
             operation_result::operations::SuccessfulManagerOperationResult, OperationGroup,
         },
     },
-    crate::constants::{BLOCK_HEAD_ALIAS, BLOCK_GENESIS_ALIAS},
+    crate::constants::{BLOCK_GENESIS_ALIAS, BLOCK_HEAD_ALIAS},
     serde::{Deserialize, Serialize},
     tezos_core::helper::rfc3339_timestamp,
     tezos_core::types::timestamp::Timestamp,

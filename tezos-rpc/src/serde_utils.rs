@@ -7,7 +7,7 @@ use {
 pub fn option_number_of_option_string<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + serde::Deserialize<'de>
+    T: FromStr + serde::Deserialize<'de>,
 {
     #[derive(Deserialize)]
     #[serde(untagged)]
@@ -17,25 +17,24 @@ where
     }
 
     match Option::<Format<T>>::deserialize(deserializer) {
-        Ok(res) =>
-            match res {
-                Some(op) => {
-                    Ok(match op {
-                        Format::String(s) => s.parse::<T>().map_or(None, Some),
-                        Format::Number(i) => Some(i),
-                    })
-                }
-                None => Ok(None),
-            }
-        Err(_) => Ok(None)
+        Ok(res) => match res {
+            Some(op) => Ok(match op {
+                Format::String(s) => s.parse::<T>().map_or(None, Some),
+                Format::Number(i) => Some(i),
+            }),
+            None => Ok(None),
+        },
+        Err(_) => Ok(None),
     }
 }
 
 /// Deserialize possible `Option<Vec<String>>` into `Option<Vec<T>>`.
-pub fn option_number_vec_of_option_string_vec<'de, T, D>(deserializer: D) -> Result<Option<Vec<T>>, D::Error>
+pub fn option_number_vec_of_option_string_vec<'de, T, D>(
+    deserializer: D,
+) -> Result<Option<Vec<T>>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr + serde::Deserialize<'de>
+    T: FromStr + serde::Deserialize<'de>,
 {
     #[derive(Deserialize)]
     #[serde(untagged)]
@@ -45,16 +44,16 @@ where
     }
 
     match Option::<Format<T>>::deserialize(deserializer) {
-        Ok(res) =>
-        match res {
-            Some(value) => {
-                Ok(match value {
-                    Format::String(v) => v.iter().map(|s| s.parse::<T>().map_or(None, Some)).collect(),
-                    Format::Number(i) => Some(i),
-                })
-            }
+        Ok(res) => match res {
+            Some(value) => Ok(match value {
+                Format::String(v) => v
+                    .iter()
+                    .map(|s| s.parse::<T>().map_or(None, Some))
+                    .collect(),
+                Format::Number(i) => Some(i),
+            }),
             None => Ok(None),
-        }
-        Err(_) => Ok(None)
+        },
+        Err(_) => Ok(None),
     }
 }

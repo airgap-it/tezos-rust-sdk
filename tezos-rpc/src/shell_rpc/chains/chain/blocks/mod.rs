@@ -3,7 +3,7 @@ use crate::error::Error;
 use serde::Serialize;
 use tezos_core::types::encoded::BlockHash;
 
-fn path(chain_id: String) -> String {
+fn path(chain_id: &String) -> String {
     format!("{}{}", super::path(chain_id), "/blocks")
 }
 
@@ -31,15 +31,17 @@ pub async fn get(
     ctx: &TezosRPCContext,
     query: &GetBlocksQuery,
 ) -> Result<Vec<Vec<BlockHash>>, Error> {
-    let path = self::path(ctx.chain_id.to_string());
+    let path = self::path(&ctx.chain_id);
 
     ctx.http_client.get_with_query(path.as_str(), query).await
 }
 
 #[cfg(test)]
 mod tests {
+
     use {
         crate::client::TezosRPC,
+        crate::constants::DEFAULT_CHAIN_ALIAS,
         crate::error::Error,
         crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
         httpmock::prelude::*,
@@ -56,7 +58,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path("main".to_string()))
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()))
                 .query_param("length", "1")
                 .query_param(
                     "head",

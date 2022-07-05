@@ -1,10 +1,6 @@
-use {
-    crate::{
-        client::TezosRPCContext,
-        error::Error,
-        models::constants::Constants,
-        protocol_rpc::block::BlockID
-    }
+use crate::{
+    client::TezosRPCContext, error::Error, models::constants::Constants,
+    protocol_rpc::block::BlockID,
 };
 
 fn path(chain_id: &String, block_id: &BlockID) -> String {
@@ -58,9 +54,7 @@ pub fn get<'a>(ctx: &'a TezosRPCContext) -> RPCRequestBuilder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        constants::{DEFAULT_CHAIN_ALIAS}, protocol_rpc::block::BlockID
-    };
+    use crate::{constants::DEFAULT_CHAIN_ALIAS, protocol_rpc::block::BlockID};
 
     use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
 
@@ -72,13 +66,13 @@ mod tests {
         let block_id = BlockID::Level(1);
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("constants/__TEST_DATA__/block_1_constants.json"));
+                .body(include_str!(
+                    "constants/__TEST_DATA__/block_1_constants.json"
+                ));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
@@ -98,13 +92,13 @@ mod tests {
         let block_id = BlockID::Head;
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("constants/__TEST_DATA__/ithaca_constants.json"));
+                .body(include_str!(
+                    "constants/__TEST_DATA__/ithaca_constants.json"
+                ));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
@@ -125,13 +119,13 @@ mod tests {
         let block_id = BlockID::Head;
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("constants/__TEST_DATA__/jakarta_constants.json"));
+                .body(include_str!(
+                    "constants/__TEST_DATA__/jakarta_constants.json"
+                ));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 

@@ -5,7 +5,7 @@ use {
     tezos_core::types::encoded::{BlockHash, Encoded},
 };
 
-fn path(chain_id: String, block_hash: String) -> String {
+fn path(chain_id: &String, block_hash: &String) -> String {
     format!("{}/{}", super::path(chain_id), block_hash)
 }
 
@@ -13,7 +13,7 @@ fn path(chain_id: String, block_hash: String) -> String {
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub async fn get(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
-    let path = self::path(ctx.chain_id.to_string(), block_hash.into_string());
+    let path = self::path(&ctx.chain_id, &block_hash.into_string());
 
     ctx.http_client.get(path.as_str()).await
 }
@@ -22,7 +22,7 @@ pub async fn get(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<Invali
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub async fn delete(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<(), Error> {
-    let path = self::path(ctx.chain_id.to_string(), block_hash.into_string());
+    let path = self::path(&ctx.chain_id, &block_hash.into_string());
 
     ctx.http_client
         .delete::<(), serde_json::Value>(path.as_str(), &None)
@@ -33,6 +33,8 @@ pub async fn delete(ctx: &TezosRPCContext, block_hash: &BlockHash) -> Result<(),
 
 #[cfg(test)]
 mod tests {
+    use crate::constants::DEFAULT_CHAIN_ALIAS;
+
     use {
         crate::client::TezosRPC,
         crate::error::Error,
@@ -62,8 +64,8 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                "main".to_string(),
-                invalid_block_hash.to_string(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &invalid_block_hash.to_string(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -100,8 +102,8 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(DELETE).path(super::path(
-                "main".to_string(),
-                invalid_block_hash.to_string(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &invalid_block_hash.to_string(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
