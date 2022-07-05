@@ -79,7 +79,7 @@
 |:-|:-|:-|
 | `/chains/<chain_id>/blocks/<block_id>/` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}` | `get` | :heavy_check_mark: |
-| `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}/{script_expr}` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}/{script_expr}` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}/{script_expr}/normalized` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/cache/contracts/all` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/cache/contracts/rank` | `post` | |
