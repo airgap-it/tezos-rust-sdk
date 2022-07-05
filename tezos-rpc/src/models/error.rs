@@ -13,6 +13,8 @@ pub struct RPCError {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub msg: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub amount: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance: Option<String>,
@@ -27,7 +29,9 @@ impl Display for RPCError {
             "{} {} {}",
             self.kind,
             self.id,
-            self.message.as_ref().unwrap_or(&String::from(""))
+            self.message
+                .as_ref()
+                .unwrap_or(self.msg.as_ref().unwrap_or(&String::from("")))
         )
     }
 }

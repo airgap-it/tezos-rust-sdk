@@ -5,6 +5,7 @@ use {
             operation_result::operations::SuccessfulManagerOperationResult, OperationGroup,
         },
     },
+    crate::constants::{BLOCK_HEAD_ALIAS, BLOCK_GENESIS_ALIAS},
     serde::{Deserialize, Serialize},
     tezos_core::helper::rfc3339_timestamp,
     tezos_core::types::timestamp::Timestamp,
@@ -188,12 +189,6 @@ pub struct VotingPeriod {
     pub start_position: i32,
 }
 
-/// The status of the test chain:
-///
-/// * `not_running` : There is no test chain at the moment.
-/// * `forking` : The test chain is being setup.
-/// * `running` : The test chain is running.
-///
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct TestChainStatus {
     pub status: TestChainStatusName,
@@ -207,10 +202,51 @@ pub struct TestChainStatus {
     pub expiration: Option<Timestamp>,
 }
 
+/// The status of the test chain:
+///
+/// * `not_running` : There is no test chain at the moment.
+/// * `forking` : The test chain is being setup.
+/// * `running` : The test chain is running.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum TestChainStatusName {
     NotRunning,
     Forking,
     Running,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum BlockID {
+    Head,
+    Genesis,
+    Hash(String),
+    Level(i32),
+}
+
+impl Default for BlockID {
+    fn default() -> Self {
+        BlockID::Head
+    }
+}
+
+impl Default for &BlockID {
+    fn default() -> Self {
+        &BlockID::Head
+    }
+}
+
+impl BlockID {
+    pub fn value(&self) -> String {
+        match self {
+            Self::Head => BLOCK_HEAD_ALIAS.into(),
+            Self::Genesis => BLOCK_GENESIS_ALIAS.into(),
+            Self::Hash(hash) => hash.into(),
+            Self::Level(level) => {
+                if level.is_negative() {
+                    return format!("head~{}", level.abs());
+                }
+                format!("{}", level)
+            }
+        }
+    }
 }
