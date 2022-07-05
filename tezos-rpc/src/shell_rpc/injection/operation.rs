@@ -3,7 +3,7 @@ use {
 };
 
 fn path() -> String {
-    format!("{}{}", super::path(), "/operation")
+    format!("{}/operation", super::path())
 }
 
 /// Inject an operation in node and broadcast it.

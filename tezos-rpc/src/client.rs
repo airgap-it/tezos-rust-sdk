@@ -170,13 +170,11 @@ impl TezosRPC {
     /// Returns the ID of the block [BlockHash].
     ///
     /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
-    pub async fn inject_block(
-        &self,
-        payload: &InjectionBlockPayload,
-        force: &bool,
-        do_async: &bool,
-    ) -> Result<BlockHash, Error> {
-        shell_rpc::injection::block::post(&self.context, payload, force, do_async).await
+    pub fn inject_block<'a>(
+        &'a self,
+        payload: &'a InjectionBlockPayload,
+    ) -> shell_rpc::injection::block::RPCRequestBuilder {
+        shell_rpc::injection::block::post(&self.context, payload)
     }
 }
 

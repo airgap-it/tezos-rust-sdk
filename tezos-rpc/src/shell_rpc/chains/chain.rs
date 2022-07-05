@@ -7,7 +7,43 @@ pub mod levels;
 use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
 
 fn path(chain_id: &String) -> String {
-    format!("/chains/{}", chain_id)
+    format!("{}/{}", super::path(), chain_id)
+}
+
+/// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+    payload: &'a PatchChainPayload,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext, payload: &'a PatchChainPayload) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+            payload,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    pub async fn send(self) -> Result<(), Error> {
+        let path = self::path(self.chain_id);
+
+        self.ctx
+            .http_client
+            .patch::<_, serde_json::Value>(path.as_str(), &Some(self.payload))
+            .await?;
+
+        Ok(())
+    }
 }
 
 /// `PatchChainPayload` used in request [`PATCH /chains/<chain_id>`](patch)
@@ -20,14 +56,11 @@ pub struct PatchChainPayload {
 /// Forcefully set the bootstrapped flag of the node.
 ///
 /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainPayload) -> Result<(), Error> {
-    let path = self::path(&ctx.chain_id);
-
-    ctx.http_client
-        .patch::<_, serde_json::Value>(path.as_str(), &Some(body))
-        .await?;
-
-    Ok(())
+pub fn patch<'a>(
+    ctx: &'a TezosRPCContext,
+    payload: &'a PatchChainPayload,
+) -> RPCRequestBuilder<'a> {
+    RPCRequestBuilder::new(ctx, payload)
 }
 
 #[cfg(test)]
@@ -55,6 +88,6 @@ mod tests {
             bootstrapped: false,
         };
 
-        super::patch(&client.context, &req).await
+        super::patch(&client.context, &req).send().await
     }
 }

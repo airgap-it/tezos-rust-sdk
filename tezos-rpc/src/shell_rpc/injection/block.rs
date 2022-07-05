@@ -4,10 +4,74 @@ use {
 };
 
 fn path() -> String {
-    format!("{}{}", super::path(), "/block")
+    format!("{}/block", super::path())
 }
 
-/// `InjectionBlockPayload` used in request [`POST /injection/block`](post)
+/// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+    payload: &'a InjectionBlockPayload,
+    force: Option<bool>,
+    do_async: Option<bool>,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext, payload: &'a InjectionBlockPayload) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+            payload,
+            force: None,
+            do_async: None,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    /// If `force` query parameter is `true`, it will be injected even on non strictly increasing fitness.
+    pub fn force(&mut self, force: bool) -> &mut Self {
+        self.force = Some(force);
+
+        self
+    }
+
+    /// If `async` query parameter is true, the function returns immediately. Otherwise, the block will be validated before the result is returned.
+    pub fn do_async(&mut self, do_async: bool) -> &mut Self {
+        self.do_async = Some(do_async);
+
+        self
+    }
+
+    pub async fn send(self) -> Result<String, Error> {
+        let mut query: Vec<(&str, String)> = vec![];
+
+        if let Some(do_async) = self.do_async {
+            // Add `async` query parameter
+            query.push(("async", do_async.to_string()));
+        }
+        if let Some(force) = self.force {
+            // Add `force` query parameter
+            query.push(("force", force.to_string()));
+        }
+        // Add `chain` query parameter
+        query.push(("chain", self.ctx.chain_id.to_string()));
+
+        self.ctx
+            .http_client
+            .post(self::path().as_str(), self.payload, &Some(query))
+            .await
+    }
+}
+
+/// [InjectionBlockPayload] is used in request [`POST /injection/block`](post)
 #[derive(Serialize)]
 pub struct InjectionBlockPayload {
     /// Signed block data
@@ -35,33 +99,21 @@ pub struct OperationPayload {
 /// Returns the ID of the block [BlockHash].
 ///
 /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
-pub async fn post(
-    ctx: &TezosRPCContext,
-    payload: &InjectionBlockPayload,
-    force: &bool,
-    do_async: &bool,
-) -> Result<BlockHash, Error> {
-    let mut query: Vec<(&str, String)> = vec![];
-
-    // Add `async` query parameter
-    query.push(("async", do_async.to_string()));
-    // Add `force` query parameter
-    query.push(("force", force.to_string()));
-    // Add `chain` query parameter
-    query.push(("chain", ctx.chain_id.to_string()));
-
-    ctx.http_client
-        .post(self::path().as_str(), payload, &Some(query))
-        .await
+pub fn post<'a>(
+    ctx: &'a TezosRPCContext,
+    payload: &'a InjectionBlockPayload,
+) -> RPCRequestBuilder<'a> {
+    RPCRequestBuilder::new(ctx, payload)
 }
 
 #[cfg(test)]
 mod tests {
-    use tezos_core::types::encoded::Encoded;
-
-    use super::{InjectionBlockPayload, OperationPayload};
-
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {
+        super::{InjectionBlockPayload, OperationPayload},
+        crate::client::TezosRPC,
+        crate::error::Error,
+        httpmock::prelude::*,
+    };
 
     #[tokio::test]
     async fn test_block_injection() -> Result<(), Error> {
@@ -95,9 +147,14 @@ mod tests {
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let op_hash = client.inject_block(&payload, &false, &false).await?;
+        let op_hash = client
+            .inject_block(&payload)
+            .force(false)
+            .do_async(false)
+            .send()
+            .await?;
 
-        assert_eq!(block_hash, op_hash.into_string());
+        assert_eq!(block_hash, op_hash);
 
         Ok(())
     }
