@@ -4,10 +4,10 @@ use {
 };
 
 fn path(chain_id: String, block_id: String, contract: String) -> String {
-    format!("{}/balance", super::path(chain_id, block_id, contract))
+    format!("{}/counter", super::path(chain_id, block_id, contract))
 }
 
-/// A builder to construct the properties of a request to access the balance of a contract.
+/// A builder to construct the properties of a request to access the counter of a contract.
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
     chain_id: String,
@@ -50,9 +50,9 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 }
 
-/// Access the balance of a contract.
+/// Access the counter of a contract.
 ///
-/// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
+/// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
 pub fn get<'a>(ctx: &'a TezosRPCContext, address: &String) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, address)
 }
@@ -64,7 +64,7 @@ mod tests {
     use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
-    async fn test_get_balance() -> Result<(), Error> {
+    async fn test_get_counter() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
@@ -83,7 +83,7 @@ mod tests {
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let balance = client.get_balance(&contract_address.to_string()).await?;
+        let balance = client.get_counter(&contract_address.to_string()).await?;
         assert_eq!(balance, balance);
 
         Ok(())

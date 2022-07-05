@@ -11,6 +11,7 @@ use {
     crate::shell_rpc,
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
+    num_bigint::BigInt,
     std::result::Result,
     tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
 };
@@ -201,8 +202,17 @@ impl TezosRPC {
     /// Access the balance of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
-    pub async fn get_balance(&self, address: &String) -> Result<u64, Error> {
+    pub async fn get_balance(&self, address: &String) -> Result<BigInt, Error> {
         protocol_rpc::block::context::contract::balance::get(&self.context, address)
+            .send()
+            .await
+    }
+
+    /// Access the counter of a contract.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
+    pub async fn get_counter(&self, address: &String) -> Result<BigInt, Error> {
+        protocol_rpc::block::context::contract::counter::get(&self.context, address)
             .send()
             .await
     }
