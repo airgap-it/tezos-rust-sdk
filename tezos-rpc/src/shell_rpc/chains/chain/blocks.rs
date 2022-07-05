@@ -1,24 +1,85 @@
 use crate::client::TezosRPCContext;
 use crate::error::Error;
-use serde::Serialize;
-use tezos_core::types::encoded::BlockHash;
 
 fn path(chain_id: &String) -> String {
     format!("{}/blocks", super::path(chain_id))
 }
 
-/// `GetBlocksQuery` query parameters for request:
-///
-/// [`GET /chains/<chain_id>/blocks?[length=<uint>]&(head=<block_hash>)&[min_date=<date>]`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-#[derive(Serialize)]
-pub struct GetBlocksQuery {
+/// A builder to construct the properties of a request to get the chain unique identifier.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
     /// The requested number of predecessors to return.
-    pub length: Option<u32>,
+    length: Option<u32>,
     /// Requests blocks starting with the current head if `None` is provided.
-    pub head: Option<BlockHash>,
+    head: Option<&'a String>,
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
-    pub min_date: Option<u64>,
+    min_date: Option<u64>,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+            length: None,
+            head: None,
+            min_date: None,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    /// Set the requested number of predecessors to return.
+    pub fn length(&mut self, length: &u32) -> &mut Self {
+        self.length = Some(length.clone());
+
+        self
+    }
+
+    /// Request blocks starting from a given block.
+    pub fn head(&mut self, head: &'a String) -> &mut Self {
+        self.head = Some(head);
+
+        self
+    }
+
+    /// A date in seconds from epoch.
+    /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
+    pub fn min_date(&mut self, min_date: &u64) -> &mut Self {
+        self.min_date = Some(min_date.clone());
+
+        self
+    }
+
+    pub async fn send(self) -> Result<Vec<Vec<String>>, Error> {
+        let mut query: Vec<(&str, String)> = vec![];
+
+        if let Some(length) = self.length {
+            // Add `length` query parameter
+            query.push(("length", length.to_string()));
+        }
+        if let Some(head) = self.head {
+            // Add `head` query parameter
+            query.push(("head", head.to_string()));
+        }
+        if let Some(min_date) = self.min_date {
+            // Add `min_date` query parameter
+            query.push(("min_date", min_date.to_string()));
+        }
+
+        self.ctx
+            .http_client
+            .get_with_query(self::path(self.chain_id).as_str(), &Some(query))
+            .await
+    }
 }
 
 /// Lists block hashes from `<chain>`, up to the last checkpoint, sorted with
@@ -27,29 +88,20 @@ pub struct GetBlocksQuery {
 /// Optional arguments [GetBlocksQuery] allow to return the list of predecessors of a given block or of a set of blocks.
 ///
 /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
-pub async fn get(
-    ctx: &TezosRPCContext,
-    query: &GetBlocksQuery,
-) -> Result<Vec<Vec<BlockHash>>, Error> {
-    let path = self::path(&ctx.chain_id);
-
-    ctx.http_client.get_with_query(path.as_str(), query).await
+pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+    RPCRequestBuilder::new(ctx)
 }
 
 #[cfg(test)]
 mod tests {
 
     use {
-        crate::client::TezosRPC,
-        crate::constants::DEFAULT_CHAIN_ALIAS,
-        crate::error::Error,
-        crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
+        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         httpmock::prelude::*,
-        tezos_core::types::encoded::{BlockHash, Encoded},
     };
 
     #[tokio::test]
-    async fn test_is_bootstrapped() -> Result<(), Error> {
+    async fn test_get_blocks() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
@@ -72,17 +124,16 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let req_query = &GetBlocksQuery {
-            length: Some(1),
-            head: Some(BlockHash::new(
-                "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string(),
-            )?),
-            min_date: Some(1),
-        };
-        let response = client.get_blocks(req_query).await?;
+        let response = client
+            .get_blocks()
+            .length(&1)
+            .head(&"BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())
+            .min_date(&1)
+            .send()
+            .await?;
 
         assert_eq!(
-            response[0][0].into_string(),
+            response[0][0],
             "BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
         );
 
