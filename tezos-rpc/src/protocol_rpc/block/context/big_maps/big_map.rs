@@ -1,3 +1,5 @@
+pub mod script_expr;
+
 use {
     crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
     tezos_michelson::micheline::Micheline,
@@ -7,7 +9,7 @@ fn path(chain_id: &String, block_id: &BlockID, big_map_id: &u32) -> String {
     format!("{}/{}", super::path(chain_id, block_id), big_map_id)
 }
 
-/// A builder to construct the properties of a request to access the counter of a contract.
+/// A builder to construct the properties of a request to get the list of values in a big map
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
@@ -102,7 +104,7 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn test_get_counter() -> Result<(), Error> {
+    async fn test_get_big_map() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 

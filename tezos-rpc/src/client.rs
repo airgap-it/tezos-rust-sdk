@@ -229,4 +229,22 @@ impl TezosRPC {
     ) -> protocol_rpc::block::context::big_maps::big_map::RPCRequestBuilder {
         protocol_rpc::block::context::big_maps::big_map::get(&self.context, id)
     }
+
+    /// Access the value associated with a key in a big map.
+    ///
+    /// * `script_expr` - The Blake2b hash of the map key packed (Base58Check-encoded)
+    /// e.g. `expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E`
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr)
+    pub fn get_big_map_value<'a>(
+        &'a self,
+        big_map_id: &'a u32,
+        script_expr: &'a String,
+    ) -> protocol_rpc::block::context::big_maps::big_map::script_expr::RPCRequestBuilder<'a> {
+        protocol_rpc::block::context::big_maps::big_map::script_expr::get(
+            &self.context,
+            big_map_id,
+            script_expr,
+        )
+    }
 }
