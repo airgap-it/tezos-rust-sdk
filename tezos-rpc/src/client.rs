@@ -214,4 +214,19 @@ impl TezosRPC {
     ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
     }
+
+    /// Get the (optionally paginated) list of values in a big map. Order of values is unspecified, but is guaranteed to be consistent.
+    ///
+    /// Optional query arguments:
+    ///
+    /// * `offset` : Skip the first [offset] values. Useful in combination with [length] for pagination.
+    /// * `length` : Only retrieve [length] values. Useful in combination with [offset] for pagination.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
+    pub fn get_big_map<'a>(
+        &'a self,
+        id: &'a u32,
+    ) -> protocol_rpc::block::context::big_maps::big_map::RPCRequestBuilder {
+        protocol_rpc::block::context::big_maps::big_map::get(&self.context, id)
+    }
 }
