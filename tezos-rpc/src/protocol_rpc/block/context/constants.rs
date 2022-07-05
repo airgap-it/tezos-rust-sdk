@@ -31,7 +31,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    /// Modify the block identifier identifier to be used in the request.
+    /// Modify the block identifier to be used in the request.
     pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
         self.block_id = block_id;
 
