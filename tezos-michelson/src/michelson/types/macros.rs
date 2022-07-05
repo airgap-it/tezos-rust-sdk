@@ -18,6 +18,9 @@ macro_rules! make_types {
             $($code::{$name, $code},)*
         };
 
+        /// Tezos Michelson types as defined in [the documentation](https://tezos.gitlab.io/active/michelson.html#full-grammar).
+        ///
+        /// See also: [Michelson Reference](https://tezos.gitlab.io/michelson-reference/).
         #[derive(Debug, Clone, PartialEq)]
         pub enum Type {
             $($enum_case_name($enum_case_type),)?
