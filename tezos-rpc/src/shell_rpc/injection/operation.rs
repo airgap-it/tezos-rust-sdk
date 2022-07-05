@@ -79,9 +79,7 @@ pub fn post<'a>(
 
 #[cfg(test)]
 mod tests {
-    use {
-        crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*,
-    };
+    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_operation_injection() -> Result<(), Error> {
