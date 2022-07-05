@@ -8,20 +8,47 @@ fn path(chain_id: &String) -> String {
     format!("{}/invalid_blocks", super::path(chain_id))
 }
 
+/// A builder to construct the properties of a request to get blocks that have been declared invalid.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    pub async fn send(self) -> Result<Vec<InvalidBlock>, Error> {
+        let path = self::path(self.chain_id);
+
+        self.ctx.http_client.get(path.as_str()).await
+    }
+}
+
 /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
-pub async fn get(ctx: &TezosRPCContext) -> Result<Vec<InvalidBlock>, Error> {
-    let path = self::path(&ctx.chain_id);
-
-    ctx.http_client.get(path.as_str()).await
+pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+    RPCRequestBuilder::new(ctx)
 }
 
 #[cfg(test)]
 mod tests {
     use {
         crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        httpmock::prelude::*, tezos_core::types::encoded::Encoded,
+        httpmock::prelude::*,
     };
 
     #[tokio::test]
@@ -54,13 +81,13 @@ mod tests {
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let response = client.get_invalid_blocks().await?;
+        let response = client.get_invalid_blocks().send().await?;
 
         assert_eq!(response.len(), 1, "Expects a single invalid block.");
 
         let invalid_block = &response[0];
         assert_eq!(
-            invalid_block.block.into_string(),
+            invalid_block.block,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
         );
         assert_eq!(invalid_block.level, 2424833);
