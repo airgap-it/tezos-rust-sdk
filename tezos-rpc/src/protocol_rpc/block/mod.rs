@@ -11,8 +11,8 @@ use {
     serde::{Deserialize, Serialize},
 };
 
-fn path(chain_id: String, block_id: String) -> String {
-    format!("/chains/{}/blocks/{}", chain_id, block_id)
+fn path(chain_id: &String, block_id: &BlockID) -> String {
+    format!("/chains/{}/blocks/{}", chain_id, block_id.value())
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -76,8 +76,8 @@ pub async fn get(
     metadata: MetadataRPCArg,
 ) -> Result<Block, Error> {
     let path = self::path(
-        ctx.chain_id.to_string(),
-        block_id.unwrap_or_default().value(),
+        &ctx.chain_id,
+        block_id.unwrap_or_default(),
     );
 
     let mut query: Vec<(&str, String)> = vec![];
@@ -96,7 +96,7 @@ mod tests {
         super::*,
         crate::{
             client::TezosRPC,
-            constants::{BLOCK_GENESIS_ALIAS, DEFAULT_CHAIN_ALIAS},
+            constants::{DEFAULT_CHAIN_ALIAS},
             error::Error,
             models::block::TestChainStatusName,
         },
@@ -108,10 +108,12 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
+        let block_id = BlockID::Genesis;
+
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                DEFAULT_CHAIN_ALIAS.to_string(),
-                BLOCK_GENESIS_ALIAS.to_string(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &block_id,
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -119,7 +121,6 @@ mod tests {
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
-        let block_id = BlockID::Genesis;
         let response = client
             .get_block(Some(&block_id), super::MetadataRPCArg::Always)
             .await?;
@@ -163,9 +164,11 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
+        let block_id = BlockID::Level(1);
+
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string(), "1".into()));
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!("__TEST_DATA__/block_1.json"));
@@ -173,7 +176,7 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         client
-            .get_block(Some(&BlockID::Level(1)), super::MetadataRPCArg::Always)
+            .get_block(Some(&block_id), super::MetadataRPCArg::Always)
             .await?;
 
         Ok(())
@@ -184,10 +187,12 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
+        let block_id = BlockID::Level(2490368);
+
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                DEFAULT_CHAIN_ALIAS.to_string(),
-                "2490368".into(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &block_id,
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -197,7 +202,7 @@ mod tests {
 
         client
             .get_block(
-                Some(&BlockID::Level(2490368)),
+                Some(&block_id),
                 super::MetadataRPCArg::Always,
             )
             .await?;
@@ -210,10 +215,12 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
+        let block_id = BlockID::Level(2504461);
+
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                DEFAULT_CHAIN_ALIAS.to_string(),
-                "2504461".into(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &block_id,
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -223,7 +230,7 @@ mod tests {
 
         client
             .get_block(
-                Some(&BlockID::Level(2504461)),
+                Some(&block_id),
                 super::MetadataRPCArg::Always,
             )
             .await?;

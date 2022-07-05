@@ -6,3 +6,4 @@ pub mod error;
 pub mod fee;
 pub mod invalid_block;
 pub mod operation;
+pub mod constants;

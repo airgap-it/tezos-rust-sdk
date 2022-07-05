@@ -1,5 +1,8 @@
-pub mod contract;
+use super::BlockID;
 
-fn path(chain_id: String, block_id: String) -> String {
+pub mod contract;
+pub mod constants;
+
+fn path(chain_id: &String, block_id: &BlockID) -> String {
     format!("{}/context", super::path(chain_id, block_id))
 }

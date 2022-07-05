@@ -1,33 +1,34 @@
 use {
-    crate::client::TezosRPCContext, crate::constants::BLOCK_HEAD_ALIAS, crate::error::Error,
+    crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
     num_bigint::BigInt,
 };
 
-fn path(chain_id: String, block_id: String, contract: String) -> String {
+fn path(chain_id: &String, block_id: &BlockID, contract: &String) -> String {
     format!("{}/counter", super::path(chain_id, block_id, contract))
 }
 
 /// A builder to construct the properties of a request to access the counter of a contract.
+#[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: String,
-    block_id: String,
-    contract: String,
+    chain_id: &'a String,
+    block_id: &'a BlockID,
+    contract: &'a String,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, contract: &'a String) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: ctx.chain_id.to_string(),
-            block_id: BLOCK_HEAD_ALIAS.to_string(),
-            contract: contract.to_string(),
+            chain_id: &ctx.chain_id,
+            block_id: &BlockID::Head,
+            contract: contract,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &String) -> &mut Self {
-        self.chain_id = chain_id.into();
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
 
         self
     }
@@ -35,8 +36,8 @@ impl<'a> RPCRequestBuilder<'a> {
     /// Modify the block identifier identifier to be used in the request.
     ///
     /// Default: [BLOCK_HEAD_ALIAS]
-    pub fn block_id(&mut self, block_id: &String) -> &mut Self {
-        self.block_id = block_id.into();
+    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+        self.block_id = block_id;
 
         self
     }
@@ -53,15 +54,20 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Access the counter of a contract.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
-pub fn get<'a>(ctx: &'a TezosRPCContext, address: &String) -> RPCRequestBuilder<'a> {
+pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a String) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, address)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::constants::{BLOCK_HEAD_ALIAS, DEFAULT_CHAIN_ALIAS};
-
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {
+        crate::{
+            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            protocol_rpc::block::BlockID,
+        },
+        num_bigint::BigInt,
+        httpmock::prelude::*,
+    };
 
     #[tokio::test]
     async fn test_get_counter() -> Result<(), Error> {
@@ -69,22 +75,27 @@ mod tests {
         let rpc_url = server.base_url();
 
         let contract_address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL";
-        let balance: u64 = 9999999999999999999;
+        let expected_counter = BigInt::from(9999999999999999999 as u64);
+        let block_id = BlockID::Head;
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                DEFAULT_CHAIN_ALIAS.to_string(),
-                BLOCK_HEAD_ALIAS.to_string(),
-                contract_address.to_string(),
+                &DEFAULT_CHAIN_ALIAS.to_string(),
+                &block_id,
+                &contract_address.to_string(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
-                .json_body(format!("{}", balance));
+                .json_body(format!("{}", expected_counter));
         });
 
         let client = TezosRPC::new(rpc_url.as_str());
-        let balance = client.get_counter(&contract_address.to_string()).await?;
-        assert_eq!(balance, balance);
+        let counter = client
+            .get_counter(&contract_address.to_string())
+            .block_id(&block_id)
+            .send()
+            .await?;
+        assert_eq!(counter, expected_counter);
 
         Ok(())
     }

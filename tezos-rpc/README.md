@@ -85,7 +85,7 @@
 | `/chains/<chain_id>/blocks/<block_id>/context/cache/contracts/rank` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/cache/contracts/size` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/cache/contracts/size_limit` | `get` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/constants` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/constants` | `get`  | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/constants/errors` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}` | `get` | |
