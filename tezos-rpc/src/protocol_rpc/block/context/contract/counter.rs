@@ -65,8 +65,8 @@ mod tests {
             client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
-        num_bigint::BigInt,
         httpmock::prelude::*,
+        num_bigint::BigInt,
     };
 
     #[tokio::test]

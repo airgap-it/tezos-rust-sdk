@@ -6,7 +6,7 @@ pub mod levels;
 
 use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
 
-fn path(chain_id: String) -> String {
+fn path(chain_id: &String) -> String {
     format!("/chains/{}", chain_id)
 }
 
@@ -21,7 +21,7 @@ pub struct PatchChainPayload {
 ///
 /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
 pub async fn patch(ctx: &TezosRPCContext, body: &PatchChainPayload) -> Result<(), Error> {
-    let path = self::path(ctx.chain_id.to_string());
+    let path = self::path(&ctx.chain_id);
 
     ctx.http_client
         .patch::<_, serde_json::Value>(path.as_str(), &Some(body))
@@ -43,7 +43,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(httpmock::Method::PATCH)
-                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string()));
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(serde_json::json!({}));

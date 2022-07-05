@@ -1,7 +1,7 @@
 use {
     crate::serde_utils,
     num_bigint::BigInt,
-    serde::{Deserialize, Serialize}
+    serde::{Deserialize, Serialize},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,7 +30,10 @@ pub struct Constants {
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_allowed_global_constants_depth: Option<i32>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_vec_of_option_string_vec")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_vec_of_option_string_vec"
+    )]
     pub cache_layout: Option<Vec<i64>>,
     /// integer ∈ [0, 2^16-1]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,34 +53,64 @@ pub struct Constants {
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blocks_per_voting_period: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none", deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub hard_gas_limit_per_operation: Option<BigInt>,
-    #[serde(skip_serializing_if = "Option::is_none", deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub hard_gas_limit_per_block: Option<BigInt>,
-    #[serde(skip_serializing_if = "Option::is_none", deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub proof_of_work_threshold: Option<i64>,
     /// Mutez
-    #[serde(skip_serializing_if = "Option::is_none", deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub tokens_per_roll: Option<BigInt>,
     /// Mutez
-    #[serde(skip_serializing_if = "Option::is_none", deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub seed_nonce_revelation_tip: Option<BigInt>,
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub origination_size: Option<i32>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub baking_reward_fixed_portion: Option<BigInt>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub baking_reward_bonus_per_slot: Option<BigInt>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub endorsing_reward_per_slot: Option<BigInt>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub cost_per_byte: Option<BigInt>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub hard_storage_limit_per_operation: Option<BigInt>,
     /// integer ∈ [-2^31-1, 2^31]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -89,7 +122,10 @@ pub struct Constants {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_proposal_quorum: Option<i32>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub liquidity_baking_subsidy: Option<i64>,
     /// integer ∈ [-2^31-1, 2^31]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -100,9 +136,15 @@ pub struct Constants {
     /// integer ∈ [-2^15, 2^15-1]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_operations_time_to_live: Option<i16>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub minimal_block_delay: Option<i64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub delay_increment_per_round: Option<i64>,
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,7 +161,10 @@ pub struct Constants {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub frozen_deposits_percentage: Option<i32>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub double_baking_punishment: Option<BigInt>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ratio_of_frozen_deposits_slashed_per_double_endorsement: Option<RatioConstant>,
@@ -150,7 +195,10 @@ pub struct Constants {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tx_rollup_max_withdrawals_per_batch: Option<i32>,
     /// Mutez
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub tx_rollup_commitment_bond: Option<BigInt>,
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -194,25 +242,51 @@ pub struct Constants {
     // ===========================
     // Removed in recent protocols
     // ===========================
-
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     block_security_deposit: Option<u64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     endorsement_security_deposit: Option<u64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     block_reward: Option<u64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     endorsement_reward: Option<u64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     origination_burn: Option<u64>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     endorsers_per_block: Option<u16>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     blocks_per_roll_snapshot: Option<u16>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_of_option_string")]
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
     pub max_revelations_per_block: Option<u16>,
-    #[serde(default, deserialize_with = "serde_utils::option_number_vec_of_option_string_vec")]
-    pub time_between_blocks: Option<Vec<u8>>
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_vec_of_option_string_vec"
+    )]
+    pub time_between_blocks: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

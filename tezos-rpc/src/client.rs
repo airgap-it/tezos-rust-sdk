@@ -10,7 +10,7 @@ use {
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
     std::result::Result,
-    tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
+    tezos_core::types::encoded::{BlockHash, OperationHash},
 };
 
 pub struct TezosRPCContext {
@@ -73,8 +73,8 @@ impl TezosRPC {
     /// Get the chain unique identifier.
     ///
     /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-    pub async fn get_chain_id(&self) -> Result<ChainId, Error> {
-        shell_rpc::chains::chain::chain_id::get(&self.context).await
+    pub fn get_chain_id(&self) -> shell_rpc::chains::chain::chain_id::RPCRequestBuilder {
+        shell_rpc::chains::chain::chain_id::get(&self.context)
     }
 
     /// Get a list of block hashes from `<chain>`, up to the last checkpoint, swith

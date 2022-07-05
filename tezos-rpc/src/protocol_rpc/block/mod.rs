@@ -11,7 +11,7 @@ fn path(chain_id: &String, block_id: &BlockID) -> String {
     format!("/chains/{}/blocks/{}", chain_id, block_id.value())
 }
 
-/// A builder to construct the properties of a request to access the constants.
+/// A builder to construct the properties of a request to get all the information about a block.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,

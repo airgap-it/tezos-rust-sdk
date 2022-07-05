@@ -3,7 +3,7 @@ use {
     crate::models::bootstrapped_status::BootstrappedStatus,
 };
 
-fn path(chain_id: String) -> String {
+fn path(chain_id: &String) -> String {
     format!("{}{}", super::path(chain_id), "/is_bootstrapped")
 }
 
@@ -11,7 +11,7 @@ fn path(chain_id: String) -> String {
 ///
 /// [`GET /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
 pub async fn get(ctx: &TezosRPCContext) -> Result<BootstrappedStatus, Error> {
-    let path = self::path(ctx.chain_id.to_string());
+    let path = self::path(&ctx.chain_id);
 
     ctx.http_client.get(path.as_str()).await
 }
@@ -37,7 +37,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(DEFAULT_CHAIN_ALIAS.to_string()));
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(valid_response);
