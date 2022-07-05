@@ -11,7 +11,6 @@ use {
     crate::shell_rpc,
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
-    num_bigint::BigInt,
     std::result::Result,
     tezos_core::types::encoded::{BlockHash, ChainId, OperationHash},
 };
@@ -80,7 +79,7 @@ impl TezosRPC {
         shell_rpc::chains::chain::chain_id::get(&self.context).await
     }
 
-    /// Get a list of block hashes from `<chain>`, up to the last checkpoint, sorted with
+    /// Get a list of block hashes from `<chain>`, up to the last checkpoint, swith
     /// decreasing fitness. Without arguments it returns the head of the chain.
     ///
     /// Optional arguments allow to return the list of predecessors of a given block or of a set of blocks.
@@ -199,21 +198,30 @@ impl TezosRPC {
         protocol_rpc::block::get(&self.context, block_id, metadata).await
     }
 
+    /// Access the list of all constants.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)
+    pub fn get_constants(&self) -> protocol_rpc::block::context::constants::RPCRequestBuilder {
+        protocol_rpc::block::context::constants::get(&self.context)
+    }
+
     /// Access the balance of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
-    pub async fn get_balance(&self, address: &String) -> Result<BigInt, Error> {
+    pub fn get_balance<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::balance::RPCRequestBuilder {
         protocol_rpc::block::context::contract::balance::get(&self.context, address)
-            .send()
-            .await
     }
 
     /// Access the counter of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
-    pub async fn get_counter(&self, address: &String) -> Result<BigInt, Error> {
+    pub fn get_counter<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
-            .send()
-            .await
     }
 }

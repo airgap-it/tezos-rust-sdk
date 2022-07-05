@@ -6,3 +6,4 @@ pub mod protocol_rpc;
 pub mod shell_rpc;
 
 mod http;
+mod serde_utils;
