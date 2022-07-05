@@ -1,6 +1,6 @@
 use {
-    crate::constants, crate::error::Error, crate::http, crate::models::invalid_block::InvalidBlock,
-    crate::protocol_rpc, crate::shell_rpc, crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
+    crate::constants, crate::error::Error, crate::http, crate::protocol_rpc, crate::shell_rpc,
+    crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload, std::result::Result,
     tezos_core::types::encoded::BlockHash,
 };
@@ -82,22 +82,30 @@ impl TezosRPC {
     /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
     ///
     /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
-    pub async fn get_invalid_blocks(&self) -> Result<Vec<InvalidBlock>, Error> {
-        shell_rpc::chains::chain::invalid_blocks::get(&self.context).await
+    pub fn get_invalid_blocks(
+        &self,
+    ) -> shell_rpc::chains::chain::invalid_blocks::RPCRequestBuilder {
+        shell_rpc::chains::chain::invalid_blocks::get(&self.context)
     }
 
     /// Get the errors that appeared during the block (in)validation.
     ///
     /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
-    pub async fn get_invalid_block(&self, block_hash: &BlockHash) -> Result<InvalidBlock, Error> {
-        shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash).await
+    pub fn get_invalid_block<'a>(
+        &'a self,
+        block_hash: &'a String,
+    ) -> shell_rpc::chains::chain::invalid_blocks::block::GetRPCRequestBuilder {
+        shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash)
     }
 
     /// Remove an invalid block for the tezos storage.
     ///
     /// [`DELETE /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
-    pub async fn remove_invalid_block(&self, block_hash: &BlockHash) -> Result<(), Error> {
-        shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash).await
+    pub fn remove_invalid_block<'a>(
+        &'a self,
+        block_hash: &'a String,
+    ) -> shell_rpc::chains::chain::invalid_blocks::block::DeleteRPCRequestBuilder {
+        shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash)
     }
 
     /// Get the bootstrap status of a chain.
