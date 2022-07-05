@@ -1,8 +1,6 @@
 use {
-    crate::constants, crate::error::Error, crate::http, crate::protocol_rpc, crate::shell_rpc,
-    crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
-    crate::shell_rpc::injection::block::InjectionBlockPayload, std::result::Result,
-    tezos_core::types::encoded::BlockHash,
+    crate::constants, crate::http, crate::protocol_rpc, crate::shell_rpc,
+    crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
 pub struct TezosRPCContext {
@@ -75,8 +73,8 @@ impl TezosRPC {
     /// Optional arguments allow to return the list of predecessors of a given block or of a set of blocks.
     ///
     /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
-    pub async fn get_blocks(&self, query: &GetBlocksQuery) -> Result<Vec<Vec<BlockHash>>, Error> {
-        shell_rpc::chains::chain::blocks::get(&self.context, query).await
+    pub fn get_blocks(&self) -> shell_rpc::chains::chain::blocks::RPCRequestBuilder {
+        shell_rpc::chains::chain::blocks::get(&self.context)
     }
 
     /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
