@@ -7,7 +7,7 @@ fn path() -> String {
     format!("{}/block", super::path())
 }
 
-/// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
+/// A builder to construct the properties of a request to inject a block in the node and broadcast it.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,

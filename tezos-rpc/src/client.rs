@@ -9,7 +9,7 @@ use {
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
     std::result::Result,
-    tezos_core::types::encoded::{BlockHash, OperationHash},
+    tezos_core::types::encoded::BlockHash,
 };
 
 pub struct TezosRPCContext {
@@ -150,13 +150,11 @@ impl TezosRPC {
     /// Returns the ID of the operation.
     ///
     /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
-    pub async fn inject_operation(
-        &self,
-        signed_operation_contents: &String,
-        do_async: &bool,
-    ) -> Result<OperationHash, Error> {
-        shell_rpc::injection::operation::post(&self.context, signed_operation_contents, do_async)
-            .await
+    pub fn inject_operation<'a>(
+        &'a self,
+        signed_operation_contents: &'a String,
+    ) -> shell_rpc::injection::operation::RPCRequestBuilder {
+        shell_rpc::injection::operation::post(&self.context, signed_operation_contents)
     }
 
     /// Inject a block in the node and broadcast it.
