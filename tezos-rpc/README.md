@@ -20,7 +20,7 @@
 | `/config/network/user_activated_upgrades` | `get` | |
 | `/errors` | `get` | |
 | `/fetch_protocol/{Protocol_hash}` | `get` | |
-| `/injection/block` | `post` | |
+| `/injection/block` | `post` | :heavy_check_mark: |
 | `/injection/operation` | `post` | :heavy_check_mark: |
 | `/injection/protocol` | `post` | |
 | `/monitor/active_chains` | `get` | |
@@ -77,7 +77,7 @@
 
 | Path | Methods | Implemented |
 |:-|:-|:-|
-| `/chains/<chain_id>/blocks/<block_id>/` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}/{script_expr}` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/big_maps/{big_map_id}/{script_expr}/normalized` | `post` | |
@@ -89,10 +89,10 @@
 | `/chains/<chain_id>/blocks/<block_id>/context/constants/errors` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}` | `get` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/balance` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/balance` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/balance_and_frozen_bonds` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/big_map_get` | `post` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/counter` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/counter` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/delegate` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints/{entrypoint}` | `get` | |
