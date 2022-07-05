@@ -1,12 +1,8 @@
 pub mod context;
 
 use {
-    crate::{
-        client::TezosRPCContext,
-        constants::{BLOCK_GENESIS_ALIAS, BLOCK_HEAD_ALIAS},
-        error::Error,
-        models::block::Block,
-    },
+    crate::models::block::BlockID,
+    crate::{client::TezosRPCContext, error::Error, models::block::Block},
     derive_more::Display,
     serde::{Deserialize, Serialize},
 };
@@ -15,50 +11,71 @@ fn path(chain_id: &String, block_id: &BlockID) -> String {
     format!("/chains/{}/blocks/{}", chain_id, block_id.value())
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum BlockID {
-    Head,
-    Genesis,
-    Hash(String),
-    Level(i32),
+/// A builder to construct the properties of a request to access the constants.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+    block_id: &'a BlockID,
+    metadata: MetadataArg,
 }
 
-impl Default for BlockID {
-    fn default() -> Self {
-        BlockID::Head
-    }
-}
-
-impl Default for &BlockID {
-    fn default() -> Self {
-        &BlockID::Head
-    }
-}
-
-impl BlockID {
-    fn value(&self) -> String {
-        match self {
-            Self::Head => BLOCK_HEAD_ALIAS.into(),
-            Self::Genesis => BLOCK_GENESIS_ALIAS.into(),
-            Self::Hash(hash) => hash.into(),
-            Self::Level(level) => {
-                if level.is_negative() {
-                    return format!("head~{}", level.abs());
-                }
-                format!("{}", level)
-            }
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+            block_id: &BlockID::Head,
+            metadata: MetadataArg::Always,
         }
     }
+
+    /// Modify chain identifier to be used in the request.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    /// Modify the block identifier to be used in the request.
+    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+        self.block_id = block_id;
+
+        self
+    }
+
+    /// Specify whether or not if the operations metadata should be returned.
+    /// By default, the metadata will be returned depending on the node's metadata size limit policy.
+    ///
+    /// To get the metadata, even if it is needed to recompute them, use [MetadataArg::Always].
+    ///
+    /// To avoid getting the metadata, use [MetadataArg::Never].
+    pub fn metadata(&mut self, metadata: MetadataArg) -> &mut Self {
+        self.metadata = metadata;
+
+        self
+    }
+
+    pub async fn send(self) -> Result<Block, Error> {
+        let path = self::path(self.chain_id, self.block_id);
+
+        let mut query: Vec<(&str, String)> = vec![];
+
+        // Add `metadata` query parameter
+        query.push(("metadata", self.metadata.to_string()));
+
+        self.ctx
+            .http_client
+            .get_with_query(path.as_str(), &Some(query))
+            .await
+    }
 }
 
-/// Specifies whether or not if the operations metadata should be returned. By default, the metadata will be returned depending on the node's metadata size limit policy.
-///
-/// To get the metadata, even if it is needed to recompute them, use [MetadataRPCArg::Always].
-///
-/// To avoid getting the metadata, use [MetadataRPCArg::Never].
-#[derive(Debug, Display, PartialEq, Serialize, Deserialize)]
+/// * [MetadataArg::Always] - Block metadata is included in the response.
+/// * [MetadataArg::Never] - Block metadata is not included in the response.
+#[derive(Clone, Copy, Display, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum MetadataRPCArg {
+pub enum MetadataArg {
     Always,
     Never,
 }
@@ -70,24 +87,8 @@ pub enum MetadataRPCArg {
 /// * `metadata` : Specifies whether or not if the operations metadata should be returned. To get the metadata, even if it is needed to recompute them, use `always`. To avoid getting the metadata, use `never`. By default, the metadata will be returned depending on the node's metadata size limit policy.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>?[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
-pub async fn get(
-    ctx: &TezosRPCContext,
-    block_id: Option<&BlockID>,
-    metadata: MetadataRPCArg,
-) -> Result<Block, Error> {
-    let path = self::path(
-        &ctx.chain_id,
-        block_id.unwrap_or_default(),
-    );
-
-    let mut query: Vec<(&str, String)> = vec![];
-
-    // Add `metadata` query parameter
-    query.push(("metadata", metadata.to_string()));
-
-    ctx.http_client
-        .get_with_query(path.as_str(), &Some(query))
-        .await
+pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+    RPCRequestBuilder::new(ctx)
 }
 
 #[cfg(test)]
@@ -95,9 +96,7 @@ mod tests {
     use {
         super::*,
         crate::{
-            client::TezosRPC,
-            constants::{DEFAULT_CHAIN_ALIAS},
-            error::Error,
+            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             models::block::TestChainStatusName,
         },
         httpmock::prelude::*,
@@ -111,10 +110,8 @@ mod tests {
         let block_id = BlockID::Genesis;
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!("__TEST_DATA__/block_genesis.json"));
@@ -122,7 +119,10 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         let response = client
-            .get_block(Some(&block_id), super::MetadataRPCArg::Always)
+            .get_block()
+            .block_id(&block_id)
+            .metadata(super::MetadataArg::Always)
+            .send()
             .await?;
 
         assert_eq!(
@@ -176,7 +176,10 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         client
-            .get_block(Some(&block_id), super::MetadataRPCArg::Always)
+            .get_block()
+            .block_id(&block_id)
+            .metadata(super::MetadataArg::Always)
+            .send()
             .await?;
 
         Ok(())
@@ -190,10 +193,8 @@ mod tests {
         let block_id = BlockID::Level(2490368);
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!("__TEST_DATA__/block_ithaca.json"));
@@ -201,10 +202,10 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         client
-            .get_block(
-                Some(&block_id),
-                super::MetadataRPCArg::Always,
-            )
+            .get_block()
+            .block_id(&block_id)
+            .metadata(super::MetadataArg::Always)
+            .send()
             .await?;
 
         Ok(())
@@ -218,10 +219,8 @@ mod tests {
         let block_id = BlockID::Level(2504461);
 
         server.mock(|when, then| {
-            when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
-                &block_id,
-            ));
+            when.method(GET)
+                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!("__TEST_DATA__/block_jakarta.json"));
@@ -229,10 +228,10 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         client
-            .get_block(
-                Some(&block_id),
-                super::MetadataRPCArg::Always,
-            )
+            .get_block()
+            .block_id(&block_id)
+            .metadata(super::MetadataArg::Always)
+            .send()
             .await?;
 
         Ok(())

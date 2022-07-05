@@ -2,12 +2,10 @@ use {
     crate::constants,
     crate::error::Error,
     crate::http,
-    crate::models::block::Block,
     crate::models::bootstrapped_status::BootstrappedStatus,
     crate::models::checkpoint::Checkpoint,
     crate::models::invalid_block::InvalidBlock,
     crate::protocol_rpc,
-    crate::protocol_rpc::block::{BlockID, MetadataRPCArg},
     crate::shell_rpc,
     crate::shell_rpc::chains::chain::blocks::GetBlocksQuery,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
@@ -190,12 +188,8 @@ impl TezosRPC {
     /// The associated metadata may not be present depending on the history mode and block's distance from the head.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>?[force_metadata]&[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
-    pub async fn get_block(
-        &self,
-        block_id: Option<&BlockID>,
-        metadata: MetadataRPCArg,
-    ) -> Result<Block, Error> {
-        protocol_rpc::block::get(&self.context, block_id, metadata).await
+    pub fn get_block(&self) -> protocol_rpc::block::RPCRequestBuilder {
+        protocol_rpc::block::get(&self.context)
     }
 
     /// Access the list of all constants.
