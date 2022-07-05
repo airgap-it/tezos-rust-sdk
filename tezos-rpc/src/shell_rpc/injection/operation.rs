@@ -1,9 +1,58 @@
-use {
-    crate::client::TezosRPCContext, crate::error::Error, tezos_core::types::encoded::OperationHash,
-};
+use {crate::client::TezosRPCContext, crate::error::Error};
 
 fn path() -> String {
     format!("{}/operation", super::path())
+}
+
+/// A builder to construct the properties of a request to inject an operation in node and broadcast it.
+#[derive(Clone, Copy)]
+pub struct RPCRequestBuilder<'a> {
+    ctx: &'a TezosRPCContext,
+    chain_id: &'a String,
+    payload: &'a String,
+    do_async: Option<bool>,
+}
+
+impl<'a> RPCRequestBuilder<'a> {
+    pub fn new(ctx: &'a TezosRPCContext, payload: &'a String) -> Self {
+        RPCRequestBuilder {
+            ctx,
+            chain_id: &ctx.chain_id,
+            payload,
+            do_async: None,
+        }
+    }
+
+    /// Modify chain identifier to be used in the request.
+    /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
+    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+        self.chain_id = chain_id;
+
+        self
+    }
+
+    /// If `async` query parameter is true, the function returns immediately. Otherwise, the block will be validated before the result is returned.
+    pub fn do_async(&mut self, do_async: bool) -> &mut Self {
+        self.do_async = Some(do_async);
+
+        self
+    }
+
+    pub async fn send(self) -> Result<String, Error> {
+        let mut query: Vec<(&str, String)> = vec![];
+
+        if let Some(do_async) = self.do_async {
+            // Add `async` query parameter
+            query.push(("async", do_async.to_string()));
+        }
+        // Add `chain` query parameter
+        query.push(("chain", self.ctx.chain_id.to_string()));
+
+        self.ctx
+            .http_client
+            .post(self::path().as_str(), self.payload, &Some(query))
+            .await
+    }
 }
 
 /// Inject an operation in node and broadcast it.
@@ -21,32 +70,17 @@ fn path() -> String {
 /// Returns the ID of the operation [OperationHash].
 ///
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
-pub async fn post(
-    ctx: &TezosRPCContext,
-    signed_operation_contents: &String,
-    do_async: &bool,
-) -> Result<OperationHash, Error> {
-    let mut query: Vec<(&str, String)> = vec![];
-
-    // Add `async` query parameter
-    query.push(("async", do_async.to_string()));
-    // Add `chain` query parameter
-    query.push(("chain", ctx.chain_id.to_string()));
-
-    ctx.http_client
-        .post(
-            self::path().as_str(),
-            signed_operation_contents,
-            &Some(query),
-        )
-        .await
+pub fn post<'a>(
+    ctx: &'a TezosRPCContext,
+    signed_operation_contents: &'a String,
+) -> RPCRequestBuilder<'a> {
+    RPCRequestBuilder::new(ctx, signed_operation_contents)
 }
 
 #[cfg(test)]
 mod tests {
     use {
         crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*,
-        tezos_core::types::encoded::Encoded,
     };
 
     #[tokio::test]
@@ -70,10 +104,12 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let op_hash = client
-            .inject_operation(&signed_operation_contents.to_string(), &false)
+            .inject_operation(&signed_operation_contents.to_string())
+            .do_async(false)
+            .send()
             .await?;
 
-        assert_eq!(operation_hash, op_hash.into_string());
+        assert_eq!(operation_hash, op_hash);
 
         Ok(())
     }
