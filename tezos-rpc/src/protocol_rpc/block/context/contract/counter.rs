@@ -89,7 +89,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let counter = client
-            .get_counter(&contract_address.to_string())
+            .get_contract_counter(&contract_address.to_string())
             .block_id(&block_id)
             .send()
             .await?;

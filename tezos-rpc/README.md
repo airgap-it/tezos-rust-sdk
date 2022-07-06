@@ -98,8 +98,8 @@
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints/{entrypoint}` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/frozen_bonds` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/manager_key` | `get` | :heavy_check_mark: |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/script` | `get` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/script/normalized` | `post` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/script` | `get` | :heavy_check_mark: |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/script/normalized` | `post`| :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/single_sapling_get_diff` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/storage` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/storage/normalized` | `post` | |

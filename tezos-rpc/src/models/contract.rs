@@ -25,3 +25,17 @@ pub struct ContractInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub script: Option<ContractScript>,
 }
+
+#[derive(Clone, Copy, Serialize)]
+pub enum UnparsingMode {
+    Readable,
+    Optimized,
+    #[allow(non_camel_case_types)] // This format is expected by the RPC
+    Optimized_legacy,
+}
+
+impl Default for UnparsingMode {
+    fn default() -> Self {
+        Self::Optimized
+    }
+}

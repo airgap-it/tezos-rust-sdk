@@ -85,8 +85,6 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Lists block hashes from `<chain>`, up to the last checkpoint, sorted with
 /// decreasing fitness. Without arguments it returns the head of the chain.
 ///
-/// Optional arguments [GetBlocksQuery] allow to return the list of predecessors of a given block or of a set of blocks.
-///
 /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
 pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
     RPCRequestBuilder::new(ctx)

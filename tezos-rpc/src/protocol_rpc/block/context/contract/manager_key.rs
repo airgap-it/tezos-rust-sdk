@@ -83,7 +83,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let manager_key = client
-            .get_manager_key(&contract_address.to_string())
+            .get_contract_manager_key(&contract_address.to_string())
             .block_id(&block_id)
             .send()
             .await?;
@@ -114,7 +114,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let counter = client
-            .get_manager_key(&contract_address.to_string())
+            .get_contract_manager_key(&contract_address.to_string())
             .block_id(&block_id)
             .send()
             .await?;
