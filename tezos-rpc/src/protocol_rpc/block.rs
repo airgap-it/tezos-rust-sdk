@@ -1,4 +1,5 @@
 pub mod context;
+pub mod helpers;
 
 use {
     crate::models::block::BlockID,
@@ -114,7 +115,7 @@ mod tests {
                 .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("__TEST_DATA__/block_genesis.json"));
+                .body(include_str!("block/__TEST_DATA__/block_genesis.json"));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
@@ -171,7 +172,7 @@ mod tests {
                 .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("__TEST_DATA__/block_1.json"));
+                .body(include_str!("block/__TEST_DATA__/block_1.json"));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
@@ -197,7 +198,7 @@ mod tests {
                 .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("__TEST_DATA__/block_ithaca.json"));
+                .body(include_str!("block/__TEST_DATA__/block_ithaca.json"));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 
@@ -223,7 +224,7 @@ mod tests {
                 .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
-                .body(include_str!("__TEST_DATA__/block_jakarta.json"));
+                .body(include_str!("block/__TEST_DATA__/block_jakarta.json"));
         });
         let client = TezosRPC::new(rpc_url.as_str());
 

@@ -61,3 +61,10 @@ pub enum OperationContent {
     // Removed in hangzhou protocol (https://tezos.gitlab.io/protocols/tenderbake.html)
     DoubleBakingEvidence(DoubleBakingEvidence),
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OperationWithMetadata {
+    pub contents: Vec<OperationContent>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
+}
