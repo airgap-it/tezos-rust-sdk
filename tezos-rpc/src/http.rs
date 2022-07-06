@@ -1,12 +1,12 @@
 use {
     crate::error::{self, Error},
-    reqwest::Response,
+    reqwest::{Client, Response},
     serde::{de::DeserializeOwned, Serialize},
 };
 
 pub struct TezosHttp {
     rpc_endpoint: String,
-    client: reqwest::Client,
+    client: Client,
 }
 
 impl TezosHttp {
@@ -14,7 +14,7 @@ impl TezosHttp {
     pub fn new(rpc_endpoint: &str) -> Self {
         TezosHttp {
             rpc_endpoint: rpc_endpoint.to_string(),
-            client: reqwest::Client::new(),
+            client: Client::new(),
         }
     }
 

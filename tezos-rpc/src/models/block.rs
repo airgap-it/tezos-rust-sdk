@@ -6,9 +6,9 @@ use {
         },
     },
     crate::constants::{BLOCK_GENESIS_ALIAS, BLOCK_HEAD_ALIAS},
+    crate::serde_utils::rfc3339_timestamp,
+    chrono::NaiveDateTime,
     serde::{Deserialize, Serialize},
-    tezos_core::helper::rfc3339_timestamp,
-    tezos_core::types::timestamp::Timestamp,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -28,7 +28,7 @@ pub struct Header {
     pub proto: u8,
     pub predecessor: String,
     #[serde(with = "rfc3339_timestamp")]
-    pub timestamp: Timestamp,
+    pub timestamp: NaiveDateTime,
     pub validation_pass: u8,
     pub operations_hash: String,
     pub fitness: Vec<String>,
@@ -57,7 +57,7 @@ pub struct FullHeader {
     pub proto: u8,
     pub predecessor: String,
     #[serde(with = "rfc3339_timestamp")]
-    pub timestamp: Timestamp,
+    pub timestamp: NaiveDateTime,
     pub validation_pass: u8,
     pub operations_hash: String,
     pub fitness: Vec<String>,
@@ -199,7 +199,7 @@ pub struct TestChainStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub protocol: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub expiration: Option<Timestamp>,
+    pub expiration: Option<NaiveDateTime>,
 }
 
 /// The status of the test chain:
