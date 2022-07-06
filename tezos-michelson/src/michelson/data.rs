@@ -7,7 +7,7 @@ use self::macros::{make_all_data, make_data};
 pub use crate::common::{bytes::Bytes, string::String};
 pub use map::{map, Map};
 pub use sequence::{sequence, Sequence};
-pub use tezos_core::types::number::{integer::Integer as Int, natural::Natural as Nat};
+pub use tezos_core::types::number::{Int, Nat};
 
 make_all_data!(
     custom_cases: {

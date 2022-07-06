@@ -8,7 +8,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Signature {
     Generic(GenericSignature),
     Ed25519(Ed25519Signature),

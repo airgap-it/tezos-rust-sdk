@@ -1,23 +1,44 @@
 mod activate_account;
+mod ballot;
+mod delegation;
 mod double_baking_evidence;
 mod double_endorsement_evidence;
+mod double_preendorsement_evidence;
 mod endorsement;
+mod failing_noop;
+mod origination;
 mod preendorsement;
+mod proposals;
+mod register_global_constant;
+mod reveal;
 mod seed_nonce_revelation;
+mod set_deposit_limit;
+mod transaction;
 
 use tezos_core::types::encoded::{BlockHash, Signature};
 
 pub use self::{
     activate_account::ActivateAccount,
+    ballot::Ballot,
+    delegation::Delegation,
     double_baking_evidence::DoubleBakingEvidence,
     double_endorsement_evidence::DoubleEndorsementEvidence,
+    double_preendorsement_evidence::DoublePreendorsementEvidence,
     endorsement::Endorsement,
+    failing_noop::FailingNoop,
+    origination::Origination,
     preendorsement::Preendorsement,
+    proposals::Proposals,
+    register_global_constant::RegisterGlobalConstant,
+    reveal::Reveal,
     seed_nonce_revelation::SeedNonceRevelation,
+    set_deposit_limit::SetDepositsLimit,
     traits::{
         OperationConsensusContent as TraitOperationConsensusContent,
         OperationContent as TraitOperationContent,
+        OperationManagerContent as TraitOperationManagerContent,
     },
+    transaction::Transaction,
 };
 
 pub trait Operation {
@@ -73,6 +94,18 @@ pub enum OperationContent {
     DoubleEndorsementEvidence(DoubleEndorsementEvidence),
     DoubleBakingEvidence(DoubleBakingEvidence),
     ActivateAccount(ActivateAccount),
+    Proposals(Proposals),
+    Ballot(Ballot),
+    DoublePreendorsementEvidence(DoublePreendorsementEvidence),
+    FailingNoop(FailingNoop),
+    Preendorsement(Preendorsement),
+    Endorsement(Endorsement),
+    Reveal(Reveal),
+    Transaction(Transaction),
+    Origination(Origination),
+    Delegation(Delegation),
+    RegisterGlobalConstant(RegisterGlobalConstant),
+    SetDepositsLimit(SetDepositsLimit),
 }
 
 #[repr(u8)]
@@ -139,7 +172,7 @@ mod traits {
     use tezos_core::types::{
         encoded::{BlockPayloadHash, ImplicitAddress},
         mutez::Mutez,
-        number::natural::Natural as Nat,
+        number::Nat,
     };
 
     pub trait OperationContent {
@@ -156,8 +189,8 @@ mod traits {
     pub trait OperationManagerContent {
         fn source(&self) -> &ImplicitAddress;
         fn fee(&self) -> Mutez;
-        fn counter(&self) -> Nat;
-        fn gas_limit(&self) -> Nat;
-        fn storage_limit(&self) -> Nat;
+        fn counter(&self) -> &Nat;
+        fn gas_limit(&self) -> &Nat;
+        fn storage_limit(&self) -> &Nat;
     }
 }

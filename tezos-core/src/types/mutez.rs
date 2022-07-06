@@ -12,7 +12,7 @@ use regex::Regex;
 use crate::internal::coder::{Decoder, Encoder, MutezBytesCoder};
 use crate::{Error, Result};
 
-use super::number::natural::Natural;
+use super::number::Nat;
 
 #[derive(
     Add,
@@ -242,10 +242,10 @@ impl TryFrom<&str> for Mutez {
     }
 }
 
-impl TryFrom<&Natural> for Mutez {
+impl TryFrom<&Nat> for Mutez {
     type Error = Error;
 
-    fn try_from(value: &Natural) -> Result<Self> {
+    fn try_from(value: &Nat) -> Result<Self> {
         value.to_string().try_into()
     }
 }

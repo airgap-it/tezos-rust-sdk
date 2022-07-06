@@ -14,12 +14,12 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Natural(String);
+pub struct Nat(String);
 
-impl Natural {
+impl Nat {
     pub fn from_string(value: String) -> Result<Self> {
         if Self::is_valid(&value) {
-            return Ok(Natural(value));
+            return Ok(Nat(value));
         }
         Err(Error::InvalidUnsignedIntegerString)
     }
@@ -52,13 +52,13 @@ impl Natural {
     }
 }
 
-impl Display for Natural {
+impl Display for Nat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl ToBigUint for Natural {
+impl ToBigUint for Nat {
     fn to_biguint(&self) -> Option<BigUint> {
         BigUint::from_str_radix(&self.0, 10)
             .map(Some)
@@ -66,49 +66,49 @@ impl ToBigUint for Natural {
     }
 }
 
-impl From<u8> for Natural {
+impl From<u8> for Nat {
     fn from(value: u8) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<u16> for Natural {
+impl From<u16> for Nat {
     fn from(value: u16) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<u32> for Natural {
+impl From<u32> for Nat {
     fn from(value: u32) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<u64> for Natural {
+impl From<u64> for Nat {
     fn from(value: u64) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<u128> for Natural {
+impl From<u128> for Nat {
     fn from(value: u128) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<BigUint> for Natural {
+impl From<BigUint> for Nat {
     fn from(value: BigUint) -> Self {
         Self::from_integer(value)
     }
 }
 
-impl From<&Mutez> for Natural {
+impl From<&Mutez> for Nat {
     fn from(mutez: &Mutez) -> Self {
         Self::from_integer(mutez.value())
     }
 }
 
-impl TryFrom<String> for Natural {
+impl TryFrom<String> for Nat {
     type Error = Error;
 
     fn try_from(value: String) -> Result<Self> {
@@ -116,7 +116,7 @@ impl TryFrom<String> for Natural {
     }
 }
 
-impl TryFrom<&str> for Natural {
+impl TryFrom<&str> for Nat {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
@@ -124,7 +124,7 @@ impl TryFrom<&str> for Natural {
     }
 }
 
-impl TryFrom<&Vec<u8>> for Natural {
+impl TryFrom<&Vec<u8>> for Nat {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
@@ -132,10 +132,10 @@ impl TryFrom<&Vec<u8>> for Natural {
     }
 }
 
-impl TryFrom<&Natural> for Vec<u8> {
+impl TryFrom<&Nat> for Vec<u8> {
     type Error = Error;
 
-    fn try_from(value: &Natural) -> Result<Self> {
+    fn try_from(value: &Nat) -> Result<Self> {
         value.to_bytes()
     }
 }
@@ -155,7 +155,7 @@ mod test {
             "9223372036854775807",
             "9223372036854775808",
         ];
-        let _result: Vec<Natural> = values
+        let _result: Vec<Nat> = values
             .into_iter()
             .map(|item| item.try_into())
             .collect::<Result<Vec<_>>>()?;
@@ -180,8 +180,7 @@ mod test {
             "-128",
             "-1",
         ];
-        let results: Vec<Result<Natural>> =
-            values.into_iter().map(|item| item.try_into()).collect();
+        let results: Vec<Result<Nat>> = values.into_iter().map(|item| item.try_into()).collect();
 
         for result in results {
             assert!(result.is_err())

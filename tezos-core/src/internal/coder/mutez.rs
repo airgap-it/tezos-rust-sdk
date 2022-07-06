@@ -1,6 +1,6 @@
 use crate::{
     internal::consumable_list::ConsumableList,
-    types::{mutez::Mutez, number::natural::Natural},
+    types::{mutez::Mutez, number::Nat},
     Error, Result,
 };
 
@@ -10,7 +10,7 @@ pub struct MutezBytesCoder;
 
 impl Encoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
     fn encode(value: &Mutez) -> Result<Vec<u8>> {
-        let value: Natural = value.into();
+        let value: Nat = value.into();
         NaturalBytesCoder::encode(&value)
     }
 }

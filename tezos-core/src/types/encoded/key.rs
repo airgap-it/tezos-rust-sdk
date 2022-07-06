@@ -7,7 +7,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Key {
     Secret(SecretKey),
     Public(PublicKey),
@@ -90,7 +90,7 @@ impl TryFrom<&Key> for Vec<u8> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SecretKey {
     Ed25519(Ed25519SecretKey),
     Secp256K1(Secp256K1SecretKey),
@@ -189,7 +189,7 @@ impl TryFrom<&SecretKey> for Vec<u8> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PublicKey {
     Ed25519(Ed25519PublicKey),
     Secp256K1(Secp256K1PublicKey),
