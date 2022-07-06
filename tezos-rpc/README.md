@@ -94,8 +94,8 @@
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/big_map_get` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/counter` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/delegate` | `get` | :heavy_check_mark: |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints` | `get` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints/{entrypoint}` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints` | `get` | :heavy_check_mark: |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/entrypoints/{entrypoint}` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/frozen_bonds` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/manager_key` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/script` | `get` | :heavy_check_mark: |

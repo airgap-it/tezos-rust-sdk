@@ -2,6 +2,7 @@ use {
     crate::serde_utils,
     num_bigint::BigInt,
     serde::{Deserialize, Serialize},
+    std::collections::HashMap,
     tezos_michelson::micheline::Micheline,
 };
 
@@ -38,4 +39,9 @@ impl Default for UnparsingMode {
     fn default() -> Self {
         Self::Optimized
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct ContractEntrypoints {
+    pub entrypoints: HashMap<String, Micheline>,
 }

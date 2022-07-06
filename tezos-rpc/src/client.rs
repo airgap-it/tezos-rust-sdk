@@ -250,6 +250,39 @@ impl TezosRPC {
         protocol_rpc::block::context::contract::delegate::get(&self.context, address)
     }
 
+    /// Return the list of entrypoints of a contract.
+    ///
+    /// Optional query arguments:
+    ///
+    /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
+    pub fn get_contract_entrypoints<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::entrypoints::RPCRequestBuilder {
+        protocol_rpc::block::context::contract::entrypoints::get(&self.context, address)
+    }
+
+    /// Return the type of a given entrypoint of a contract.
+    ///
+    /// Optional query arguments:
+    ///
+    /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints/<entrypoint>?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
+    pub fn get_contract_entrypoint<'a>(
+        &'a self,
+        address: &'a String,
+        entrypoint: &'a String,
+    ) -> protocol_rpc::block::context::contract::entrypoints::entrypoint::RPCRequestBuilder {
+        protocol_rpc::block::context::contract::entrypoints::entrypoint::get(
+            &self.context,
+            address,
+            entrypoint,
+        )
+    }
+
     /// Access the code and data of the contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-script)
