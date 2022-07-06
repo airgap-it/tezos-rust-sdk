@@ -240,6 +240,16 @@ impl TezosRPC {
         protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
 
+    /// Access the delegate of a contract, if any.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/delegate`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-delegate)
+    pub fn get_contract_delegate<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::delegate::RPCRequestBuilder {
+        protocol_rpc::block::context::contract::delegate::get(&self.context, address)
+    }
+
     /// Access the code and data of the contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-script)

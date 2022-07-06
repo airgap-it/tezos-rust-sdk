@@ -1,5 +1,6 @@
 pub mod balance;
 pub mod counter;
+pub mod delegate;
 pub mod manager_key;
 pub mod script;
 
