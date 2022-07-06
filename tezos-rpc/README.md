@@ -88,7 +88,7 @@
 | `/chains/<chain_id>/blocks/<block_id>/context/constants` | `get`  | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/constants/errors` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts` | `get` | |
-| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/balance` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/balance_and_frozen_bonds` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/contracts/{contract_id}/big_map_get` | `post` | |

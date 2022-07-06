@@ -3,6 +3,26 @@ use {
     std::str::FromStr,
 };
 
+/// Deserialize `String` into `T`.
+pub fn number_of_string<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: FromStr + serde::Deserialize<'de>,
+    <T as FromStr>::Err: std::fmt::Display,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Format<T> {
+        String(String),
+        Number(T),
+    }
+
+    match Format::<T>::deserialize(deserializer)? {
+        Format::String(v) => v.parse::<T>().map_err(serde::de::Error::custom),
+        Format::Number(v) => Ok(v),
+    }
+}
+
 /// Deserialize possible `Option<String>` into `Option<T>`.
 pub fn option_number_of_option_string<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
 where

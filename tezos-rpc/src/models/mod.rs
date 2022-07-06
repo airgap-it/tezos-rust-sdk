@@ -3,6 +3,7 @@ pub mod block;
 pub mod bootstrapped_status;
 pub mod checkpoint;
 pub mod constants;
+pub mod contract;
 pub mod error;
 pub mod fee;
 pub mod invalid_block;
