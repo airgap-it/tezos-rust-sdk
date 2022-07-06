@@ -2,6 +2,6 @@ pub mod caboose;
 pub mod checkpoint;
 pub mod savepoint;
 
-fn path(chain_id: &String) -> String {
+fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/levels", super::path(chain_id))
 }

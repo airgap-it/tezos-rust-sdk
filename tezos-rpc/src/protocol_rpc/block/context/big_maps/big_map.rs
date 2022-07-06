@@ -5,7 +5,7 @@ use {
     tezos_michelson::micheline::Micheline,
 };
 
-fn path(chain_id: &String, block_id: &BlockID, big_map_id: &u32) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32) -> String {
     format!("{}/{}", super::path(chain_id, block_id), big_map_id)
 }
 
@@ -13,7 +13,7 @@ fn path(chain_id: &String, block_id: &BlockID, big_map_id: &u32) -> String {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
     offset: Option<&'a u32>,
@@ -33,7 +33,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self

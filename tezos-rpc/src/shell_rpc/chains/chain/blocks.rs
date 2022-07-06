@@ -1,7 +1,7 @@
 use crate::client::TezosRPCContext;
 use crate::error::Error;
 
-fn path(chain_id: &String) -> String {
+fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/blocks", super::path(chain_id))
 }
 
@@ -9,11 +9,11 @@ fn path(chain_id: &String) -> String {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     /// The requested number of predecessors to return.
     length: Option<u32>,
     /// Requests blocks starting with the current head if `None` is provided.
-    head: Option<&'a String>,
+    head: Option<&'a str>,
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
     min_date: Option<u64>,
@@ -31,7 +31,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -45,7 +45,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Request blocks starting from a given block.
-    pub fn head(&mut self, head: &'a String) -> &mut Self {
+    pub fn head(&mut self, head: &'a str) -> &mut Self {
         self.head = Some(head);
 
         self

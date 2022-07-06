@@ -10,22 +10,26 @@ use {
     crate::protocol_rpc::block::BlockID,
 };
 
-fn path(chain_id: &String, block_id: &BlockID, contract: &String) -> String {
-    format!("{}/contracts/{}", super::path(chain_id, block_id), contract)
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
+    format!(
+        "{}/contracts/{}",
+        super::path(chain_id, block_id),
+        contract.as_ref()
+    )
 }
 
 /// A builder to construct the properties of a request to access the counter of a contract.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
-    contract: &'a String,
+    contract: &'a str,
     normalize_types: Option<bool>,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -36,7 +40,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -81,7 +85,7 @@ impl<'a> RPCRequestBuilder<'a> {
 /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
 ///
 /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
-pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a String) -> RPCRequestBuilder<'a> {
+pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, address)
 }
 

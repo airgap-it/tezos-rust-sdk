@@ -2,20 +2,20 @@ use {
     crate::client::TezosRPCContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
 };
 
-fn path(chain_id: &String, block_hash: &String) -> String {
-    format!("{}/{}", super::path(chain_id), block_hash)
+fn path<S: AsRef<str>>(chain_id: S, block_hash: S) -> String {
+    format!("{}/{}", super::path(chain_id), block_hash.as_ref())
 }
 
 /// A builder to construct the properties of a request to get the errors that appeared during the block (in)validation.
 #[derive(Clone, Copy)]
 pub struct GetRPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
-    block_hash: &'a String,
+    chain_id: &'a str,
+    block_hash: &'a str,
 }
 
 impl<'a> GetRPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, block_hash: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, block_hash: &'a str) -> Self {
         GetRPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -24,7 +24,7 @@ impl<'a> GetRPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -41,12 +41,12 @@ impl<'a> GetRPCRequestBuilder<'a> {
 #[derive(Clone, Copy)]
 pub struct DeleteRPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
-    block_hash: &'a String,
+    chain_id: &'a str,
+    block_hash: &'a str,
 }
 
 impl<'a> DeleteRPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, block_hash: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, block_hash: &'a str) -> Self {
         DeleteRPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -55,7 +55,7 @@ impl<'a> DeleteRPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -76,14 +76,14 @@ impl<'a> DeleteRPCRequestBuilder<'a> {
 /// Get the errors that appeared during the block (in)validation.
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
-pub fn get<'a>(ctx: &'a TezosRPCContext, block_hash: &'a String) -> GetRPCRequestBuilder<'a> {
+pub fn get<'a>(ctx: &'a TezosRPCContext, block_hash: &'a str) -> GetRPCRequestBuilder<'a> {
     GetRPCRequestBuilder::new(ctx, block_hash)
 }
 
 /// Remove an invalid block for the tezos storage.
 ///
 /// [`DELETE <'a>/chains'a /<chain_id>/invalid_blocks/<bl'a ock_hash>`](htDeleteRPCRequestBuilder<'a>hell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
-pub fn delete<'a>(ctx: &'a TezosRPCContext, block_hash: &'a String) -> DeleteRPCRequestBuilder<'a> {
+pub fn delete<'a>(ctx: &'a TezosRPCContext, block_hash: &'a str) -> DeleteRPCRequestBuilder<'a> {
     DeleteRPCRequestBuilder::new(ctx, block_hash)
 }
 

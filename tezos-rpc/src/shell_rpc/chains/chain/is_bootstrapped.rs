@@ -3,7 +3,7 @@ use {
     crate::models::bootstrapped_status::BootstrappedStatus,
 };
 
-fn path(chain_id: &String) -> String {
+fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/is_bootstrapped", super::path(chain_id))
 }
 
@@ -11,7 +11,7 @@ fn path(chain_id: &String) -> String {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
@@ -23,7 +23,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self

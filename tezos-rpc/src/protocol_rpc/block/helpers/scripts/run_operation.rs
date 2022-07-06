@@ -8,21 +8,21 @@ use {
     serde::Serialize,
 };
 
-fn path(chain_id: &String, block_id: &BlockID) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
     format!("{}/run_operation", super::path(chain_id, block_id))
 }
 
 #[derive(Serialize)]
 struct RunOperationParam<'a> {
     operation: &'a OperationGroup,
-    chain_id: &'a String,
+    chain_id: &'a str,
 }
 
 /// A builder to construct the properties of a request to run an operation without signature checks.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
     operation: &'a OperationGroup,
 }
@@ -38,7 +38,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self

@@ -2,11 +2,11 @@ use tezos_michelson::micheline::Micheline;
 
 use {crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
 
-fn path(chain_id: &String, block_id: &BlockID, contract: &String, entrypoint: &String) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S, entrypoint: S) -> String {
     format!(
         "{}/{}",
         super::path(chain_id, block_id, contract),
-        entrypoint
+        entrypoint.as_ref()
     )
 }
 
@@ -14,15 +14,15 @@ fn path(chain_id: &String, block_id: &BlockID, contract: &String, entrypoint: &S
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
-    contract: &'a String,
-    entrypoint: &'a String,
+    contract: &'a str,
+    entrypoint: &'a str,
     normalize_types: Option<bool>,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a String, entrypoint: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str, entrypoint: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -34,7 +34,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -82,8 +82,8 @@ impl<'a> RPCRequestBuilder<'a> {
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints/<entrypoint>?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
 pub fn get<'a>(
     ctx: &'a TezosRPCContext,
-    address: &'a String,
-    entrypoint: &'a String,
+    address: &'a str,
+    entrypoint: &'a str,
 ) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, address, entrypoint)
 }

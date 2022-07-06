@@ -25,7 +25,7 @@ pub struct InjectionBlockPayload {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     payload: &'a InjectionBlockPayload,
     force: Option<bool>,
     do_async: Option<bool>,
@@ -44,7 +44,7 @@ impl<'a> RPCRequestBuilder<'a> {
 
     /// Modify chain identifier to be used in the request.
     /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self

@@ -3,7 +3,7 @@ use {
     crate::models::contract::UnparsingMode, crate::protocol_rpc::block::BlockID, serde::Serialize,
 };
 
-fn path(chain_id: &String, block_id: &BlockID, contract: &String) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
     format!("{}/script", super::path(chain_id, block_id, contract))
 }
 
@@ -17,15 +17,15 @@ struct NormalizedPayload {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
-    contract: &'a String,
+    contract: &'a str,
     unparsing_mode: Option<UnparsingMode>,
     normalize_types: Option<bool>,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -37,7 +37,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -103,7 +103,7 @@ impl<'a> RPCRequestBuilder<'a> {
 /// If `unparsing_mode` is provided, the request below will be used.
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
-pub fn get_or_post<'a>(ctx: &'a TezosRPCContext, address: &'a String) -> RPCRequestBuilder<'a> {
+pub fn get_or_post<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, address)
 }
 

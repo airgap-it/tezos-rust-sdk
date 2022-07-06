@@ -91,7 +91,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
     pub fn get_invalid_block<'a>(
         &'a self,
-        block_hash: &'a String,
+        block_hash: &'a str,
     ) -> shell_rpc::chains::chain::invalid_blocks::block::GetRPCRequestBuilder {
         shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash)
     }
@@ -101,7 +101,7 @@ impl TezosRPC {
     /// [`DELETE /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
     pub fn remove_invalid_block<'a>(
         &'a self,
-        block_hash: &'a String,
+        block_hash: &'a str,
     ) -> shell_rpc::chains::chain::invalid_blocks::block::DeleteRPCRequestBuilder {
         shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash)
     }
@@ -153,7 +153,7 @@ impl TezosRPC {
     /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
     pub fn inject_operation<'a>(
         &'a self,
-        signed_operation_contents: &'a String,
+        signed_operation_contents: &'a str,
     ) -> shell_rpc::injection::operation::RPCRequestBuilder {
         shell_rpc::injection::operation::post(&self.context, signed_operation_contents)
     }
@@ -205,7 +205,7 @@ impl TezosRPC {
     /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
     pub fn get_contract<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::RPCRequestBuilder<'a> {
         protocol_rpc::block::context::contract::get(&self.context, address)
     }
@@ -215,7 +215,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
     pub fn get_contract_balance<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::balance::RPCRequestBuilder {
         protocol_rpc::block::context::contract::balance::get(&self.context, address)
     }
@@ -225,7 +225,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
     pub fn get_contract_counter<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
     }
@@ -235,7 +235,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/manager_key`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-manager-key)
     pub fn get_contract_manager_key<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::manager_key::RPCRequestBuilder {
         protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
@@ -245,7 +245,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/delegate`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-delegate)
     pub fn get_contract_delegate<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::delegate::RPCRequestBuilder {
         protocol_rpc::block::context::contract::delegate::get(&self.context, address)
     }
@@ -259,7 +259,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
     pub fn get_contract_entrypoints<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::entrypoints::RPCRequestBuilder {
         protocol_rpc::block::context::contract::entrypoints::get(&self.context, address)
     }
@@ -273,8 +273,8 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints/<entrypoint>?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
     pub fn get_contract_entrypoint<'a>(
         &'a self,
-        address: &'a String,
-        entrypoint: &'a String,
+        address: &'a str,
+        entrypoint: &'a str,
     ) -> protocol_rpc::block::context::contract::entrypoints::entrypoint::RPCRequestBuilder {
         protocol_rpc::block::context::contract::entrypoints::entrypoint::get(
             &self.context,
@@ -292,7 +292,7 @@ impl TezosRPC {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
     pub fn get_contract_script<'a>(
         &'a self,
-        address: &'a String,
+        address: &'a str,
     ) -> protocol_rpc::block::context::contract::script::RPCRequestBuilder {
         protocol_rpc::block::context::contract::script::get_or_post(&self.context, address)
     }
@@ -318,12 +318,16 @@ impl TezosRPC {
     /// e.g. `expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E`
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr)
+    ///
+    /// If `unparsing_mode` is provided, the request below will be used.
+    ///
+    /// [`POST /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>/normalized`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr-normalized)
     pub fn get_big_map_value<'a>(
         &'a self,
         big_map_id: &'a u32,
-        script_expr: &'a String,
+        script_expr: &'a str,
     ) -> protocol_rpc::block::context::big_maps::big_map::script_expr::RPCRequestBuilder<'a> {
-        protocol_rpc::block::context::big_maps::big_map::script_expr::get(
+        protocol_rpc::block::context::big_maps::big_map::script_expr::get_or_post(
             &self.context,
             big_map_id,
             script_expr,

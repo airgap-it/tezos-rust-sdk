@@ -8,13 +8,13 @@ fn path() -> String {
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
-    payload: &'a String,
+    chain_id: &'a str,
+    payload: &'a str,
     do_async: Option<bool>,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, payload: &'a String) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, payload: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
@@ -25,7 +25,7 @@ impl<'a> RPCRequestBuilder<'a> {
 
     /// Modify chain identifier to be used in the request.
     /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -50,7 +50,11 @@ impl<'a> RPCRequestBuilder<'a> {
 
         self.ctx
             .http_client
-            .post(self::path().as_str(), self.payload, &Some(query))
+            .post(
+                self::path().as_str(),
+                &self.payload.to_string(),
+                &Some(query),
+            )
             .await
     }
 }
@@ -72,7 +76,7 @@ impl<'a> RPCRequestBuilder<'a> {
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
 pub fn post<'a>(
     ctx: &'a TezosRPCContext,
-    signed_operation_contents: &'a String,
+    signed_operation_contents: &'a str,
 ) -> RPCRequestBuilder<'a> {
     RPCRequestBuilder::new(ctx, signed_operation_contents)
 }

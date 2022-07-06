@@ -8,15 +8,15 @@ use {
     serde::{Deserialize, Serialize},
 };
 
-fn path(chain_id: &String, block_id: &BlockID) -> String {
-    format!("/chains/{}/blocks/{}", chain_id, block_id.value())
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
+    format!("/chains/{}/blocks/{}", chain_id.as_ref(), block_id.value())
 }
 
 /// A builder to construct the properties of a request to get all the information about a block.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     block_id: &'a BlockID,
     metadata: MetadataArg,
 }
@@ -32,7 +32,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self

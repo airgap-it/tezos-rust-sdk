@@ -6,15 +6,15 @@ pub mod levels;
 
 use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
 
-fn path(chain_id: &String) -> String {
-    format!("{}/{}", super::path(), chain_id)
+fn path<S: AsRef<str>>(chain_id: S) -> String {
+    format!("{}/{}", super::path(), chain_id.as_ref())
 }
 
 /// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
-    chain_id: &'a String,
+    chain_id: &'a str,
     payload: &'a PatchChainPayload,
 }
 
@@ -28,7 +28,7 @@ impl<'a> RPCRequestBuilder<'a> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a String) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
         self.chain_id = chain_id;
 
         self
