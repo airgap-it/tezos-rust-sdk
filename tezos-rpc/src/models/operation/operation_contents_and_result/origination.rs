@@ -1,10 +1,10 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
+        models::balance_update::BalanceUpdate, models::contract::ContractScript,
+        models::operation::kind::OperationKind,
         models::operation::operation_result::operations::origination::OriginationOperationResult,
     },
     serde::{Deserialize, Serialize},
-    tezos_michelson::micheline::Micheline,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -21,7 +21,7 @@ pub struct Origination {
     /// Address (Base58Check-encoded)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delegate: Option<String>,
-    pub script: OriginationScript,
+    pub script: ContractScript,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<OriginationMetadata>,
 }
@@ -33,12 +33,6 @@ pub struct OriginationMetadata {
     pub operation_result: OriginationOperationResult,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub internal_operation_results: Option<InternalOriginationOperationResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct OriginationScript {
-    pub code: Vec<Micheline>,
-    pub storage: Micheline,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -55,6 +49,6 @@ pub struct InternalOriginationOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delegate: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub script: Option<OriginationScript>,
+    pub script: Option<ContractScript>,
     pub result: OriginationOperationResult,
 }
