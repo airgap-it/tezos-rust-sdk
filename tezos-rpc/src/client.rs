@@ -257,4 +257,14 @@ impl TezosRPC {
     ) -> protocol_rpc::block::helpers::preapply::operations::RPCRequestBuilder<'a> {
         protocol_rpc::block::helpers::preapply::operations::post(&self.context, operations)
     }
+
+    /// Run an operation without signature checks.
+    ///
+    /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
+    pub fn run_operation<'a>(
+        &'a self,
+        operation: &'a OperationGroup,
+    ) -> protocol_rpc::block::helpers::scripts::run_operation::RPCRequestBuilder<'a> {
+        protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)
+    }
 }

@@ -1,30 +1,39 @@
-use crate::{
-    client::TezosRPCContext,
-    error::Error,
-    models::operation::{OperationGroup, OperationWithMetadata},
-    protocol_rpc::block::BlockID,
+use {
+    crate::{
+        client::TezosRPCContext,
+        error::Error,
+        models::operation::{OperationGroup, OperationWithMetadata},
+        protocol_rpc::block::BlockID,
+    },
+    serde::Serialize,
 };
 
 fn path(chain_id: &String, block_id: &BlockID) -> String {
-    format!("{}/operations", super::path(chain_id, block_id))
+    format!("{}/run_operation", super::path(chain_id, block_id))
 }
 
-/// A builder to construct the properties of a request to simulate the application of the operations.
+#[derive(Serialize)]
+struct RunOperationParam<'a> {
+    operation: &'a OperationGroup,
+    chain_id: &'a String,
+}
+
+/// A builder to construct the properties of a request to run an operation without signature checks.
 #[derive(Clone, Copy)]
 pub struct RPCRequestBuilder<'a> {
     ctx: &'a TezosRPCContext,
     chain_id: &'a String,
     block_id: &'a BlockID,
-    operations: &'a Vec<&'a OperationGroup>,
+    operation: &'a OperationGroup,
 }
 
 impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, operations: &'a Vec<&OperationGroup>) -> Self {
+    pub fn new(ctx: &'a TezosRPCContext, operation: &'a OperationGroup) -> Self {
         RPCRequestBuilder {
             ctx,
             chain_id: &ctx.chain_id,
             block_id: &BlockID::Head,
-            operations,
+            operation,
         }
     }
 
@@ -42,29 +51,32 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<OperationWithMetadata>, Error> {
+    pub async fn send(self) -> Result<OperationWithMetadata, Error> {
         let path = self::path(self.chain_id, self.block_id);
+
+        let param = RunOperationParam {
+            operation: self.operation,
+            chain_id: self.chain_id,
+        };
 
         self.ctx
             .http_client
-            .post::<_, _, ()>(path.as_str(), self.operations, &None)
+            .post::<_, _, ()>(path.as_str(), &param, &None)
             .await
     }
 }
 
-/// Simulate the application of the operations with the context of the given block and return the result of each operation application.
+/// Run an operation without signature checks.
 ///
-/// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
-pub fn post<'a>(
-    ctx: &'a TezosRPCContext,
-    operations: &'a Vec<&OperationGroup>,
-) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx, operations)
+/// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
+pub fn post<'a>(ctx: &'a TezosRPCContext, operation: &'a OperationGroup) -> RPCRequestBuilder<'a> {
+    RPCRequestBuilder::new(ctx, operation)
 }
 
 #[cfg(test)]
 mod tests {
     use {
+        super::*,
         crate::{
             client::TezosRPC,
             constants::DEFAULT_CHAIN_ALIAS,
@@ -79,7 +91,7 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn test_preapply_operations() -> Result<(), Error> {
+    async fn test_run_operation() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
@@ -103,11 +115,14 @@ mod tests {
             chain_id: None,
             hash: None,
         };
-        let body = serde_json::to_string(&vec![&operation_group])?;
-        let response = serde_json::to_string(&vec![OperationWithMetadata {
+        let body = serde_json::to_string(&RunOperationParam {
+            operation: &operation_group,
+            chain_id: &DEFAULT_CHAIN_ALIAS.to_string(),
+        })?;
+        let response = serde_json::to_string(&OperationWithMetadata {
             contents: operation_group.contents.clone(),
             signature: operation_group.signature.clone(),
-        }])?;
+        })?;
 
         server.mock(|when, then| {
             when.method(POST)
@@ -120,12 +135,12 @@ mod tests {
         let client = TezosRPC::new(rpc_url.as_str());
 
         let result = client
-            .preapply_operations(&vec![&operation_group])
+            .run_operation(&operation_group)
             .block_id(&block_id)
             .send()
             .await?;
 
-        assert_eq!(result[0].signature, operation_group.signature);
+        assert_eq!(result.signature, operation_group.signature);
 
         Ok(())
     }

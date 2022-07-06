@@ -162,7 +162,7 @@
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/normalize_type` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/pack_data` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_code` | `post` | |
-| `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation` | `post` | |
+| `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation` | `post` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_view` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/script_size` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/simulate_operation` | `post` | |
