@@ -153,7 +153,7 @@
 | `/chains/<chain_id>/blocks/<block_id>/helpers/parse/block` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/parse/operations` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/preapply/block` | `post` | |
-| `/chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations` | `post` | |
+| `/chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations` | `post` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/round` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/entrypoint` | `post` | |
 | `/chains/<chain_id>/blocks/<block_id>/helpers/scripts/entrypoints` | `post` | |

@@ -1,6 +1,6 @@
 use {
-    crate::constants, crate::http, crate::protocol_rpc, crate::shell_rpc,
-    crate::shell_rpc::injection::block::InjectionBlockPayload,
+    crate::constants, crate::http, crate::models::operation::OperationGroup, crate::protocol_rpc,
+    crate::shell_rpc, crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
 pub struct TezosRPCContext {
@@ -246,5 +246,15 @@ impl TezosRPC {
             big_map_id,
             script_expr,
         )
+    }
+
+    /// Simulate the application of the operations with the context of the given block and return the result of each operation application.
+    ///
+    /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
+    pub fn preapply_operations<'a>(
+        &'a self,
+        operations: &'a Vec<&OperationGroup>,
+    ) -> protocol_rpc::block::helpers::preapply::operations::RPCRequestBuilder<'a> {
+        protocol_rpc::block::helpers::preapply::operations::post(&self.context, operations)
     }
 }
