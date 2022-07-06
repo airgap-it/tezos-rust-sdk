@@ -2,7 +2,10 @@ use num_bigint::{BigInt, ToBigInt};
 use num_integer::Integer as Int;
 use num_traits::{Num, ToPrimitive};
 use regex::Regex;
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 use crate::{
     internal::coder::{Decoder, Encoder, IntegerBytesCoder},
@@ -50,9 +53,9 @@ impl Integer {
     }
 }
 
-impl ToString for Integer {
-    fn to_string(&self) -> String {
-        self.0.to_owned()
+impl Display for Integer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

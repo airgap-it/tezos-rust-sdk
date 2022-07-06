@@ -1,4 +1,7 @@
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 use num_bigint::{BigUint, ToBigUint};
 use num_traits::{Num, Unsigned};
@@ -49,9 +52,9 @@ impl Natural {
     }
 }
 
-impl ToString for Natural {
-    fn to_string(&self) -> String {
-        self.0.to_owned()
+impl Display for Natural {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
