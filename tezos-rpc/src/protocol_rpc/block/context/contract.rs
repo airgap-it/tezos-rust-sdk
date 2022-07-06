@@ -1,5 +1,6 @@
 pub mod balance;
 pub mod counter;
+pub mod manager_key;
 
 use {
     crate::client::TezosRPCContext, crate::error::Error, crate::models::contract::ContractInfo,
