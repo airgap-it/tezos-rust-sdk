@@ -1,4 +1,5 @@
 pub mod preapply;
+pub mod scripts;
 
 use super::BlockID;
 
