@@ -195,6 +195,21 @@ impl TezosRPC {
         protocol_rpc::block::context::constants::get(&self.context)
     }
 
+    /// Access the complete status of a contract.
+    ///
+    /// * `address` : A contract identifier encoded in b58check. e.g. `KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA`
+    ///
+    /// Optional query arguments :
+    /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
+    ///
+    /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
+    pub fn get_contract<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::RPCRequestBuilder<'a> {
+        protocol_rpc::block::context::contract::get(&self.context, address)
+    }
+
     /// Access the balance of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
@@ -213,6 +228,16 @@ impl TezosRPC {
         address: &'a String,
     ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
+    }
+
+    /// Access the manager public key of a contract.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/manager_key`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-manager-key)
+    pub fn get_manager_key<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::manager_key::RPCRequestBuilder {
+        protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
 
     /// Get the (optionally paginated) list of values in a big map. Order of values is unspecified, but is guaranteed to be consistent.
@@ -266,20 +291,5 @@ impl TezosRPC {
         operation: &'a OperationGroup,
     ) -> protocol_rpc::block::helpers::scripts::run_operation::RPCRequestBuilder<'a> {
         protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)
-    }
-
-    /// Access the complete status of a contract.
-    ///
-    /// * `address` : A contract identifier encoded in b58check. e.g. `KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA`
-    ///
-    /// Optional query arguments :
-    /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
-    ///
-    /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
-    pub fn get_contract<'a>(
-        &'a self,
-        address: &'a String,
-    ) -> protocol_rpc::block::context::contract::RPCRequestBuilder<'a> {
-        protocol_rpc::block::context::contract::get(&self.context, address)
     }
 }
