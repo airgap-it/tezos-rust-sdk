@@ -85,8 +85,8 @@ impl<'a> RPCRequestBuilder<'a> {
 ///
 /// Optional query arguments:
 ///
-/// * `offset` : Skip the first [offset] values. Useful in combination with [length] for pagination.
-/// * `length` : Only retrieve [length] values. Useful in combination with [offset] for pagination.
+/// * `offset` : Skip the first `offset` values. Useful in combination with `length` for pagination.
+/// * `length` : Only retrieve `length` values. Useful in combination with `offset` for pagination.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
 pub fn get<'a>(ctx: &'a TezosRPCContext, big_map_id: &'a u32) -> RPCRequestBuilder<'a> {

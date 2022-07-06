@@ -166,7 +166,7 @@ impl TezosRPC {
     /// By default, the RPC will wait for the block to be validated before answering.
     /// If `?async` is true, the function returns immediately. Otherwise, the block will be validated before the result is returned. If ?force is true, it will be injected even on non strictly increasing fitness. An optional ?chain parameter can be used to specify whether to inject on the test chain or the main chain.
     ///
-    /// Returns the ID of the block [BlockHash].
+    /// Returns the ID of the block.
     ///
     /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
     pub fn inject_block<'a>(
@@ -213,7 +213,7 @@ impl TezosRPC {
     /// Access the balance of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
-    pub fn get_balance<'a>(
+    pub fn get_contract_balance<'a>(
         &'a self,
         address: &'a String,
     ) -> protocol_rpc::block::context::contract::balance::RPCRequestBuilder {
@@ -223,7 +223,7 @@ impl TezosRPC {
     /// Access the counter of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
-    pub fn get_counter<'a>(
+    pub fn get_contract_counter<'a>(
         &'a self,
         address: &'a String,
     ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
@@ -233,19 +233,33 @@ impl TezosRPC {
     /// Access the manager public key of a contract.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/manager_key`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-manager-key)
-    pub fn get_manager_key<'a>(
+    pub fn get_contract_manager_key<'a>(
         &'a self,
         address: &'a String,
     ) -> protocol_rpc::block::context::contract::manager_key::RPCRequestBuilder {
         protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
 
+    /// Access the code and data of the contract.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-script)
+    ///
+    /// If `unparsing_mode` is provided, the request below will be used.
+    ///
+    /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
+    pub fn get_contract_script<'a>(
+        &'a self,
+        address: &'a String,
+    ) -> protocol_rpc::block::context::contract::script::RPCRequestBuilder {
+        protocol_rpc::block::context::contract::script::get_or_post(&self.context, address)
+    }
+
     /// Get the (optionally paginated) list of values in a big map. Order of values is unspecified, but is guaranteed to be consistent.
     ///
     /// Optional query arguments:
     ///
-    /// * `offset` : Skip the first [offset] values. Useful in combination with [length] for pagination.
-    /// * `length` : Only retrieve [length] values. Useful in combination with [offset] for pagination.
+    /// * `offset` : Skip the first `offset` values. Useful in combination with `length` for pagination.
+    /// * `length` : Only retrieve `length` values. Useful in combination with `offset` for pagination.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
     pub fn get_big_map<'a>(

@@ -88,7 +88,7 @@ mod tests {
 
         let client = TezosRPC::new(rpc_url.as_str());
         let balance = client
-            .get_balance(&contract_address.to_string())
+            .get_contract_balance(&contract_address.to_string())
             .block_id(&block_id)
             .send()
             .await?;

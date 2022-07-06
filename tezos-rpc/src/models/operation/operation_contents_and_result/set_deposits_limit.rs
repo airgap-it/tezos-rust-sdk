@@ -33,7 +33,7 @@ pub struct SetDepositsLimitsMetadata {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InternalSetDepositsLimitOperationResult {
-    /// [OperationKind::SetDepositsLimits]
+    /// [OperationKind::SetDepositsLimit]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
     pub source: String,

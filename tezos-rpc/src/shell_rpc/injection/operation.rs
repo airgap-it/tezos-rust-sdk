@@ -67,7 +67,7 @@ impl<'a> RPCRequestBuilder<'a> {
 /// However, if `?async` is true, the function returns immediately.
 /// The optional `?chain` parameter can be used to specify whether to inject on the test chain or the main chain.
 ///
-/// Returns the ID of the operation [OperationHash].
+/// Returns the ID of the operation.
 ///
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
 pub fn post<'a>(

@@ -93,7 +93,7 @@ impl<'a> RPCRequestBuilder<'a> {
 /// By default, the RPC will wait for the block to be validated before answering.
 /// If `?async` is true, the function returns immediately. Otherwise, the block will be validated before the result is returned. If ?force is true, it will be injected even on non strictly increasing fitness. An optional ?chain parameter can be used to specify whether to inject on the test chain or the main chain.
 ///
-/// Returns the ID of the block [BlockHash].
+/// Returns the ID of the block.
 ///
 /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
 pub fn post<'a>(
