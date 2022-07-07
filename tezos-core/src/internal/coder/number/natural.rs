@@ -6,7 +6,7 @@ use crate::{
         coder::{ConsumingDecoder, Decoder, Encoder},
         consumable_list::{ConsumableBytes, ConsumableList},
     },
-    types::number::natural::Natural,
+    types::number::Nat,
     Error, Result,
 };
 
@@ -55,8 +55,8 @@ impl NaturalBytesCoder {
     }
 }
 
-impl Encoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
-    fn encode(value: &Natural) -> Result<Vec<u8>> {
+impl Encoder<Nat, Vec<u8>, Error> for NaturalBytesCoder {
+    fn encode(value: &Nat) -> Result<Vec<u8>> {
         let value: BigUint = value.to_integer().unwrap();
         if value == BigUint::zero() {
             return Ok(vec![0]);
@@ -65,16 +65,16 @@ impl Encoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
     }
 }
 
-impl Decoder<Natural, Vec<u8>, Error> for NaturalBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Natural> {
+impl Decoder<Nat, Vec<u8>, Error> for NaturalBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<Nat> {
         let value = &mut ConsumableBytes::new(value);
 
         Self::decode_consuming(value)
     }
 }
 
-impl ConsumingDecoder<Natural, u8, Error> for NaturalBytesCoder {
-    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Natural> {
+impl ConsumingDecoder<Nat, u8, Error> for NaturalBytesCoder {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Nat> {
         if value.is_empty() {
             return Err(Error::InvalidNaturalBytes);
         }
@@ -88,7 +88,7 @@ impl ConsumingDecoder<Natural, u8, Error> for NaturalBytesCoder {
 mod test {
     use super::*;
 
-    fn test_values() -> Result<Vec<(Natural, Vec<u8>)>> {
+    fn test_values() -> Result<Vec<(Nat, Vec<u8>)>> {
         Ok(vec![
             ((0u8).into(), vec![0]),
             ((1u8).into(), vec![1]),

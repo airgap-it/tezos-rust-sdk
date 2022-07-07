@@ -122,7 +122,7 @@ macro_rules! make_encoded_struct {
                 Error, Result,
             };
 
-            #[derive(Debug)]
+            #[derive(Debug, Clone)]
             pub struct $name(String);
 
             impl $name {

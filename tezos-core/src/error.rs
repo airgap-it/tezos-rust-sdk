@@ -34,6 +34,7 @@ pub enum Error {
     InvalidNaturalConversion,
     InvalidAddress,
     InvalidContractAddress,
+    InvalidHexString,
 }
 
 pub type Result<T> = result::Result<T, Error>;
