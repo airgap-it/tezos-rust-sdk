@@ -1,0 +1,178 @@
+[
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "22013"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "1402812724175"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "285781515"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "18356247544274940"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "50001"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "66646865"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "22"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "2003335545"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "1000000000"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "63452529983797734"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "66"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "4152547146"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "True"
+                    },
+                    {
+                        "int": "1525672"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "121431274674462"
+            }
+        ]
+    },
+    {
+        "prim": "Pair",
+        "args": [
+            {
+                "prim": "Pair",
+                "args": [
+                    {
+                        "prim": "False"
+                    },
+                    {
+                        "int": "1"
+                    }
+                ]
+            },
+            {
+                "prim": "False"
+            },
+            {
+                "int": "110237865"
+            }
+        ]
+    }
+]

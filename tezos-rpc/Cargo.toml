@@ -1,0 +1,22 @@
+[package]
+name = "tezos-rpc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+reqwest = { version = "0.11", features = ["json"] }
+derive_more = "0.99"
+num-bigint =  { version = "0.4.3", features = ["serde"] }
+chrono = { version = "0.4",  features = ["serde"] }
+
+# Local dependencies
+tezos-core = { path = "../tezos-core" }
+tezos-michelson = { path = "../tezos-michelson" }
+
+[dev-dependencies]
+tokio = { version = "1.19", features = ["macros"] }
+httpmock = { version = "0.6" }

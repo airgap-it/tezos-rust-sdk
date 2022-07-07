@@ -1,0 +1,28 @@
+{
+    "prim": "pair",
+    "args": [
+        {
+            "prim": "address",
+            "annots": [
+                "%vault_owner"
+            ]
+        },
+        {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%token_amount"
+                    ]
+                },
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%recipient"
+                    ]
+                }
+            ]
+        }
+    ]
+}
