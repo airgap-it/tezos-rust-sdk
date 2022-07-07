@@ -1,0 +1,249 @@
+{
+    "entrypoints": {
+        "withdraw": {
+            "prim": "nat"
+        },
+        "update": {
+            "prim": "unit"
+        },
+        "touch": {
+            "prim": "list",
+            "args": [
+                {
+                    "prim": "address"
+                }
+            ]
+        },
+        "settle_with_vault": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%vault_owner"
+                    ]
+                },
+                {
+                    "prim": "pair",
+                    "args": [
+                        {
+                            "prim": "nat",
+                            "annots": [
+                                "%token_amount"
+                            ]
+                        },
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%recipient"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "set_target_price": {
+            "prim": "nat"
+        },
+        "set_reference_interest_rate": {
+            "prim": "nat"
+        },
+        "set_contracts": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "pair",
+                    "args": [
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%governance_token_contract"
+                            ]
+                        },
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%options_contract"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "prim": "pair",
+                    "args": [
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%reward_pool_contract"
+                            ]
+                        },
+                        {
+                            "prim": "pair",
+                            "args": [
+                                {
+                                    "prim": "address",
+                                    "annots": [
+                                        "%savings_pool_contract"
+                                    ]
+                                },
+                                {
+                                    "prim": "address",
+                                    "annots": [
+                                        "%target_price_oracle"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "set_administrator": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%administrator_to_set"
+                    ]
+                },
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%token_id"
+                    ]
+                }
+            ]
+        },
+        "remove_administrator": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%administrator_to_remove"
+                    ]
+                },
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%token_id"
+                    ]
+                }
+            ]
+        },
+        "mint": {
+            "prim": "nat"
+        },
+        "liquidate": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%vault_owner"
+                    ]
+                },
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%token_amount"
+                    ]
+                }
+            ]
+        },
+        "internal_withdraw": {
+            "prim": "nat"
+        },
+        "internal_touch": {
+            "prim": "list",
+            "args": [
+                {
+                    "prim": "address"
+                }
+            ]
+        },
+        "internal_settle_with_vault": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%vault_owner"
+                    ]
+                },
+                {
+                    "prim": "pair",
+                    "args": [
+                        {
+                            "prim": "nat",
+                            "annots": [
+                                "%token_amount"
+                            ]
+                        },
+                        {
+                            "prim": "address",
+                            "annots": [
+                                "%recipient"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "internal_mint": {
+            "prim": "nat"
+        },
+        "internal_liquidate": {
+            "prim": "pair",
+            "args": [
+                {
+                    "prim": "address",
+                    "annots": [
+                        "%vault_owner"
+                    ]
+                },
+                {
+                    "prim": "nat",
+                    "annots": [
+                        "%token_amount"
+                    ]
+                }
+            ]
+        },
+        "internal_burn": {
+            "prim": "nat"
+        },
+        "internal_bailout": {
+            "prim": "nat"
+        },
+        "execute": {
+            "prim": "lambda",
+            "args": [
+                {
+                    "prim": "unit"
+                },
+                {
+                    "prim": "list",
+                    "args": [
+                        {
+                            "prim": "operation"
+                        }
+                    ]
+                }
+            ]
+        },
+        "deposit": {
+            "prim": "nat"
+        },
+        "create_vault": {
+            "prim": "bool"
+        },
+        "burn": {
+            "prim": "nat"
+        },
+        "bailout": {
+            "prim": "nat"
+        }
+    }
+}
