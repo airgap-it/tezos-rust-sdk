@@ -1,2 +1,5 @@
-pub mod integer;
-pub mod natural;
+mod int;
+mod nat;
+
+pub use int::Int;
+pub use nat::Nat;

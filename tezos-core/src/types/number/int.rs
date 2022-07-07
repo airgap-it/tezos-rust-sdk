@@ -1,32 +1,35 @@
 use num_bigint::{BigInt, ToBigInt};
-use num_integer::Integer as Int;
+use num_integer::Integer;
 use num_traits::{Num, ToPrimitive};
 use regex::Regex;
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 
 use crate::{
     internal::coder::{Decoder, Encoder, IntegerBytesCoder},
     Error, Result,
 };
 
-use super::natural::Natural;
+use super::Nat;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Integer(String);
+pub struct Int(String);
 
-impl Integer {
+impl Int {
     pub fn from_string(value: String) -> Result<Self> {
         if Self::is_valid(&value) {
-            return Ok(Integer(value));
+            return Ok(Int(value));
         }
         Err(Error::InvalidIntegerString)
     }
 
-    pub fn from_intenger<I: Int + ToString>(value: I) -> Self {
+    pub fn from_intenger<I: Integer + ToString>(value: I) -> Self {
         Self::from_string(value.to_string()).unwrap()
     }
 
-    pub fn to_integer<I: Int + FromStr>(&self) -> Result<I>
+    pub fn to_integer<I: Integer + FromStr>(&self) -> Result<I>
     where
         <I as FromStr>::Err: Debug,
     {
@@ -50,13 +53,13 @@ impl Integer {
     }
 }
 
-impl ToString for Integer {
-    fn to_string(&self) -> String {
-        self.0.to_owned()
+impl Display for Int {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
-impl ToPrimitive for Integer {
+impl ToPrimitive for Int {
     fn to_i64(&self) -> Option<i64> {
         self.to_integer().ok()
     }
@@ -74,7 +77,7 @@ impl ToPrimitive for Integer {
     }
 }
 
-impl ToBigInt for Integer {
+impl ToBigInt for Int {
     fn to_bigint(&self) -> Option<BigInt> {
         BigInt::from_str_radix(&self.0, 10)
             .map(Some)
@@ -82,49 +85,49 @@ impl ToBigInt for Integer {
     }
 }
 
-impl From<i8> for Integer {
+impl From<i8> for Int {
     fn from(value: i8) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<i16> for Integer {
+impl From<i16> for Int {
     fn from(value: i16) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<i32> for Integer {
+impl From<i32> for Int {
     fn from(value: i32) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<i64> for Integer {
+impl From<i64> for Int {
     fn from(value: i64) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<i128> for Integer {
+impl From<i128> for Int {
     fn from(value: i128) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<BigInt> for Integer {
+impl From<BigInt> for Int {
     fn from(value: BigInt) -> Self {
         Self::from_intenger(value)
     }
 }
 
-impl From<Natural> for Integer {
-    fn from(value: Natural) -> Self {
-        Integer(value.to_string())
+impl From<Nat> for Int {
+    fn from(value: Nat) -> Self {
+        Int(value.to_string())
     }
 }
 
-impl TryFrom<String> for Integer {
+impl TryFrom<String> for Int {
     type Error = Error;
 
     fn try_from(value: String) -> Result<Self> {
@@ -132,7 +135,7 @@ impl TryFrom<String> for Integer {
     }
 }
 
-impl TryFrom<&str> for Integer {
+impl TryFrom<&str> for Int {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
@@ -140,7 +143,7 @@ impl TryFrom<&str> for Integer {
     }
 }
 
-impl TryFrom<&Vec<u8>> for Integer {
+impl TryFrom<&Vec<u8>> for Int {
     type Error = Error;
 
     fn try_from(value: &Vec<u8>) -> Result<Self> {
@@ -148,10 +151,10 @@ impl TryFrom<&Vec<u8>> for Integer {
     }
 }
 
-impl TryFrom<&Integer> for Vec<u8> {
+impl TryFrom<&Int> for Vec<u8> {
     type Error = Error;
 
-    fn try_from(value: &Integer) -> Result<Self> {
+    fn try_from(value: &Int) -> Result<Self> {
         value.to_bytes()
     }
 }
@@ -177,7 +180,7 @@ mod test {
             "9223372036854775807",
             "9223372036854775808",
         ];
-        let _integers: Vec<Integer> = integer_strings
+        let _integers: Vec<Int> = integer_strings
             .into_iter()
             .map(|item| item.try_into())
             .collect::<Result<Vec<_>>>()?;
@@ -187,7 +190,7 @@ mod test {
     #[test]
     fn test_invalid_integers() -> Result<()> {
         let integer_strings = vec!["", "abc", "1.", "1.0", " 10", " -10", "- 10", "10%"];
-        let results: Vec<Result<Integer>> = integer_strings
+        let results: Vec<Result<Int>> = integer_strings
             .into_iter()
             .map(|item| item.try_into())
             .collect();
