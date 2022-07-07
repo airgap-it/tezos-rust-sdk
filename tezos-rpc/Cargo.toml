@@ -15,7 +15,7 @@ chrono = { version = "0.4",  features = ["serde"] }
 
 # Local dependencies
 tezos-core = { path = "../tezos-core" }
-tezos-michelson = { path = "../tezos-michelson" }
+tezos-michelson = { path = "../tezos-michelson", features = ["serde"] }
 
 [dev-dependencies]
 tokio = { version = "1.19", features = ["macros"] }

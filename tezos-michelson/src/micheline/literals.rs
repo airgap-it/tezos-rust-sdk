@@ -1,6 +1,7 @@
 mod int;
 
 use int::IntDef;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::types::number::Nat;
 
