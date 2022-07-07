@@ -2,7 +2,7 @@ pub mod literals;
 pub mod primitive_application;
 pub mod sequence;
 mod utils;
-
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::internal::{
     coder::{Decoder, Encoder},
@@ -168,6 +168,7 @@ impl From<Michelson> for Micheline {
 }
 
 #[cfg(test)]
+#[cfg(feature = "serde")]
 mod test {
     use serde_json::json;
 

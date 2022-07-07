@@ -19,5 +19,4 @@ sha2 = { version = "0.10", optional = true }
 hex = "0.4"
 
 [features]
-default = ["crypto"]
 crypto = ["dep:sodiumoxide", "dep:k256", "dep:p256", "dep:sha2"]

@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use regex::Regex;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{

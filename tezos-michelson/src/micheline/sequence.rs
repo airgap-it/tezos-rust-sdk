@@ -1,10 +1,12 @@
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::internal::normalizer::Normalizer;
 
 use super::Micheline;
 use crate::{internal::normalizer::MichelineNormalizer, Error, Result};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sequence(Vec<Micheline>);
 
 impl Sequence {

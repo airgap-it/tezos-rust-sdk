@@ -20,5 +20,4 @@ tezos-core = { path = "../tezos-core" }
 hex-literal = "0.3"
 
 [features]
-default = ["serde"]
 serde = ["dep:serde", "dep:serde_json"]

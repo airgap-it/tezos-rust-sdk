@@ -1,5 +1,6 @@
 use hex;
 use regex::Regex;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::{

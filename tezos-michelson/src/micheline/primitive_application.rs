@@ -1,3 +1,4 @@
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::internal::normalizer::Normalizer;
 
