@@ -1,5 +1,5 @@
 mod int;
-
+#[cfg(feature = "serde")]
 use int::IntDef;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

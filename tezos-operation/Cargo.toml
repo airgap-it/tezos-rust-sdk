@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4"
+derive_more = "0.99.17"
+
 tezos-core = { path = "../tezos-core" }
 tezos-michelson = { path = "../tezos-michelson" }

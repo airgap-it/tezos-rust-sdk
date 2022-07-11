@@ -120,6 +120,7 @@ macro_rules! make_encoded_struct {
             use $crate::{
                 types::encoded::{Encoded, MetaEncoded, TraitMetaEncoded},
                 Error, Result,
+                internal::{consumable_list::ConsumableList, coder::ConsumingDecoder},
             };
 
             #[derive(Debug, Clone)]
@@ -158,7 +159,14 @@ macro_rules! make_encoded_struct {
                 }
 
                 fn from_bytes(bytes: &[u8]) -> Result<Self> {
-                    <Self as Encoded>::Coder::decode_with_meta(bytes, &META)
+                    Self::Coder::decode_with_meta(bytes, &META)
+                }
+
+                fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self>
+                where
+                    Self::Coder: ConsumingDecoder<Self, u8, Error>,
+                {
+                    Self::Coder::decode_consuming_with_meta(bytes, &META)
                 }
             }
 
