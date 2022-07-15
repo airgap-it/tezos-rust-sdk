@@ -17,10 +17,7 @@ pub trait EncodedTag: BytesTag + Sized + Copy {
     }
 
     fn is_valid_consumable(&self, bytes: &[u8]) -> bool {
-        bytes.starts_with(self.value())
-            && self
-                .meta()
-                .is_valid_consumable_bytes(&bytes[self.value().len()..])
+        bytes.starts_with(self.value()) && bytes.len() >= self.meta().bytes_length
     }
 
     fn recognize(bytes: &[u8]) -> Option<Self>

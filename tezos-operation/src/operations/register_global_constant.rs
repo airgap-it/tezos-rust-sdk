@@ -3,7 +3,7 @@ use tezos_michelson::micheline::Micheline;
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegisterGlobalConstant {
     source: ImplicitAddress,
     fee: Mutez,
@@ -38,8 +38,8 @@ impl RegisterGlobalConstant {
 }
 
 impl TraitOperationContent for RegisterGlobalConstant {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::RegisterGlobalConstant as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::RegisterGlobalConstant
     }
 }
 

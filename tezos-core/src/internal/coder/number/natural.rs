@@ -65,8 +65,8 @@ impl Encoder<Nat, Vec<u8>, Error> for NaturalBytesCoder {
     }
 }
 
-impl Decoder<Nat, Vec<u8>, Error> for NaturalBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Nat> {
+impl Decoder<Nat, [u8], Error> for NaturalBytesCoder {
+    fn decode(value: &[u8]) -> Result<Nat> {
         let value = &mut ConsumableBytes::new(value);
 
         Self::decode_consuming(value)

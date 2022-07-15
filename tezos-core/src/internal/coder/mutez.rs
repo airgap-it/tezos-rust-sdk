@@ -15,8 +15,8 @@ impl Encoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
     }
 }
 
-impl Decoder<Mutez, Vec<u8>, Error> for MutezBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Mutez> {
+impl Decoder<Mutez, [u8], Error> for MutezBytesCoder {
+    fn decode(value: &[u8]) -> Result<Mutez> {
         let nat = NaturalBytesCoder::decode(value)?;
         (&nat).try_into()
     }

@@ -1,5 +1,5 @@
 use derive_more::{Display, Error as DError, From};
-use std::result;
+use std::{result, string::FromUtf8Error};
 
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
@@ -19,6 +19,9 @@ pub enum Error {
     },
     IntParse {
         source: std::num::ParseIntError,
+    },
+    InvalidStringConversion {
+        source: FromUtf8Error,
     },
     InvalidConversion,
     InvalidEncodedValue,

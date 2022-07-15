@@ -8,7 +8,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Address {
     Implicit(ImplicitAddress),
     Originated(ContractAddress),
@@ -86,7 +86,7 @@ impl From<ContractAddress> for Address {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ImplicitAddress {
     TZ1(Ed25519PublicKeyHash),
     TZ2(Secp256K1PublicKeyHash),
@@ -201,7 +201,7 @@ impl From<P256PublicKeyHash> for ImplicitAddress {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContractAddress(String);
 
 impl ContractAddress {

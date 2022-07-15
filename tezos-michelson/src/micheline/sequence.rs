@@ -5,7 +5,7 @@ use tezos_core::internal::normalizer::Normalizer;
 use super::Micheline;
 use crate::{internal::normalizer::MichelineNormalizer, Error, Result};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sequence(Vec<Micheline>);
 

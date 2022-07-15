@@ -1,5 +1,5 @@
 mod int;
-
+#[cfg(feature = "serde")]
 use int::IntDef;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ pub use tezos_core::types::number::Int;
 
 use super::Micheline;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
