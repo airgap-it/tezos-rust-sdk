@@ -1,5 +1,6 @@
 use super::{InlinedEndorsement, OperationContentTag, TraitOperationContent};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DoubleEndorsementEvidence {
     op1: InlinedEndorsement,
     op2: InlinedEndorsement,
@@ -20,7 +21,7 @@ impl DoubleEndorsementEvidence {
 }
 
 impl TraitOperationContent for DoubleEndorsementEvidence {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::DoubleEndorsementEvidence as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::DoubleEndorsementEvidence
     }
 }

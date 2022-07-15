@@ -1,13 +1,16 @@
 use crate::{
-    internal::coder::{Decoder, Encoder},
+    internal::{
+        coder::{ConsumingDecoder, Decoder, Encoder},
+        consumable_list::ConsumableList,
+    },
     types::encoded::{ContractAddress, ContractHash, Encoded, TraitMetaEncoded},
-    Error,
+    Error, Result,
 };
 
 pub struct ContractAddressBytesCoder;
 
 impl Encoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
-    fn encode(value: &ContractAddress) -> std::result::Result<Vec<u8>, Error> {
+    fn encode(value: &ContractAddress) -> Result<Vec<u8>> {
         let contract_hash: ContractHash = value.contract_hash().try_into()?;
         let mut bytes = contract_hash.to_bytes()?;
         bytes.push(0);
@@ -19,7 +22,7 @@ impl Encoder<ContractAddress, Vec<u8>, Error> for ContractAddressBytesCoder {
 }
 
 impl Decoder<ContractAddress, [u8], Error> for ContractAddressBytesCoder {
-    fn decode(value: &[u8]) -> std::result::Result<ContractAddress, Error> {
+    fn decode(value: &[u8]) -> Result<ContractAddress> {
         let meta = ContractAddress::meta_value();
         let (contract_hash_bytes, entrypoint_bytes) = value.split_at(meta.bytes_length + 1);
         if !contract_hash_bytes.ends_with(&[0]) {
@@ -40,5 +43,18 @@ impl Decoder<ContractAddress, [u8], Error> for ContractAddressBytesCoder {
             &contract_hash,
             entrypoint.as_ref().map(|x| &**x),
         ))
+    }
+}
+
+impl ConsumingDecoder<ContractAddress, u8, Error> for ContractAddressBytesCoder {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<ContractAddress> {
+        let meta = ContractAddress::meta_value();
+        let bytes = value.consume_until(meta.bytes_length + 1)?;
+        if !bytes.ends_with(&[0]) {
+            return Err(Error::InvalidBytes);
+        }
+        let contract_hash = ContractHash::from_bytes(&bytes[..meta.bytes_length])?;
+
+        Ok(ContractAddress::from_components(&contract_hash, None))
     }
 }

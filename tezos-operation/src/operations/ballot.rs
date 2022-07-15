@@ -4,8 +4,9 @@ use tezos_core::{
 };
 
 use super::{OperationContentTag, TraitOperationContent};
+use crate::{Error, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ballot {
     source: ImplicitAddress,
     period: i32,
@@ -41,16 +42,27 @@ impl Ballot {
 }
 
 impl TraitOperationContent for Ballot {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Ballot as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Ballot
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
     Yay,
     Nay,
     Pass,
+}
+
+impl Type {
+    pub fn from_value(value: &[u8]) -> Result<Self> {
+        match value {
+            &[0] => Ok(Self::Yay),
+            &[1] => Ok(Self::Nay),
+            &[2] => Ok(Self::Pass),
+            _ => Err(Error::InvalidBytes),
+        }
+    }
 }
 
 impl BytesTag for Type {

@@ -8,7 +8,10 @@ use num_traits::{Num, Unsigned};
 use regex::Regex;
 
 use crate::{
-    internal::coder::{Decoder, Encoder, NaturalBytesCoder},
+    internal::{
+        coder::{ConsumingDecoder, Decoder, Encoder, NaturalBytesCoder},
+        consumable_list::ConsumableList,
+    },
     types::mutez::Mutez,
     Error, Result,
 };
@@ -45,6 +48,14 @@ impl Nat {
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         NaturalBytesCoder::encode(self)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        NaturalBytesCoder::decode(bytes)
+    }
+
+    pub fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self> {
+        NaturalBytesCoder::decode_consuming(bytes)
     }
 
     pub fn to_str(&self) -> &str {

@@ -2,7 +2,7 @@ use tezos_core::types::{encoded::ImplicitAddress, mutez::Mutez, number::Nat};
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Delegation {
     source: ImplicitAddress,
     fee: Mutez,
@@ -37,8 +37,8 @@ impl Delegation {
 }
 
 impl TraitOperationContent for Delegation {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Delegation as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Delegation
     }
 }
 

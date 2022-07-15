@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 pub mod crypto;
-pub mod error;
+mod error;
 pub mod internal;
 pub mod types;
 

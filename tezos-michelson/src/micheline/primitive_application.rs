@@ -5,7 +5,7 @@ use tezos_core::internal::normalizer::Normalizer;
 use super::Micheline;
 use crate::{internal::normalizer::MichelineNormalizer, Error, Result};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PrimitiveApplication {
     prim: String,

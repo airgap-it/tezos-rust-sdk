@@ -2,7 +2,7 @@ use tezos_core::types::hex_string::HexString;
 
 use super::{OperationContentTag, TraitOperationContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FailingNoop {
     arbitrary: HexString,
 }
@@ -18,7 +18,7 @@ impl FailingNoop {
 }
 
 impl TraitOperationContent for FailingNoop {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::FailingNoop as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::FailingNoop
     }
 }

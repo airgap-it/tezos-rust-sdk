@@ -6,7 +6,7 @@ use tezos_core::types::{
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Reveal {
     source: ImplicitAddress,
     fee: Mutez,
@@ -41,8 +41,8 @@ impl Reveal {
 }
 
 impl TraitOperationContent for Reveal {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Reveal as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Reveal
     }
 }
 

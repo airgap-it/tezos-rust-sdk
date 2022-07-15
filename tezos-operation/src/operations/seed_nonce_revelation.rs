@@ -2,6 +2,7 @@ use tezos_core::types::hex_string::HexString;
 
 use super::{OperationContentTag, TraitOperationContent};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SeedNonceRevelation {
     level: i32,
     nonce: HexString,
@@ -22,7 +23,7 @@ impl SeedNonceRevelation {
 }
 
 impl TraitOperationContent for SeedNonceRevelation {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::SeedNonceRevelation as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::SeedNonceRevelation
     }
 }

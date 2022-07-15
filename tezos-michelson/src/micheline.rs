@@ -23,7 +23,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum Micheline {
     Literal(Literal),
