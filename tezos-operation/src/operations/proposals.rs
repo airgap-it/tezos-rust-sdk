@@ -2,6 +2,7 @@ use tezos_core::types::encoded::{ImplicitAddress, ProtocolHash};
 
 use super::{OperationContentTag, TraitOperationContent};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Proposals {
     source: ImplicitAddress,
     period: i32,
@@ -31,7 +32,7 @@ impl Proposals {
 }
 
 impl TraitOperationContent for Proposals {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Proposals as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Proposals
     }
 }

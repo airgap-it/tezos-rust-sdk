@@ -1,7 +1,9 @@
-use crate::internal::consumable_list::ConsumableList;
+use crate::{internal::consumable_list::ConsumableList, types::encoded::Encoded};
 use num_traits::ToPrimitive;
 
 use crate::{Error, Result};
+
+use super::{coder::ConsumingDecoder, consumable_list::ConsumableBytes};
 
 pub fn encode_string(value: &str) -> Vec<u8> {
     let bytes = value.as_bytes();
@@ -46,30 +48,92 @@ pub fn encode_u16(value: u16) -> [u8; 2] {
     value.to_be_bytes()
 }
 
+pub fn decode_consuming_u16<CL: ConsumableList<u8>>(value: &mut CL) -> Result<u16> {
+    let bytes = value.consume_until(2)?;
+
+    Ok(u16::from_be_bytes(
+        bytes.try_into().map_err(|_error| Error::InvalidBytes)?,
+    ))
+}
+
 pub fn encode_i32(value: i32) -> [u8; 4] {
-    let mut result = value.to_be_bytes();
-    if value < 0 {
-        for value in result.iter_mut() {
-            if *value == 0u8 {
-                *value = 255u8
-            } else {
-                break;
-            }
-        }
-    }
-    result
+    value.to_be_bytes()
+}
+
+pub fn decode_consuming_i32<CL: ConsumableList<u8>>(value: &mut CL) -> Result<i32> {
+    let bytes = value.consume_until(4)?;
+
+    Ok(i32::from_be_bytes(
+        bytes.try_into().map_err(|_error| Error::InvalidBytes)?,
+    ))
 }
 
 pub fn encode_i64(value: i64) -> [u8; 8] {
-    let mut result = value.to_be_bytes();
-    if value < 0 {
-        for value in result.iter_mut() {
-            if *value == 0u8 {
-                *value = 255u8
-            } else {
-                break;
-            }
-        }
+    value.to_be_bytes()
+}
+
+pub fn decode_consuming_i64<CL: ConsumableList<u8>>(value: &mut CL) -> Result<i64> {
+    let bytes = value.consume_until(8)?;
+
+    Ok(i64::from_be_bytes(
+        bytes.try_into().map_err(|_error| Error::InvalidBytes)?,
+    ))
+}
+
+pub fn encode_bool(value: bool) -> [u8; 1] {
+    if value {
+        [255u8]
+    } else {
+        [0u8]
     }
-    result
+}
+
+pub fn decode_consuming_bool<CL: ConsumableList<u8>>(value: &mut CL) -> Result<bool> {
+    let byte = value.consume_first()?;
+    match byte {
+        0 => Ok(false),
+        255 => Ok(true),
+        _ => Err(Error::InvalidBytes),
+    }
+}
+
+pub fn encode_list<Item: Encoded>(list: &[Item]) -> Result<Vec<u8>> {
+    let bytes = list
+        .iter()
+        .try_fold::<_, _, Result<_>>(Vec::<u8>::new(), |acc, item| {
+            Ok([acc, item.to_bytes()?].concat())
+        })?;
+
+    Ok(encode_bytes(&bytes))
+}
+
+pub fn decode_consuming_list<Item: Encoded, CL: ConsumableList<u8>>(
+    value: &mut CL,
+) -> Result<Vec<Item>>
+where
+    Item::Coder: ConsumingDecoder<Item, u8, Error>,
+{
+    let bytes = decode_bytes(value)?;
+    let mut bytes = ConsumableBytes::new(&bytes);
+    let mut result = Vec::<Item>::new();
+    while !bytes.is_empty() {
+        result.push(Item::from_consumable_bytes(&mut bytes)?);
+    }
+
+    Ok(result)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_u16_coding() -> Result<()> {
+        let encoded = encode_u16(1);
+        let decoded = decode_consuming_u16(&mut ConsumableBytes::new(&encoded))?;
+
+        assert_eq!(1, decoded);
+
+        Ok(())
+    }
 }

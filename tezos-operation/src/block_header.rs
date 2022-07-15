@@ -6,6 +6,7 @@ use tezos_core::types::{
     hex_string::HexString,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BlockHeader {
     pub level: i32,
     pub proto: u8,

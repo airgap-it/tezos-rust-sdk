@@ -189,7 +189,7 @@ impl TryFrom<&SecretKey> for Vec<u8> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PublicKey {
     Ed25519(Ed25519PublicKey),
     Secp256K1(Secp256K1PublicKey),

@@ -2,18 +2,18 @@ use tezos_core::types::{encoded::ImplicitAddress, mutez::Mutez, number::Nat};
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SetDepositsLimit {
     source: ImplicitAddress,
     fee: Mutez,
     counter: Nat,
     gas_limit: Nat,
     storage_limit: Nat,
-    limit: Mutez,
+    limit: Option<Mutez>,
 }
 
 impl SetDepositsLimit {
-    pub fn limit(&self) -> Mutez {
+    pub fn limit(&self) -> Option<Mutez> {
         self.limit
     }
 
@@ -23,7 +23,7 @@ impl SetDepositsLimit {
         counter: Nat,
         gas_limit: Nat,
         storage_limit: Nat,
-        limit: Mutez,
+        limit: Option<Mutez>,
     ) -> Self {
         Self {
             source,
@@ -37,8 +37,8 @@ impl SetDepositsLimit {
 }
 
 impl TraitOperationContent for SetDepositsLimit {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::SetDepositsLimit as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::SetDepositsLimit
     }
 }
 

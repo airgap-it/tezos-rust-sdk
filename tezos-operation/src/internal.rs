@@ -1,1 +1,1 @@
-mod coder;
+pub mod coder;

@@ -3,7 +3,7 @@ use tezos_michelson::micheline::Micheline;
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Origination {
     source: ImplicitAddress,
     fee: Mutez,
@@ -52,8 +52,8 @@ impl Origination {
 }
 
 impl TraitOperationContent for Origination {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Origination as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Origination
     }
 }
 
@@ -79,7 +79,7 @@ impl TraitOperationManagerContent for Origination {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Script {
     code: Micheline,
     storage: Micheline,

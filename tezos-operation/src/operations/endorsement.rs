@@ -2,7 +2,7 @@ use tezos_core::types::encoded::BlockPayloadHash;
 
 use super::{OperationContentTag, TraitOperationConsensusContent, TraitOperationContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Endorsement {
     slot: u16,
     level: i32,
@@ -22,8 +22,8 @@ impl Endorsement {
 }
 
 impl TraitOperationContent for Endorsement {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Endorsement as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Endorsement
     }
 }
 

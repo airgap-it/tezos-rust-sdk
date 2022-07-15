@@ -2,7 +2,7 @@ use regex::Regex;
 
 use crate::{Error, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HexString(String);
 
 impl HexString {
@@ -63,5 +63,13 @@ impl TryFrom<String> for HexString {
 
     fn try_from(value: String) -> Result<Self> {
         Self::new(value)
+    }
+}
+
+impl TryFrom<&str> for HexString {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self> {
+        Self::new(value.into())
     }
 }

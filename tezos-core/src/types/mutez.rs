@@ -9,7 +9,8 @@ use derive_more::{
 use num_traits::ToPrimitive;
 use regex::Regex;
 
-use crate::internal::coder::{Decoder, Encoder, MutezBytesCoder};
+use crate::internal::coder::{ConsumingDecoder, Decoder, Encoder, MutezBytesCoder};
+use crate::internal::consumable_list::ConsumableList;
 use crate::{Error, Result};
 
 use super::number::Nat;
@@ -66,6 +67,14 @@ impl Mutez {
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MutezBytesCoder::encode(self)
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        MutezBytesCoder::decode(bytes)
+    }
+
+    pub fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self> {
+        MutezBytesCoder::decode_consuming(bytes)
     }
 }
 

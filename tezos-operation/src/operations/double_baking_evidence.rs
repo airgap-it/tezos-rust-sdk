@@ -2,6 +2,7 @@ use crate::block_header::BlockHeader;
 
 use super::{OperationContentTag, TraitOperationContent};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DoubleBakingEvidence {
     bh1: BlockHeader,
     bh2: BlockHeader,
@@ -22,7 +23,7 @@ impl DoubleBakingEvidence {
 }
 
 impl TraitOperationContent for DoubleBakingEvidence {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::DoubleBakingEvidence as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::DoubleBakingEvidence
     }
 }

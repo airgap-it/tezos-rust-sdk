@@ -1,3 +1,4 @@
+use num_derive::FromPrimitive;
 use tezos_core::types::{
     encoded::{Address, ImplicitAddress},
     mutez::Mutez,
@@ -7,7 +8,7 @@ use tezos_michelson::micheline::Micheline;
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
     source: ImplicitAddress,
     fee: Mutez,
@@ -56,8 +57,8 @@ impl Transaction {
 }
 
 impl TraitOperationContent for Transaction {
-    fn tag() -> &'static [u8] {
-        &[OperationContentTag::Transaction as u8]
+    fn tag() -> OperationContentTag {
+        OperationContentTag::Transaction
     }
 }
 
@@ -83,7 +84,7 @@ impl TraitOperationManagerContent for Transaction {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Parameters {
     entrypoint: Entrypoint,
     value: Micheline,
@@ -109,13 +110,29 @@ pub enum Entrypoint {
     Named(String),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+impl Entrypoint {
+    const NAMED_TAG: u8 = 255;
+
+    pub fn tag(&self) -> u8 {
+        match self {
+            Entrypoint::Common(value) => value.tag(),
+            Entrypoint::Named(_) => Self::named_tag(),
+        }
+    }
+
+    pub fn named_tag() -> u8 {
+        Self::NAMED_TAG
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
+#[repr(u8)]
 pub enum CommonEntrypoint {
-    Default,
-    Root,
-    Do,
-    SetDelegate,
-    RemoveDelegate,
+    Default = 0,
+    Root = 1,
+    Do = 2,
+    SetDelegate = 3,
+    RemoveDelegate = 4,
 }
 
 impl CommonEntrypoint {
@@ -133,5 +150,9 @@ impl CommonEntrypoint {
             Self::SetDelegate => Self::SET_DELEGATE,
             Self::RemoveDelegate => Self::REMOVE_DELEGATE,
         }
+    }
+
+    pub fn tag(&self) -> u8 {
+        *self as u8
     }
 }

@@ -123,7 +123,7 @@ macro_rules! make_encoded_struct {
                 internal::{consumable_list::ConsumableList, coder::ConsumingDecoder},
             };
 
-            #[derive(Debug, Clone)]
+            #[derive(Debug, Clone, PartialEq, Eq)]
             pub struct $name(String);
 
             impl $name {
@@ -137,6 +137,14 @@ macro_rules! make_encoded_struct {
 
                 pub fn is_valid_prefixed_bytes(value: &[u8]) -> bool {
                     META.is_valid_prefixed_bytes(value)
+                }
+
+                pub fn is_valid_consumable_bytes(value: &[u8]) -> bool {
+                    META.is_valid_consumable_bytes(value)
+                }
+
+                pub fn is_valid_prefixed_consumable_bytes(value: &[u8]) -> bool {
+                    META.is_valid_prefixed_consumable_bytes(value)
                 }
             }
 
