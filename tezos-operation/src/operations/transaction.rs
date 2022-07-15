@@ -125,6 +125,38 @@ impl Entrypoint {
     }
 }
 
+impl Entrypoint {
+    fn default() -> Self {
+        Self::Common(CommonEntrypoint::Default)
+    }
+
+    pub fn root() -> Self {
+        Self::Common(CommonEntrypoint::Root)
+    }
+
+    pub fn r#do() -> Self {
+        Self::Common(CommonEntrypoint::Do)
+    }
+
+    pub fn set_delegate() -> Self {
+        Self::Common(CommonEntrypoint::SetDelegate)
+    }
+
+    pub fn remove_delegate() -> Self {
+        Self::Common(CommonEntrypoint::RemoveDelegate)
+    }
+
+    pub fn named(name: String) -> Self {
+        Self::Named(name)
+    }
+}
+
+impl Default for Entrypoint {
+    fn default() -> Self {
+        Self::default()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
 #[repr(u8)]
 pub enum CommonEntrypoint {

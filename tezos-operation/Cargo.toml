@@ -16,4 +16,3 @@ tezos-michelson = { path = "../tezos-michelson" }
 
 [dev-dependencies]
 hex-literal = "0.3"
-hex = "0.4"

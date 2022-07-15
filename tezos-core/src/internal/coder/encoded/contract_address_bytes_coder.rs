@@ -53,7 +53,7 @@ impl ConsumingDecoder<ContractAddress, u8, Error> for ContractAddressBytesCoder 
         if !bytes.ends_with(&[0]) {
             return Err(Error::InvalidBytes);
         }
-        let contract_hash = ContractHash::from_bytes(bytes)?;
+        let contract_hash = ContractHash::from_bytes(&bytes[..meta.bytes_length])?;
 
         Ok(ContractAddress::from_components(&contract_hash, None))
     }

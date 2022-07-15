@@ -362,8 +362,12 @@ impl Encoder<Entrypoint, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Entrypoint) -> std::result::Result<Vec<u8>, Error> {
         let tag = value.tag();
         if let Entrypoint::Named(value) = value {
-            let bytes = utils::encode_bytes(value.as_bytes());
-            return Ok([&[tag], bytes.as_slice()].concat());
+            let bytes = value.as_bytes();
+            if bytes.len() > u8::MAX as usize {
+                return Err(Error::InvalidBytes);
+            }
+            let bytes_length = bytes.len() as u8;
+            return Ok([&[tag], &[bytes_length], bytes].concat());
         }
         Ok(vec![tag])
     }
@@ -719,6 +723,7 @@ impl ConsumingDecoder<FailingNoop, u8, Error> for OperationContentBytesCoder {
 
 impl ConsumingDecoder<Preendorsement, u8, Error> for OperationContentBytesCoder {
     fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Preendorsement> {
+        Self::require_consume_operation_content_tag(OperationContentTag::Preendorsement, value)?;
         Self::decode_consensus_operation(value, |slot, level, round, block_payload_hash, _| {
             Preendorsement::new(slot, level, round, block_payload_hash)
         })
@@ -805,8 +810,9 @@ impl ConsumingDecoder<Entrypoint, u8, Error> for OperationContentBytesCoder {
             return Ok(Entrypoint::Common(common_entrypoint));
         }
         if tag_byte == Entrypoint::named_tag() {
-            let bytes = utils::decode_bytes(value)?;
-            let name = String::from_utf8(bytes)?;
+            let name_length = value.consume_first()?;
+            let bytes = value.consume_until(name_length.into())?;
+            let name = String::from_utf8(bytes.to_vec())?;
             return Ok(Entrypoint::Named(name));
         }
         Err(Error::InvalidBytes)
