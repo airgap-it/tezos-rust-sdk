@@ -1,6 +1,6 @@
 use {
     crate::{
-        models::balance_update::BalanceUpdate, models::error::RPCError,
+        models::balance_update::BalanceUpdate, models::error::RpcError,
         models::operation::operation_result::OperationResultStatus,
     },
     serde::{Deserialize, Serialize},
@@ -19,5 +19,5 @@ pub struct RegisterGlobalConstantOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_address: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
+    pub errors: Option<Vec<RpcError>>,
 }

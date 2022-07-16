@@ -1,7 +1,9 @@
+use crate::http::Http;
+
 pub mod block;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
+    crate::client::TezosRpcContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
 };
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
@@ -10,16 +12,16 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get blocks that have been declared invalid.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
         }
     }
 
@@ -30,24 +32,24 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<InvalidBlock>, Error> {
+    pub async fn send(&self) -> Result<Vec<InvalidBlock>, Error> {
         let path = self::path(self.chain_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
-    RPCRequestBuilder::new(ctx)
+pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBuilder<HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
-        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
+        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         httpmock::prelude::*,
     };
 
@@ -80,7 +82,7 @@ mod tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
         let response = client.get_invalid_blocks().send().await?;
 
         assert_eq!(response.len(), 1, "Expects a single invalid block.");

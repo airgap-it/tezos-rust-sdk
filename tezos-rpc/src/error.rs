@@ -1,11 +1,12 @@
-use {crate::models::error::RPCError, derive_more::From};
+use {crate::models::error::RpcError, derive_more::From};
 
 #[derive(Debug, From)]
 pub enum Error {
     Core {
         source: tezos_core::Error,
     },
-    HTTPError {
+    #[cfg(feature = "http")]
+    HttpError {
         source: reqwest::Error,
     },
     ParsingError {
@@ -17,6 +18,6 @@ pub enum Error {
     ParseBigIntError {
         source: num_bigint::ParseBigIntError,
     },
-    RPCErrorPlain(String),
-    RPCErrors(Vec<RPCError>),
+    RpcErrorPlain(String),
+    RpcErrors(Vec<RpcError>),
 }

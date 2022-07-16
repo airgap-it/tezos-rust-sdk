@@ -1,7 +1,7 @@
 use {
     crate::models::{
         balance_update::BalanceUpdate,
-        error::RPCError,
+        error::RpcError,
         operation::kind::OperationKind,
         operation::operation_result::OperationResultStatus,
         operation::operation_result::{
@@ -31,7 +31,7 @@ pub struct OriginationOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lazy_storage_diff: Option<LazyStorageDiff>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
+    pub errors: Option<Vec<RpcError>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

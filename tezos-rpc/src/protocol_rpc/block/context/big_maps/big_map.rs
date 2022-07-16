@@ -1,7 +1,9 @@
+use crate::http::Http;
+
 pub mod script_expr;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
+    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
     tezos_michelson::micheline::Micheline,
 };
 
@@ -11,8 +13,8 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32) -> Str
 
 /// A builder to construct the properties of a request to get the list of values in a big map
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
@@ -20,11 +22,11 @@ pub struct RPCRequestBuilder<'a> {
     length: Option<&'a u32>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, big_map_id: &'a u32) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, big_map_id: &'a u32) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             big_map_id,
             offset: None,
@@ -60,7 +62,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Micheline, Error> {
+    pub async fn send(&self) -> Result<Micheline, Error> {
         let mut query: Vec<(&str, String)> = vec![];
 
         if let Some(offset) = self.offset {
@@ -75,7 +77,7 @@ impl<'a> RPCRequestBuilder<'a> {
         let path = self::path(self.chain_id, self.block_id, self.big_map_id);
 
         self.ctx
-            .http_client
+            .http_client()
             .get_with_query(path.as_str(), &Some(query))
             .await
     }
@@ -89,15 +91,18 @@ impl<'a> RPCRequestBuilder<'a> {
 /// * `length` : Only retrieve `length` values. Useful in combination with `offset` for pagination.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
-pub fn get<'a>(ctx: &'a TezosRPCContext, big_map_id: &'a u32) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx, big_map_id)
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRpcContext<HttpClient>,
+    big_map_id: &'a u32,
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, big_map_id)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -123,7 +128,7 @@ mod tests {
                 .body(big_map);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
         let big_map = client
             .get_big_map(&big_map_id)
             .block_id(&block_id)

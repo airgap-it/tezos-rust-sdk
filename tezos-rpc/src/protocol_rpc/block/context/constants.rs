@@ -1,5 +1,5 @@
 use crate::{
-    client::TezosRPCContext, error::Error, models::constants::Constants,
+    client::TezosRpcContext, error::Error, http::Http, models::constants::Constants,
     protocol_rpc::block::BlockID,
 };
 
@@ -9,17 +9,17 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to access the constants.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
         }
     }
@@ -38,25 +38,27 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Constants, Error> {
+    pub async fn send(&self) -> Result<Constants, Error> {
         let path = self::path(self.chain_id, self.block_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Access the list of all constants.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)
-pub fn get<'a>(ctx: &'a TezosRPCContext) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx)
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRpcContext<HttpClient>,
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use crate::{constants::DEFAULT_CHAIN_ALIAS, protocol_rpc::block::BlockID};
 
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_genesis_constants() -> Result<(), Error> {
@@ -74,7 +76,7 @@ mod tests {
                     "constants/__TEST_DATA__/block_1_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 
@@ -100,7 +102,7 @@ mod tests {
                     "constants/__TEST_DATA__/ithaca_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 
@@ -127,7 +129,7 @@ mod tests {
                     "constants/__TEST_DATA__/jakarta_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 

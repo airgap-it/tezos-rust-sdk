@@ -7,7 +7,7 @@ use std::fmt::Display;
 /// [RPC Errors](https://tezos.gitlab.io/api/errors.html)
 /// or by querying [`GET /errors`](https://tezos.gitlab.io/shell/rpc.html#get-errors)
 #[derive(Debug, Serialize, Deserialize, Clone, Error, PartialEq)]
-pub struct RPCError {
+pub struct RpcError {
     pub kind: String,
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -22,7 +22,7 @@ pub struct RPCError {
     pub contract: Option<String>,
 }
 
-impl Display for RPCError {
+impl Display for RpcError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

@@ -1,7 +1,9 @@
+use crate::http::Http;
+
 pub mod entrypoint;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error,
+    crate::client::TezosRpcContext, crate::error::Error,
     crate::models::contract::ContractEntrypoints, crate::protocol_rpc::block::BlockID,
 };
 
@@ -11,19 +13,19 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 
 /// A builder to construct the properties of a request to obtain the list of entrypoints of a contract.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
     normalize_types: Option<bool>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a str) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             contract: contract,
             normalize_types: None,
@@ -53,7 +55,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<ContractEntrypoints, Error> {
+    pub async fn send(&self) -> Result<ContractEntrypoints, Error> {
         let mut query: Vec<(&str, String)> = vec![];
 
         if let Some(normalize_types) = self.normalize_types {
@@ -64,7 +66,7 @@ impl<'a> RPCRequestBuilder<'a> {
         let path = self::path(self.chain_id, self.block_id, self.contract);
 
         self.ctx
-            .http_client
+            .http_client()
             .get_with_query(path.as_str(), &Some(query))
             .await
     }
@@ -77,15 +79,18 @@ impl<'a> RPCRequestBuilder<'a> {
 /// * `normalize_types` : Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
-pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx, address)
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRpcContext<HttpClient>,
+    address: &'a str,
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, address)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -112,7 +117,7 @@ mod tests {
                 .body(include_str!("entrypoints/__TEST_DATA__/entrypoints.json"));
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
         let entrypoints = client
             .get_contract_entrypoints(&contract_address.to_string())
             .normalize_types(true)
