@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {
     crate::client::TezosRPCContext, crate::error::Error, crate::models::contract::ContractScript,
     crate::models::contract::UnparsingMode, crate::protocol_rpc::block::BlockID, serde::Serialize,
@@ -15,8 +17,8 @@ struct NormalizedPayload {
 
 /// A builder to construct the properties of a request to access the code and data of the contract.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
@@ -24,11 +26,11 @@ pub struct RPCRequestBuilder<'a> {
     normalize_types: Option<bool>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, contract: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             contract: contract,
             unparsing_mode: None,
@@ -72,11 +74,11 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<ContractScript, Error> {
+    pub async fn send(&self) -> Result<ContractScript, Error> {
         if self.unparsing_mode.is_none() {
             let path = self::path(self.chain_id, self.block_id, self.contract);
 
-            self.ctx.http_client.get(path.as_str()).await
+            self.ctx.http_client().get(path.as_str()).await
         } else {
             let path = format!(
                 "{}/normalized",
@@ -89,7 +91,7 @@ impl<'a> RPCRequestBuilder<'a> {
             };
 
             self.ctx
-                .http_client
+                .http_client()
                 .post::<_, _, ()>(path.as_str(), &param, &None)
                 .await
         }
@@ -103,7 +105,10 @@ impl<'a> RPCRequestBuilder<'a> {
 /// If `unparsing_mode` is provided, the request below will be used.
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
-pub fn get_or_post<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
+pub fn get_or_post<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
+    address: &'a str,
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, address)
 }
 
@@ -136,7 +141,7 @@ mod tests {
                 .body(include_str!("__TEST_DATA__/optimized_contract_script.json"));
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let script = client
             .get_contract_script(&contract_address.to_string())
             .block_id(&block_id)
@@ -180,7 +185,7 @@ mod tests {
                 .body(include_str!("__TEST_DATA__/optimized_contract_script.json"));
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let script = client
             .get_contract_script(&contract_address.to_string())
             .unparsing_mode(UnparsingMode::Readable)

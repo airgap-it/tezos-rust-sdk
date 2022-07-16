@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {
     crate::client::TezosRPCContext, crate::error::Error,
     crate::models::bootstrapped_status::BootstrappedStatus,
@@ -9,16 +11,16 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get the bootstrap status of a chain.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
         }
     }
 
@@ -29,17 +31,17 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<BootstrappedStatus, Error> {
+    pub async fn send(&self) -> Result<BootstrappedStatus, Error> {
         let path = self::path(self.chain_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Get the bootstrap status of a chain.
 ///
 /// [`GET /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
     RPCRequestBuilder::new(ctx)
 }
 
@@ -69,7 +71,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .json_body(valid_response);
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let response = client.is_bootstrapped().send().await?;
 

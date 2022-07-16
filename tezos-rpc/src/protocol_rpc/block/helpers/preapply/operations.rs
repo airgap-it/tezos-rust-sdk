@@ -1,6 +1,7 @@
 use crate::{
     client::TezosRPCContext,
     error::Error,
+    http::Http,
     models::operation::{OperationGroup, OperationWithMetadata},
     protocol_rpc::block::BlockID,
 };
@@ -11,18 +12,18 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to simulate the application of the operations.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     operations: &'a Vec<&'a OperationGroup>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, operations: &'a Vec<&OperationGroup>) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, operations: &'a Vec<&OperationGroup>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             operations,
         }
@@ -42,11 +43,11 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<OperationWithMetadata>, Error> {
+    pub async fn send(&self) -> Result<Vec<OperationWithMetadata>, Error> {
         let path = self::path(self.chain_id, self.block_id);
 
         self.ctx
-            .http_client
+            .http_client()
             .post::<_, _, ()>(path.as_str(), self.operations, &None)
             .await
     }
@@ -55,10 +56,10 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Simulate the application of the operations with the context of the given block and return the result of each operation application.
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
-pub fn post<'a>(
-    ctx: &'a TezosRPCContext,
+pub fn post<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
     operations: &'a Vec<&OperationGroup>,
-) -> RPCRequestBuilder<'a> {
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, operations)
 }
 
@@ -117,7 +118,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(response);
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let result = client
             .preapply_operations(&vec![&operation_group])

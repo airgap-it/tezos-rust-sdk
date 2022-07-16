@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {crate::client::TezosRPCContext, crate::error::Error};
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
@@ -6,16 +8,16 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get the chain unique identifier.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
         }
     }
 
@@ -26,17 +28,17 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<String, Error> {
+    pub async fn send(&self) -> Result<String, Error> {
         let path = self::path(self.chain_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Get the chain unique identifier.
 ///
 /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
     RPCRequestBuilder::new(ctx)
 }
 
@@ -61,7 +63,7 @@ mod tests {
                 .json_body(chain_id_string);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let chain_id = client.get_chain_id().send().await?;
         assert_eq!(chain_id_string, chain_id);
 

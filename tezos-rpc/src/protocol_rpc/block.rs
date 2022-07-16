@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 pub mod context;
 pub mod helpers;
 
@@ -14,18 +16,18 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to get all the information about a block.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     metadata: MetadataArg,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             metadata: MetadataArg::Always,
         }
@@ -57,7 +59,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Block, Error> {
+    pub async fn send(&self) -> Result<Block, Error> {
         let path = self::path(self.chain_id, self.block_id);
 
         let mut query: Vec<(&str, String)> = vec![];
@@ -66,7 +68,7 @@ impl<'a> RPCRequestBuilder<'a> {
         query.push(("metadata", self.metadata.to_string()));
 
         self.ctx
-            .http_client
+            .http_client()
             .get_with_query(path.as_str(), &Some(query))
             .await
     }
@@ -88,7 +90,7 @@ pub enum MetadataArg {
 /// * `metadata` : Specifies whether or not if the operations metadata should be returned. To get the metadata, even if it is needed to recompute them, use `always`. To avoid getting the metadata, use `never`. By default, the metadata will be returned depending on the node's metadata size limit policy.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>?[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
     RPCRequestBuilder::new(ctx)
 }
 
@@ -117,7 +119,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_genesis.json"));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let response = client
             .get_block()
@@ -174,7 +176,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_1.json"));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         client
             .get_block()
@@ -200,7 +202,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_ithaca.json"));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         client
             .get_block()
@@ -226,7 +228,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_jakarta.json"));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         client
             .get_block()

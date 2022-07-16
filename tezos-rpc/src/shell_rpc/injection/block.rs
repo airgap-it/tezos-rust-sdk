@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
 
 fn path() -> String {
@@ -23,19 +25,19 @@ pub struct InjectionBlockPayload {
 
 /// A builder to construct the properties of a request to inject a block in the node and broadcast it.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a InjectionBlockPayload,
     force: Option<bool>,
     do_async: Option<bool>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, payload: &'a InjectionBlockPayload) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, payload: &'a InjectionBlockPayload) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             payload,
             force: None,
             do_async: None,
@@ -64,7 +66,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<String, Error> {
+    pub async fn send(&self) -> Result<String, Error> {
         let mut query: Vec<(&str, String)> = vec![];
 
         if let Some(do_async) = self.do_async {
@@ -76,10 +78,10 @@ impl<'a> RPCRequestBuilder<'a> {
             query.push(("force", force.to_string()));
         }
         // Add `chain` query parameter
-        query.push(("chain", self.ctx.chain_id.to_string()));
+        query.push(("chain", self.ctx.chain_id().into()));
 
         self.ctx
-            .http_client
+            .http_client()
             .post(self::path().as_str(), self.payload, &Some(query))
             .await
     }
@@ -96,10 +98,10 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Returns the ID of the block.
 ///
 /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
-pub fn post<'a>(
-    ctx: &'a TezosRPCContext,
+pub fn post<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
     payload: &'a InjectionBlockPayload,
-) -> RPCRequestBuilder<'a> {
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, payload)
 }
 
@@ -143,7 +145,7 @@ mod tests {
                 .json_body(block_hash);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let op_hash = client
             .inject_block(&payload)
             .force(false)

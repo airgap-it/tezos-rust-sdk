@@ -1,5 +1,5 @@
 use crate::{
-    client::TezosRPCContext, error::Error, models::constants::Constants,
+    client::TezosRPCContext, error::Error, http::Http, models::constants::Constants,
     protocol_rpc::block::BlockID,
 };
 
@@ -9,17 +9,17 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to access the constants.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
         }
     }
@@ -38,17 +38,19 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Constants, Error> {
+    pub async fn send(&self) -> Result<Constants, Error> {
         let path = self::path(self.chain_id, self.block_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Access the list of all constants.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)
-pub fn get<'a>(ctx: &'a TezosRPCContext) -> RPCRequestBuilder<'a> {
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx)
 }
 
@@ -74,7 +76,7 @@ mod tests {
                     "constants/__TEST_DATA__/block_1_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 
@@ -100,7 +102,7 @@ mod tests {
                     "constants/__TEST_DATA__/ithaca_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 
@@ -127,7 +129,7 @@ mod tests {
                     "constants/__TEST_DATA__/jakarta_constants.json"
                 ));
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 

@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 pub mod blocks;
 pub mod chain_id;
 pub mod invalid_blocks;
@@ -12,17 +14,17 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a PatchChainPayload,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, payload: &'a PatchChainPayload) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, payload: &'a PatchChainPayload) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             payload,
         }
     }
@@ -34,11 +36,11 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<(), Error> {
+    pub async fn send(&self) -> Result<(), Error> {
         let path = self::path(self.chain_id);
 
         self.ctx
-            .http_client
+            .http_client()
             .patch::<_, serde_json::Value>(path.as_str(), &Some(self.payload))
             .await?;
 
@@ -56,10 +58,10 @@ pub struct PatchChainPayload {
 /// Forcefully set the bootstrapped flag of the node.
 ///
 /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-pub fn patch<'a>(
-    ctx: &'a TezosRPCContext,
+pub fn patch<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
     payload: &'a PatchChainPayload,
-) -> RPCRequestBuilder<'a> {
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, payload)
 }
 
@@ -82,7 +84,7 @@ mod tests {
                 .json_body(serde_json::json!({}));
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
 
         let req = super::PatchChainPayload {
             bootstrapped: false,

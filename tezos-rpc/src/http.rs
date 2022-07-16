@@ -1,8 +1,45 @@
 use {
     crate::error::{self, Error},
+    async_trait::async_trait,
     reqwest::{Client, Response},
     serde::{de::DeserializeOwned, Serialize},
 };
+
+#[async_trait]
+pub trait Http {
+    fn new(rpc_endpoint: String) -> Self
+    where
+        Self: Sized;
+
+    fn change_rpc_endpoint(&mut self, rpc_endpoint: String);
+
+    async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error>;
+
+    async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized + Sync>(
+        &self,
+        url: &str,
+        query: &Q,
+    ) -> Result<T, Error>;
+
+    async fn post<B: Serialize + Sync, T: DeserializeOwned, Q: Serialize + Sync>(
+        &self,
+        url: &str,
+        body: &B,
+        query: &Option<Q>,
+    ) -> Result<T, Error>;
+
+    async fn patch<B: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &Option<B>,
+    ) -> Result<T, Error>;
+
+    async fn delete<B: Serialize + Sync, T: DeserializeOwned>(
+        &self,
+        url: &str,
+        body: &Option<B>,
+    ) -> Result<T, Error>;
+}
 
 pub struct TezosHttp {
     rpc_endpoint: String,
@@ -10,14 +47,6 @@ pub struct TezosHttp {
 }
 
 impl TezosHttp {
-    /// Creates an Http client that will be used to send requests to the specified node.
-    pub fn new(rpc_endpoint: &str) -> Self {
-        TezosHttp {
-            rpc_endpoint: rpc_endpoint.to_string(),
-            client: Client::new(),
-        }
-    }
-
     fn url(&self, path: &str) -> String {
         format!("{}{}", self.rpc_endpoint, path)
     }
@@ -33,19 +62,30 @@ impl TezosHttp {
 
         Ok(response.json().await?)
     }
+}
 
-    pub fn change_rpc_endpoint(&mut self, rpc_endpoint: String) {
+#[async_trait]
+impl Http for TezosHttp {
+    /// Creates an Http client that will be used to send requests to the specified node.
+    fn new(rpc_endpoint: String) -> Self {
+        TezosHttp {
+            rpc_endpoint,
+            client: Client::new(),
+        }
+    }
+
+    fn change_rpc_endpoint(&mut self, rpc_endpoint: String) {
         self.rpc_endpoint = rpc_endpoint;
     }
 
     /// Convenience method to make a `GET` request to a URL.
-    pub async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
+    async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, Error> {
         self.handle_response(self.client.get(self.url(url)).send().await?)
             .await
     }
 
     /// Convenience method to make a `GET` request with query parameters to a URL.
-    pub async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized>(
+    async fn get_with_query<T: DeserializeOwned, Q: Serialize + ?Sized + Sync>(
         &self,
         url: &str,
         query: &Q,
@@ -55,7 +95,7 @@ impl TezosHttp {
     }
 
     /// Convenience method to make a `POST` request to a URL.
-    pub async fn post<B: Serialize, T: DeserializeOwned, Q: Serialize>(
+    async fn post<B: Serialize + Sync, T: DeserializeOwned, Q: Serialize + Sync>(
         &self,
         url: &str,
         body: &B,
@@ -73,7 +113,7 @@ impl TezosHttp {
     }
 
     /// Convenience method to make a `PATCH` request to a URL.
-    pub async fn patch<B: Serialize, T: DeserializeOwned>(
+    async fn patch<B: Serialize + Sync, T: DeserializeOwned>(
         &self,
         url: &str,
         body: &Option<B>,
@@ -88,7 +128,7 @@ impl TezosHttp {
     }
 
     /// Convenience method to make a `DELETE` request to a URL.
-    pub async fn delete<B: Serialize, T: DeserializeOwned>(
+    async fn delete<B: Serialize + Sync, T: DeserializeOwned>(
         &self,
         url: &str,
         body: &Option<B>,

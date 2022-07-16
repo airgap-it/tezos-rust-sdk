@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
 
 fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
@@ -6,18 +8,18 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 
 /// A builder to construct the properties of a request to access the manager public key of a contract.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, contract: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             contract: contract,
         }
@@ -37,17 +39,20 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Option<String>, Error> {
+    pub async fn send(&self) -> Result<Option<String>, Error> {
         let path = self::path(self.chain_id, self.block_id, self.contract);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Access the manager public key of a contract.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/manager_key`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-manager-key)
-pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
+    address: &'a str,
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, address)
 }
 
@@ -81,7 +86,7 @@ mod tests {
                 .json_body(expected_manager);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let manager_key = client
             .get_contract_manager_key(&contract_address.to_string())
             .block_id(&block_id)
@@ -112,7 +117,7 @@ mod tests {
                 .body("null");
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let counter = client
             .get_contract_manager_key(&contract_address.to_string())
             .block_id(&block_id)

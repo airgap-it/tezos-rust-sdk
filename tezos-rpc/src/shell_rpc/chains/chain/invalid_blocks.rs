@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 pub mod block;
 
 use {
@@ -10,16 +12,16 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get blocks that have been declared invalid.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
         }
     }
 
@@ -30,17 +32,17 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<InvalidBlock>, Error> {
+    pub async fn send(&self) -> Result<Vec<InvalidBlock>, Error> {
         let path = self::path(self.chain_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Get blocks that have been declared invalid along with the errors that led to them being declared invalid.
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
+pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
     RPCRequestBuilder::new(ctx)
 }
 
@@ -80,7 +82,7 @@ mod tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let response = client.get_invalid_blocks().send().await?;
 
         assert_eq!(response.len(), 1, "Expects a single invalid block.");

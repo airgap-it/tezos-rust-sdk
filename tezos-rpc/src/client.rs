@@ -1,14 +1,33 @@
+use crate::http::{Http, TezosHttp};
+
 use {
-    crate::constants, crate::http, crate::models::operation::OperationGroup, crate::protocol_rpc,
+    crate::constants, crate::models::operation::OperationGroup, crate::protocol_rpc,
     crate::shell_rpc, crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
-pub struct TezosRPCContext {
+#[derive(Debug)]
+pub struct TezosRPCContext<HttpClient: Http> {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
-    pub chain_id: String,
-    pub http_client: http::TezosHttp,
+    chain_id: String,
+    http_client: HttpClient,
 }
-impl TezosRPCContext {
+
+impl<HttpClient: Http> TezosRPCContext<HttpClient> {
+    pub fn chain_id(&self) -> &str {
+        &self.chain_id
+    }
+
+    pub fn http_client(&self) -> &HttpClient {
+        &self.http_client
+    }
+
+    pub fn new(chain_id: String, http_client: HttpClient) -> Self {
+        Self {
+            chain_id,
+            http_client,
+        }
+    }
+
     /// Changes the rpc endpoint used in RPC requests.
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
         self.http_client
@@ -16,25 +35,26 @@ impl TezosRPCContext {
     }
 }
 
-pub struct TezosRPC {
-    pub context: TezosRPCContext,
+pub struct TezosRPC<HttpClient: Http> {
+    pub context: TezosRPCContext<HttpClient>,
 }
 
-impl TezosRPC {
+impl TezosRPC<TezosHttp> {
+    pub fn new(rpc_endpoint: String) -> Self {
+        Self::new_rpc(rpc_endpoint)
+    }
+}
+
+impl<HttpClient: Http> TezosRPC<HttpClient> {
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
     ///
     /// ```rust
-    /// use tezos_rpc::client::{TezosRPC};
+    /// use tezos_rpc::{client::TezosRPC, http::TezosHttp};
     ///
-    /// let client = TezosRPC::new("https://tezos-node.prod.gke.papers.tech");
+    /// let client = TezosRPC::<TezosHttp>::new_rpc("https://tezos-node.prod.gke.papers.tech".into());
     /// ```
-    pub fn new(rpc_endpoint: &str) -> Self {
-        TezosRPC {
-            context: TezosRPCContext {
-                chain_id: constants::DEFAULT_CHAIN_ALIAS.to_string(),
-                http_client: http::TezosHttp::new(rpc_endpoint),
-            },
-        }
+    pub fn new_rpc(rpc_endpoint: String) -> Self {
+        Self::new_rpc_with_chain_id(rpc_endpoint, constants::DEFAULT_CHAIN_ALIAS.into())
     }
 
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
@@ -43,27 +63,26 @@ impl TezosRPC {
     /// sending requests to the RPC. The default is `main`.
     ///
     /// ```rust
-    /// use tezos_rpc::client::{TezosRPC};
+    /// use tezos_rpc::{client::TezosRPC, http::TezosHttp};
     ///
-    /// let client = TezosRPC::new_with_chain_id("https://tezos-node.prod.gke.papers.tech", "NetXLH1uAxK7CCh");
+    /// let client = TezosRPC::<TezosHttp>::new_rpc_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), "NetXLH1uAxK7CCh".into());
     /// ```
-    pub fn new_with_chain_id(rpc_endpoint: &str, chain_id: &str) -> Self {
-        TezosRPC {
-            context: TezosRPCContext {
-                chain_id: chain_id.to_string(),
-                http_client: http::TezosHttp::new(rpc_endpoint),
-            },
+    pub fn new_rpc_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+        Self {
+            context: TezosRPCContext::new(chain_id, HttpClient::new(rpc_endpoint)),
         }
     }
 }
 
 // Tezos protocol-independent RPCs
 // See [RPCs - Reference](https://tezos.gitlab.io/shell/rpc.html) for more details.
-impl TezosRPC {
+impl<HttpClient: Http> TezosRPC<HttpClient> {
     /// Get the chain unique identifier.
     ///
     /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-    pub fn get_chain_id(&self) -> shell_rpc::chains::chain::chain_id::RPCRequestBuilder {
+    pub fn get_chain_id(
+        &self,
+    ) -> shell_rpc::chains::chain::chain_id::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::chain_id::get(&self.context)
     }
 
@@ -73,7 +92,7 @@ impl TezosRPC {
     /// Optional arguments allow to return the list of predecessors of a given block or of a set of blocks.
     ///
     /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
-    pub fn get_blocks(&self) -> shell_rpc::chains::chain::blocks::RPCRequestBuilder {
+    pub fn get_blocks(&self) -> shell_rpc::chains::chain::blocks::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::blocks::get(&self.context)
     }
 
@@ -82,7 +101,7 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/invalid_blocks`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks)
     pub fn get_invalid_blocks(
         &self,
-    ) -> shell_rpc::chains::chain::invalid_blocks::RPCRequestBuilder {
+    ) -> shell_rpc::chains::chain::invalid_blocks::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::invalid_blocks::get(&self.context)
     }
 
@@ -92,7 +111,7 @@ impl TezosRPC {
     pub fn get_invalid_block<'a>(
         &'a self,
         block_hash: &'a str,
-    ) -> shell_rpc::chains::chain::invalid_blocks::block::GetRPCRequestBuilder {
+    ) -> shell_rpc::chains::chain::invalid_blocks::block::GetRPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash)
     }
 
@@ -102,21 +121,25 @@ impl TezosRPC {
     pub fn remove_invalid_block<'a>(
         &'a self,
         block_hash: &'a str,
-    ) -> shell_rpc::chains::chain::invalid_blocks::block::DeleteRPCRequestBuilder {
+    ) -> shell_rpc::chains::chain::invalid_blocks::block::DeleteRPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash)
     }
 
     /// Get the bootstrap status of a chain.
     ///
     /// [`GET /chains/<chain_id>/is_bootstrapped`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-is-bootstrapped)
-    pub fn is_bootstrapped(&self) -> shell_rpc::chains::chain::is_bootstrapped::RPCRequestBuilder {
+    pub fn is_bootstrapped(
+        &self,
+    ) -> shell_rpc::chains::chain::is_bootstrapped::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::is_bootstrapped::get(&self.context)
     }
 
     /// Get the current caboose for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
-    pub fn get_caboose(&self) -> shell_rpc::chains::chain::levels::caboose::RPCRequestBuilder {
+    pub fn get_caboose(
+        &self,
+    ) -> shell_rpc::chains::chain::levels::caboose::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::levels::caboose::get(&self.context)
     }
 
@@ -125,14 +148,16 @@ impl TezosRPC {
     /// [`GET /chains/<chain_id>/levels/checkpoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-checkpoint)
     pub fn get_checkpoint(
         &self,
-    ) -> shell_rpc::chains::chain::levels::checkpoint::RPCRequestBuilder {
+    ) -> shell_rpc::chains::chain::levels::checkpoint::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::levels::checkpoint::get(&self.context)
     }
 
     /// Get the current savepoint for this chain.
     ///
     /// [`GET /chains/<chain_id>/levels/savepoint`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-savepoint)
-    pub fn get_savepoint(&self) -> shell_rpc::chains::chain::levels::savepoint::RPCRequestBuilder {
+    pub fn get_savepoint(
+        &self,
+    ) -> shell_rpc::chains::chain::levels::savepoint::RPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::levels::savepoint::get(&self.context)
     }
 
@@ -154,7 +179,7 @@ impl TezosRPC {
     pub fn inject_operation<'a>(
         &'a self,
         signed_operation_contents: &'a str,
-    ) -> shell_rpc::injection::operation::RPCRequestBuilder {
+    ) -> shell_rpc::injection::operation::RPCRequestBuilder<HttpClient> {
         shell_rpc::injection::operation::post(&self.context, signed_operation_contents)
     }
 
@@ -172,26 +197,28 @@ impl TezosRPC {
     pub fn inject_block<'a>(
         &'a self,
         payload: &'a InjectionBlockPayload,
-    ) -> shell_rpc::injection::block::RPCRequestBuilder {
+    ) -> shell_rpc::injection::block::RPCRequestBuilder<HttpClient> {
         shell_rpc::injection::block::post(&self.context, payload)
     }
 }
 
 // Tezos protocol-dependent RPCs
 // See [RPCs - Reference](https://tezos.gitlab.io/active/rpc.html) for more details.
-impl TezosRPC {
+impl<HttpClient: Http> TezosRPC<HttpClient> {
     /// Get all the information about a block.
     /// The associated metadata may not be present depending on the history mode and block's distance from the head.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block_id>?[force_metadata]&[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
-    pub fn get_block(&self) -> protocol_rpc::block::RPCRequestBuilder {
+    pub fn get_block(&self) -> protocol_rpc::block::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::get(&self.context)
     }
 
     /// Access the list of all constants.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)
-    pub fn get_constants(&self) -> protocol_rpc::block::context::constants::RPCRequestBuilder {
+    pub fn get_constants(
+        &self,
+    ) -> protocol_rpc::block::context::constants::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::constants::get(&self.context)
     }
 
@@ -206,7 +233,7 @@ impl TezosRPC {
     pub fn get_contract<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::RPCRequestBuilder<'a> {
+    ) -> protocol_rpc::block::context::contract::RPCRequestBuilder<'a, HttpClient> {
         protocol_rpc::block::context::contract::get(&self.context, address)
     }
 
@@ -216,7 +243,7 @@ impl TezosRPC {
     pub fn get_contract_balance<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::balance::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::balance::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::balance::get(&self.context, address)
     }
 
@@ -226,7 +253,7 @@ impl TezosRPC {
     pub fn get_contract_counter<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::counter::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
     }
 
@@ -236,7 +263,7 @@ impl TezosRPC {
     pub fn get_contract_manager_key<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::manager_key::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::manager_key::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
 
@@ -246,7 +273,7 @@ impl TezosRPC {
     pub fn get_contract_delegate<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::delegate::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::delegate::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::delegate::get(&self.context, address)
     }
 
@@ -260,7 +287,7 @@ impl TezosRPC {
     pub fn get_contract_entrypoints<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::entrypoints::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::entrypoints::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::entrypoints::get(&self.context, address)
     }
 
@@ -275,7 +302,9 @@ impl TezosRPC {
         &'a self,
         address: &'a str,
         entrypoint: &'a str,
-    ) -> protocol_rpc::block::context::contract::entrypoints::entrypoint::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::entrypoints::entrypoint::RPCRequestBuilder<
+        HttpClient,
+    > {
         protocol_rpc::block::context::contract::entrypoints::entrypoint::get(
             &self.context,
             address,
@@ -293,7 +322,7 @@ impl TezosRPC {
     pub fn get_contract_script<'a>(
         &'a self,
         address: &'a str,
-    ) -> protocol_rpc::block::context::contract::script::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::contract::script::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::script::get_or_post(&self.context, address)
     }
 
@@ -308,7 +337,7 @@ impl TezosRPC {
     pub fn get_big_map<'a>(
         &'a self,
         id: &'a u32,
-    ) -> protocol_rpc::block::context::big_maps::big_map::RPCRequestBuilder {
+    ) -> protocol_rpc::block::context::big_maps::big_map::RPCRequestBuilder<HttpClient> {
         protocol_rpc::block::context::big_maps::big_map::get(&self.context, id)
     }
 
@@ -326,7 +355,10 @@ impl TezosRPC {
         &'a self,
         big_map_id: &'a u32,
         script_expr: &'a str,
-    ) -> protocol_rpc::block::context::big_maps::big_map::script_expr::RPCRequestBuilder<'a> {
+    ) -> protocol_rpc::block::context::big_maps::big_map::script_expr::RPCRequestBuilder<
+        'a,
+        HttpClient,
+    > {
         protocol_rpc::block::context::big_maps::big_map::script_expr::get_or_post(
             &self.context,
             big_map_id,
@@ -340,7 +372,7 @@ impl TezosRPC {
     pub fn preapply_operations<'a>(
         &'a self,
         operations: &'a Vec<&OperationGroup>,
-    ) -> protocol_rpc::block::helpers::preapply::operations::RPCRequestBuilder<'a> {
+    ) -> protocol_rpc::block::helpers::preapply::operations::RPCRequestBuilder<'a, HttpClient> {
         protocol_rpc::block::helpers::preapply::operations::post(&self.context, operations)
     }
 
@@ -350,7 +382,8 @@ impl TezosRPC {
     pub fn run_operation<'a>(
         &'a self,
         operation: &'a OperationGroup,
-    ) -> protocol_rpc::block::helpers::scripts::run_operation::RPCRequestBuilder<'a> {
+    ) -> protocol_rpc::block::helpers::scripts::run_operation::RPCRequestBuilder<'a, HttpClient>
+    {
         protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)
     }
 }

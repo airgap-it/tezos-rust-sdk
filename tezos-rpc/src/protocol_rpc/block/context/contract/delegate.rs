@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
 
 fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
@@ -6,18 +8,18 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 
 /// A builder to construct the properties of a request to access the delegate of a contract.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, contract: &'a str) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, contract: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             contract: contract,
         }
@@ -37,10 +39,10 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Option<String>, Error> {
+    pub async fn send(&self) -> Result<Option<String>, Error> {
         let path = self::path(self.chain_id, self.block_id, self.contract);
 
-        match self.ctx.http_client.get(path.as_str()).await {
+        match self.ctx.http_client().get(path.as_str()).await {
             Ok(delegate) => Ok(Some(delegate)),
             Err(_) => Ok(None),
         }
@@ -50,7 +52,10 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Access the delegate of a contract, if any.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/delegate`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-delegate)
-pub fn get<'a>(ctx: &'a TezosRPCContext, address: &'a str) -> RPCRequestBuilder<'a> {
+pub fn get<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
+    address: &'a str,
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, address)
 }
 
@@ -84,7 +89,7 @@ mod tests {
                 .json_body(expected_delegate);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let delegate = client
             .get_contract_delegate(&contract_address.to_string())
             .block_id(&block_id)

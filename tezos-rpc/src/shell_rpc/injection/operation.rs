@@ -1,3 +1,5 @@
+use crate::http::Http;
+
 use {crate::client::TezosRPCContext, crate::error::Error};
 
 fn path() -> String {
@@ -6,18 +8,18 @@ fn path() -> String {
 
 /// A builder to construct the properties of a request to inject an operation in node and broadcast it.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RPCRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRPCContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a str,
     do_async: Option<bool>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, payload: &'a str) -> Self {
+impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, payload: &'a str) -> Self {
         RPCRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             payload,
             do_async: None,
         }
@@ -38,7 +40,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<String, Error> {
+    pub async fn send(&self) -> Result<String, Error> {
         let mut query: Vec<(&str, String)> = vec![];
 
         if let Some(do_async) = self.do_async {
@@ -46,10 +48,10 @@ impl<'a> RPCRequestBuilder<'a> {
             query.push(("async", do_async.to_string()));
         }
         // Add `chain` query parameter
-        query.push(("chain", self.ctx.chain_id.to_string()));
+        query.push(("chain", self.ctx.chain_id().into()));
 
         self.ctx
-            .http_client
+            .http_client()
             .post(
                 self::path().as_str(),
                 &self.payload.to_string(),
@@ -74,10 +76,10 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Returns the ID of the operation.
 ///
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
-pub fn post<'a>(
-    ctx: &'a TezosRPCContext,
+pub fn post<'a, HttpClient: Http>(
+    ctx: &'a TezosRPCContext<HttpClient>,
     signed_operation_contents: &'a str,
-) -> RPCRequestBuilder<'a> {
+) -> RPCRequestBuilder<'a, HttpClient> {
     RPCRequestBuilder::new(ctx, signed_operation_contents)
 }
 
@@ -104,7 +106,7 @@ mod tests {
                 .json_body(operation_hash);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRPC::new(rpc_url);
         let op_hash = client
             .inject_operation(&signed_operation_contents.to_string())
             .do_async(false)
