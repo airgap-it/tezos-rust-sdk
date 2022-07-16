@@ -1,6 +1,6 @@
 use {
     super::{big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, OperationResultStatus},
-    crate::{models::balance_update::BalanceUpdate, models::error::RPCError},
+    crate::{models::balance_update::BalanceUpdate, models::error::RpcError},
     serde::{Deserialize, Serialize},
 };
 
@@ -8,7 +8,7 @@ use {
 pub struct Backtracked {
     pub status: OperationResultStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
+    pub errors: Option<Vec<RpcError>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub big_map_diff: Option<Vec<BigMapDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]

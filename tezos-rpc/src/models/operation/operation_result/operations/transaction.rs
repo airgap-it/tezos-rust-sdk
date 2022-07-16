@@ -1,7 +1,7 @@
 use {
     crate::{
         models::balance_update::BalanceUpdate,
-        models::error::RPCError,
+        models::error::RpcError,
         models::operation::kind::OperationKind,
         models::operation::operation_result::{
             big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, OperationResultStatus,
@@ -35,7 +35,7 @@ pub struct TransactionOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
+    pub errors: Option<Vec<RpcError>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

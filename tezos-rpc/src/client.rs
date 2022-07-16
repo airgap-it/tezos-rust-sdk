@@ -1,4 +1,6 @@
-use crate::http::{Http, TezosHttp};
+#[cfg(feature = "http")]
+use crate::http::default::TezosHttp;
+use crate::http::Http;
 
 use {
     crate::constants, crate::models::operation::OperationGroup, crate::protocol_rpc,
@@ -39,9 +41,14 @@ pub struct TezosRPC<HttpClient: Http> {
     pub context: TezosRPCContext<HttpClient>,
 }
 
+#[cfg(feature = "http")]
 impl TezosRPC<TezosHttp> {
     pub fn new(rpc_endpoint: String) -> Self {
         Self::new_rpc(rpc_endpoint)
+    }
+
+    pub fn new_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+        Self::new_rpc_with_chain_id(rpc_endpoint, chain_id)
     }
 }
 

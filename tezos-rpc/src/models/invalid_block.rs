@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use super::error::RPCError;
+use super::error::RpcError;
 
 #[derive(Serialize, Deserialize)]
 pub struct InvalidBlock {
     pub block: String,
     pub level: u64,
-    pub errors: Vec<RPCError>,
+    pub errors: Vec<RpcError>,
 }
 
 #[cfg(test)]
