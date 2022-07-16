@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use tezos_core::types::encoded::BlockHash;
 
 use super::error::RpcError;
 
 #[derive(Serialize, Deserialize)]
 pub struct InvalidBlock {
-    pub block: String,
+    pub block: BlockHash,
     pub level: u64,
     pub errors: Vec<RpcError>,
 }
@@ -17,7 +18,9 @@ mod test {
     #[test]
     fn test_serde_serialize() -> Result<(), crate::error::Error> {
         let invalid_block = InvalidBlock {
-            block: "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA".to_string(),
+            block: "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA"
+                .try_into()
+                .unwrap(),
             level: 1,
             errors: vec![],
         };
@@ -37,6 +40,8 @@ mod test {
         assert_eq!(
             invalid_block.block,
             "BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(invalid_block.level, 1);
         assert_eq!(invalid_block.errors, vec![]);

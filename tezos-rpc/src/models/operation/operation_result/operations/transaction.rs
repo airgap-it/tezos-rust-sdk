@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ContractAddress;
+
 use {
     crate::{
         models::balance_update::BalanceUpdate,
@@ -21,7 +23,7 @@ pub struct TransactionOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance_updates: Option<Vec<BalanceUpdate>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub originated_contracts: Option<Vec<String>>,
+    pub originated_contracts: Option<Vec<ContractAddress>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumed_gas: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -49,7 +51,7 @@ pub struct TransactionSuccessfulManagerOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance_updates: Option<Vec<BalanceUpdate>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub originated_contracts: Option<Vec<String>>,
+    pub originated_contracts: Option<Vec<ContractAddress>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumed_gas: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

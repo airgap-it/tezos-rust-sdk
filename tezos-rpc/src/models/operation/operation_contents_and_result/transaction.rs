@@ -1,3 +1,8 @@
+use tezos_core::types::{
+    encoded::{Address, ImplicitAddress},
+    mutez::Mutez,
+};
+
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
@@ -18,14 +23,14 @@ pub struct Transaction {
     /// [OperationKind::Transaction]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
-    pub fee: String,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
     pub counter: String,
     pub gas_limit: String,
     pub storage_limit: String,
-    pub amount: String,
+    pub amount: Mutez,
     /// Base58Check-encoded
-    pub destination: String,
+    pub destination: Address,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parameters: Option<TransactionParameters>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,13 +51,13 @@ pub struct InternalTransactionOperationResult {
     /// [OperationKind::Transaction]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
+    pub source: Address,
     /// integer ∈ [0, 2^16-1]
     pub nonce: u16,
     /// Mutez
-    pub amount: String,
+    pub amount: Mutez,
     /// Address (Base58Check-encoded)
-    pub destination: String,
+    pub destination: Address,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parameters: Option<TransactionParameters>,
     #[serde(skip_serializing_if = "Option::is_none")]

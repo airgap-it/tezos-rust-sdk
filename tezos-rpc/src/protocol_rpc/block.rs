@@ -130,22 +130,30 @@ mod tests {
 
         assert_eq!(
             response.protocol,
-            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i".to_string()
+            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i"
+                .try_into()
+                .unwrap()
         );
-        assert_eq!(response.chain_id, "NetXdQprcVkpaWU".to_string());
+        assert_eq!(response.chain_id, "NetXdQprcVkpaWU".try_into().unwrap());
         assert_eq!(
             response.hash,
-            "BLockGenesisGenesisGenesisGenesisGenesisf79b5d1CoW2".to_string()
+            "BLockGenesisGenesisGenesisGenesisGenesisf79b5d1CoW2"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(
             response.header.context,
-            "CoV8SQumiVU9saiu3FVNeDNewJaJH8yWdsGF3WLdsRr2P9S7MzCj".to_string()
+            "CoV8SQumiVU9saiu3FVNeDNewJaJH8yWdsGF3WLdsRr2P9S7MzCj"
+                .try_into()
+                .unwrap()
         );
 
         let block_metadata = response.metadata.expect("Block has metadata");
         assert_eq!(
             block_metadata.protocol,
-            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i".to_string()
+            "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(block_metadata.baker, None);
         assert_eq!(

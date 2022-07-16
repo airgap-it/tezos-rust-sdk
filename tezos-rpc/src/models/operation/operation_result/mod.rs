@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ContractAddress;
+
 pub mod backtracked;
 pub mod big_map_diff;
 pub mod lazy_storage_diff;
@@ -11,7 +13,7 @@ use {
     crate::{
         models::balance_update::BalanceUpdate,
         models::error::RpcError,
-        models::fee::{Limits, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN},
+        models::limits::{Limits, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN},
     },
     serde::{Deserialize, Serialize},
 };
@@ -42,7 +44,7 @@ pub struct OperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance_updates: Option<Vec<BalanceUpdate>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub originated_contracts: Option<Vec<String>>,
+    pub originated_contracts: Option<Vec<ContractAddress>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consumed_gas: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

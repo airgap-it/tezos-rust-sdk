@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ScriptExprHash;
+
 use {
     super::DiffAction,
     serde::{Deserialize, Serialize},
@@ -14,7 +16,7 @@ pub struct BigMapDiff {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub destination_big_map: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub key_hash: Option<String>,
+    pub key_hash: Option<ScriptExprHash>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<Micheline>,
     #[serde(skip_serializing_if = "Option::is_none")]

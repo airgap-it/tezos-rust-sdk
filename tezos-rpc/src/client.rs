@@ -3,23 +3,23 @@ use crate::http::default::HttpClient;
 use crate::http::Http;
 
 use {
-    crate::constants, crate::models::operation::OperationGroup, crate::protocol_rpc,
-    crate::shell_rpc, crate::shell_rpc::injection::block::InjectionBlockPayload,
+    crate::constants, crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
+    crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
 #[derive(Debug)]
 pub struct TezosRpcContext<HttpClient: Http> {
-    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
     chain_id: String,
     http_client: HttpClient,
 }
 
 impl<HttpClient: Http> TezosRpcContext<HttpClient> {
+    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
     pub fn chain_id(&self) -> &str {
         &self.chain_id
     }
 
-    pub fn http_client(&self) -> &HttpClient {
+    pub(crate) fn http_client(&self) -> &HttpClient {
         &self.http_client
     }
 
@@ -39,7 +39,7 @@ impl<HttpClient: Http> TezosRpcContext<HttpClient> {
 
 #[derive(Debug)]
 pub struct TezosRpc<HttpClient: Http> {
-    pub context: TezosRpcContext<HttpClient>,
+    context: TezosRpcContext<HttpClient>,
 }
 
 #[cfg(feature = "http")]
@@ -71,6 +71,10 @@ impl TezosRpc<HttpClient> {
 }
 
 impl<HttpClient: Http> TezosRpc<HttpClient> {
+    pub fn context(&self) -> &TezosRpcContext<HttpClient> {
+        &self.context
+    }
+
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
     ///
     /// ```rust
@@ -400,7 +404,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
     pub fn preapply_operations<'a>(
         &'a self,
-        operations: &'a Vec<&OperationGroup>,
+        operations: &'a Vec<&Operation>,
     ) -> protocol_rpc::block::helpers::preapply::operations::RpcRequestBuilder<'a, HttpClient> {
         protocol_rpc::block::helpers::preapply::operations::post(&self.context, operations)
     }
@@ -410,7 +414,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
     pub fn run_operation<'a>(
         &'a self,
-        operation: &'a OperationGroup,
+        operation: &'a Operation,
     ) -> protocol_rpc::block::helpers::scripts::run_operation::RpcRequestBuilder<'a, HttpClient>
     {
         protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)

@@ -1,3 +1,6 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::{
     internal::{
         coder::{ConsumingDecoder, EncodedBytesCoder},
@@ -12,6 +15,11 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum Signature {
     Generic(GenericSignature),
     Ed25519(Ed25519Signature),
@@ -64,7 +72,9 @@ impl Encoded for Signature {
         if P256Signature::is_valid_base58(&base58) {
             return Ok(Self::P256(P256Signature::new(base58)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData {
+            description: base58,
+        })
     }
 
     fn to_bytes(&self) -> crate::Result<Vec<u8>> {

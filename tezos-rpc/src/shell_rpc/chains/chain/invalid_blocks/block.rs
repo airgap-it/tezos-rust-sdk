@@ -141,6 +141,8 @@ mod tests {
         assert_eq!(
             response.block,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(response.level, 2424833);
         assert_eq!(response.errors.len(), 1, "Expects a single error.");

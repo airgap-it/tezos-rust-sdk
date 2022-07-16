@@ -21,11 +21,11 @@ use tezos_michelson::micheline::Micheline;
 use crate::{
     block_header::BlockHeader,
     operations::{
-        ActivateAccount, Ballot, BallotType, CommonEntrypoint, Delegation, DoubleBakingEvidence,
+        ActivateAccount, Ballot, BallotType, Delegation, DoubleBakingEvidence,
         DoubleEndorsementEvidence, DoublePreendorsementEvidence, Endorsement, Entrypoint,
         FailingNoop, InlinedEndorsement, InlinedPreendrosement, OperationContent,
-        OperationContentTag, Origination, Parameters, Preendorsement, Proposals,
-        RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
+        OperationContentTag, Origination, Parameters, Preendorsement, PrimitiveEntrypoint,
+        Proposals, RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
         TraitOperationConsensusContent, TraitOperationContent, TraitOperationManagerContent,
         Transaction,
     },
@@ -806,8 +806,8 @@ impl ConsumingDecoder<Entrypoint, u8, Error> for OperationContentBytesCoder {
         use num_traits::FromPrimitive;
 
         let tag_byte = value.consume_first()?;
-        if let Some(common_entrypoint) = CommonEntrypoint::from_u8(tag_byte) {
-            return Ok(Entrypoint::Common(common_entrypoint));
+        if let Some(common_entrypoint) = PrimitiveEntrypoint::from_u8(tag_byte) {
+            return Ok(Entrypoint::Primitive(common_entrypoint));
         }
         if tag_byte == Entrypoint::named_tag() {
             let name_length = value.consume_first()?;

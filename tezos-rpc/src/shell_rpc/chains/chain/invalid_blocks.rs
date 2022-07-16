@@ -91,6 +91,8 @@ mod tests {
         assert_eq!(
             invalid_block.block,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(invalid_block.level, 2424833);
         assert_eq!(invalid_block.errors.len(), 1, "Expects a single error.");

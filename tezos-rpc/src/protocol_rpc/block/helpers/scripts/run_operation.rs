@@ -4,7 +4,7 @@ use {
     crate::{
         client::TezosRpcContext,
         error::Error,
-        models::operation::{OperationGroup, OperationWithMetadata},
+        models::operation::{Operation, OperationWithMetadata},
         protocol_rpc::block::BlockID,
     },
     serde::Serialize,
@@ -16,7 +16,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 #[derive(Serialize)]
 struct RunOperationParam<'a> {
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
     chain_id: &'a str,
 }
 
@@ -26,11 +26,11 @@ pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operation: &'a OperationGroup) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operation: &'a Operation) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -73,7 +73,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
 pub fn post<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, operation)
 }
@@ -88,7 +88,7 @@ mod tests {
             error::Error,
             models::operation::{
                 kind::OperationKind, operation_contents_and_result::endorsement::Endorsement,
-                OperationContent, OperationGroup, OperationWithMetadata,
+                Operation, OperationContent, OperationWithMetadata,
             },
             protocol_rpc::block::BlockID,
         },
@@ -101,9 +101,9 @@ mod tests {
         let rpc_url = server.base_url();
 
         let block_id = BlockID::Level(1);
-        let operation_group = OperationGroup {
-            protocol: Some("PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY".to_string()),
-            branch: "BKoVxMrDZHW8yvh6u5pWwCS9qYi8ApUtjt5KMMBN5ofikNW1cJW".to_string(),
+        let operation_group = Operation {
+            protocol: Some("PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY".try_into().unwrap()),
+            branch: "BKoVxMrDZHW8yvh6u5pWwCS9qYi8ApUtjt5KMMBN5ofikNW1cJW".try_into().unwrap(),
             contents: vec![
                 OperationContent::Endorsement(
                     Endorsement {
@@ -111,12 +111,12 @@ mod tests {
                         slot: Some(0),
                         level: Some(2510083),
                         round: Some(0),
-                        block_payload_hash: Some("vh32fG1tMNPtzZiKPHinfLPSAU3m2piFSgud4jBdaGSKJQH6q7Xd".to_string()),
+                        block_payload_hash: Some("vh32fG1tMNPtzZiKPHinfLPSAU3m2piFSgud4jBdaGSKJQH6q7Xd".try_into().unwrap()),
                         metadata: None
                     }
                 )
             ],
-            signature: Some("sigqmbZ1v6kN6FC6L9aAZZkcrkF5NjmepPMqzn3FLW5PB31ERYPAy4ku4s865hY4eK4NGj6hjpR56W5GZquZKGQ9ibnFmtiR".to_string()),
+            signature: Some("sigqmbZ1v6kN6FC6L9aAZZkcrkF5NjmepPMqzn3FLW5PB31ERYPAy4ku4s865hY4eK4NGj6hjpR56W5GZquZKGQ9ibnFmtiR".try_into().unwrap()),
             chain_id: None,
             hash: None,
         };

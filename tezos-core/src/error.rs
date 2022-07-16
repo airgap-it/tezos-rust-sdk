@@ -6,7 +6,10 @@ pub enum Error {
     Internal {
         description: String,
     },
-    InvalidBase58EncodedData,
+    #[from(ignore)]
+    InvalidBase58EncodedData {
+        description: String,
+    },
     InvalidBytes,
     Base58Decoding {
         source: bs58::decode::Error,

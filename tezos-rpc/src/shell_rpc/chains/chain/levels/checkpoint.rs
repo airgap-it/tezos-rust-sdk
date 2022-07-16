@@ -73,6 +73,8 @@ mod tests {
         assert_eq!(
             response.block_hash,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(response.level, 2424833);
 
