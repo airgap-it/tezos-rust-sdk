@@ -1,6 +1,8 @@
+use crate::http::Http;
+
 use {
     crate::{
-        client::TezosRPCContext,
+        client::TezosRpcContext,
         error::Error,
         models::operation::{OperationGroup, OperationWithMetadata},
         protocol_rpc::block::BlockID,
@@ -20,18 +22,18 @@ struct RunOperationParam<'a> {
 
 /// A builder to construct the properties of a request to run an operation without signature checks.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     operation: &'a OperationGroup,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, operation: &'a OperationGroup) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operation: &'a OperationGroup) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             operation,
         }
@@ -51,7 +53,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<OperationWithMetadata, Error> {
+    pub async fn send(&self) -> Result<OperationWithMetadata, Error> {
         let path = self::path(self.chain_id, self.block_id);
 
         let param = RunOperationParam {
@@ -60,7 +62,7 @@ impl<'a> RPCRequestBuilder<'a> {
         };
 
         self.ctx
-            .http_client
+            .http_client()
             .post::<_, _, ()>(path.as_str(), &param, &None)
             .await
     }
@@ -69,16 +71,19 @@ impl<'a> RPCRequestBuilder<'a> {
 /// Run an operation without signature checks.
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
-pub fn post<'a>(ctx: &'a TezosRPCContext, operation: &'a OperationGroup) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx, operation)
+pub fn post<'a, HttpClient: Http>(
+    ctx: &'a TezosRpcContext<HttpClient>,
+    operation: &'a OperationGroup,
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, operation)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         super::*,
         crate::{
-            client::TezosRPC,
+            client::TezosRpc,
             constants::DEFAULT_CHAIN_ALIAS,
             error::Error,
             models::operation::{
@@ -132,7 +137,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(response);
         });
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let result = client
             .run_operation(&operation_group)

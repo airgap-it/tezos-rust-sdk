@@ -1,4 +1,6 @@
-use {crate::client::TezosRPCContext, crate::error::Error};
+use crate::http::Http;
+
+use {crate::client::TezosRpcContext, crate::error::Error};
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/chain_id", super::path(chain_id))
@@ -6,16 +8,16 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get the chain unique identifier.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
         }
     }
 
@@ -26,25 +28,25 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<String, Error> {
+    pub async fn send(&self) -> Result<String, Error> {
         let path = self::path(self.chain_id);
 
-        self.ctx.http_client.get(path.as_str()).await
+        self.ctx.http_client().get(path.as_str()).await
     }
 }
 
 /// Get the chain unique identifier.
 ///
 /// [`GET /chains/<chain_id>/chain_id`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-chain-id)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
-    RPCRequestBuilder::new(ctx)
+pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBuilder<HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use crate::constants::DEFAULT_CHAIN_ALIAS;
 
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_chain_id() -> Result<(), Error> {
@@ -61,7 +63,7 @@ mod tests {
                 .json_body(chain_id_string);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
         let chain_id = client.get_chain_id().send().await?;
         assert_eq!(chain_id_string, chain_id);
 

@@ -10,7 +10,7 @@ use {
     },
     crate::{
         models::balance_update::BalanceUpdate,
-        models::error::RPCError,
+        models::error::RpcError,
         models::fee::{Limits, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN},
     },
     serde::{Deserialize, Serialize},
@@ -56,7 +56,7 @@ pub struct OperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<Vec<RPCError>>,
+    pub errors: Option<Vec<RpcError>>,
 }
 
 impl OperationResult {

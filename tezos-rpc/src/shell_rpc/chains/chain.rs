@@ -1,10 +1,12 @@
+use crate::http::Http;
+
 pub mod blocks;
 pub mod chain_id;
 pub mod invalid_blocks;
 pub mod is_bootstrapped;
 pub mod levels;
 
-use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
+use {crate::client::TezosRpcContext, crate::error::Error, serde::Serialize};
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/{}", super::path(), chain_id.as_ref())
@@ -12,17 +14,17 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to forcefully set the bootstrapped flag of the node.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a PatchChainPayload,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext, payload: &'a PatchChainPayload) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, payload: &'a PatchChainPayload) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             payload,
         }
     }
@@ -34,11 +36,11 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<(), Error> {
+    pub async fn send(&self) -> Result<(), Error> {
         let path = self::path(self.chain_id);
 
         self.ctx
-            .http_client
+            .http_client()
             .patch::<_, serde_json::Value>(path.as_str(), &Some(self.payload))
             .await?;
 
@@ -56,18 +58,18 @@ pub struct PatchChainPayload {
 /// Forcefully set the bootstrapped flag of the node.
 ///
 /// [`PATCH /chains/<chain_id>`](https://tezos.gitlab.io/shell/rpc.html#patch-chains-chain-id)
-pub fn patch<'a>(
-    ctx: &'a TezosRPCContext,
+pub fn patch<'a, HttpClient: Http>(
+    ctx: &'a TezosRpcContext<HttpClient>,
     payload: &'a PatchChainPayload,
-) -> RPCRequestBuilder<'a> {
-    RPCRequestBuilder::new(ctx, payload)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, payload)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use crate::constants::DEFAULT_CHAIN_ALIAS;
 
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::MockServer};
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::MockServer};
 
     #[tokio::test]
     async fn test_patch_chain() -> Result<(), Error> {
@@ -82,7 +84,7 @@ mod tests {
                 .json_body(serde_json::json!({}));
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let req = super::PatchChainPayload {
             bootstrapped: false,

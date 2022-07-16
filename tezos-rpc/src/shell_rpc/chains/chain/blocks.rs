@@ -1,5 +1,6 @@
-use crate::client::TezosRPCContext;
+use crate::client::TezosRpcContext;
 use crate::error::Error;
+use crate::http::Http;
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/blocks", super::path(chain_id))
@@ -7,8 +8,8 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get the chain unique identifier.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a> {
-    ctx: &'a TezosRPCContext,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     /// The requested number of predecessors to return.
     length: Option<u32>,
@@ -19,11 +20,11 @@ pub struct RPCRequestBuilder<'a> {
     min_date: Option<u64>,
 }
 
-impl<'a> RPCRequestBuilder<'a> {
-    pub fn new(ctx: &'a TezosRPCContext) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
-            chain_id: &ctx.chain_id,
+            chain_id: ctx.chain_id(),
             length: None,
             head: None,
             min_date: None,
@@ -59,7 +60,7 @@ impl<'a> RPCRequestBuilder<'a> {
         self
     }
 
-    pub async fn send(self) -> Result<Vec<Vec<String>>, Error> {
+    pub async fn send(&self) -> Result<Vec<Vec<String>>, Error> {
         let mut query: Vec<(&str, String)> = vec![];
 
         if let Some(length) = self.length {
@@ -76,7 +77,7 @@ impl<'a> RPCRequestBuilder<'a> {
         }
 
         self.ctx
-            .http_client
+            .http_client()
             .get_with_query(self::path(self.chain_id).as_str(), &Some(query))
             .await
     }
@@ -86,15 +87,15 @@ impl<'a> RPCRequestBuilder<'a> {
 /// decreasing fitness. Without arguments it returns the head of the chain.
 ///
 /// [`GET /chains/<chain_id>/blocks`](https://tezos.gitlab.io/shell/rpc.html#get_chains__chain_id__blocks)
-pub fn get(ctx: &TezosRPCContext) -> RPCRequestBuilder {
-    RPCRequestBuilder::new(ctx)
+pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBuilder<HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
 
     use {
-        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
+        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         httpmock::prelude::*,
     };
 
@@ -120,7 +121,7 @@ mod tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRPC::new(rpc_url.as_str());
+        let client = TezosRpc::new(rpc_url);
 
         let response = client
             .get_blocks()
