@@ -1,7 +1,7 @@
 use crate::http::Http;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
+    crate::client::TezosRpcContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
 };
 
 fn path<S: AsRef<str>>(chain_id: S, block_hash: S) -> String {
@@ -11,13 +11,13 @@ fn path<S: AsRef<str>>(chain_id: S, block_hash: S) -> String {
 /// A builder to construct the properties of a request to get the errors that appeared during the block (in)validation.
 #[derive(Clone, Copy)]
 pub struct GetRPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_hash: &'a str,
 }
 
 impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, block_hash: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a str) -> Self {
         GetRPCRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -42,13 +42,13 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
 /// A builder to construct the properties of a request to get the errors that appeared during the block (in)validation.
 #[derive(Clone, Copy)]
 pub struct DeleteRPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_hash: &'a str,
 }
 
 impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, block_hash: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a str) -> Self {
         DeleteRPCRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -79,7 +79,7 @@ impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub fn get<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     block_hash: &'a str,
 ) -> GetRPCRequestBuilder<'a, HttpClient> {
     GetRPCRequestBuilder::new(ctx, block_hash)
@@ -89,16 +89,16 @@ pub fn get<'a, HttpClient: Http>(
 ///
 /// [`DELETE <'a>/chains'a /<chain_id>/invalid_blocks/<bl'a ock_hash>`](htDeleteRPCRequestBuilder<'a>hell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
 pub fn delete<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     block_hash: &'a str,
 ) -> DeleteRPCRequestBuilder<'a, HttpClient> {
     DeleteRPCRequestBuilder::new(ctx, block_hash)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
-        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
+        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         httpmock::prelude::*,
     };
 
@@ -132,7 +132,7 @@ mod tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let response = client
             .get_invalid_block(&invalid_block_hash.to_string())
             .send()
@@ -171,7 +171,7 @@ mod tests {
                 .json_body(serde_json::json!({}));
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         client
             .remove_invalid_block(&invalid_block_hash.to_string())

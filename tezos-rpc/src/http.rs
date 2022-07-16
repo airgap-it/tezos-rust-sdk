@@ -6,9 +6,7 @@ use {
 
 #[async_trait]
 pub trait Http {
-    fn new(rpc_endpoint: String) -> Self
-    where
-        Self: Sized;
+    fn new(rpc_endpoint: String) -> Self;
 
     fn change_rpc_endpoint(&mut self, rpc_endpoint: String);
 
@@ -45,12 +43,13 @@ pub mod default {
     use super::*;
     use reqwest::{Client, Response};
 
-    pub struct TezosHttp {
+    #[derive(Debug)]
+    pub struct HttpClient {
         rpc_endpoint: String,
         client: Client,
     }
 
-    impl TezosHttp {
+    impl HttpClient {
         fn url(&self, path: &str) -> String {
             format!("{}{}", self.rpc_endpoint, path)
         }
@@ -73,10 +72,10 @@ pub mod default {
 
     #[cfg(feature = "http")]
     #[async_trait]
-    impl Http for TezosHttp {
+    impl Http for HttpClient {
         /// Creates an Http client that will be used to send requests to the specified node.
         fn new(rpc_endpoint: String) -> Self {
-            TezosHttp {
+            Self {
                 rpc_endpoint,
                 client: Client::new(),
             }

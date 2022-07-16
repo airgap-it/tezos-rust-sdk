@@ -1,6 +1,6 @@
 use crate::http::Http;
 
-use {crate::client::TezosRPCContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
+use {crate::client::TezosRpcContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
 
 fn path<S: AsRef<str>>(chain_id: S) -> String {
     format!("{}/caboose", super::path(chain_id))
@@ -8,14 +8,14 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 
 /// A builder to construct the properties of a request to get the current caboose for this chain.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
         }
@@ -38,14 +38,14 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 /// Get the current caboose for this chain.
 ///
 /// [`GET /chains/<chain_id>/levels/caboose`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-levels-caboose)
-pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
-    RPCRequestBuilder::new(ctx)
+pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBuilder<HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
-        crate::client::TezosRPC, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
+        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
         httpmock::prelude::*,
     };
 
@@ -67,7 +67,7 @@ mod tests {
                 .json_body(valid_response);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let response = client.get_caboose().send().await?;
 
         assert_eq!(

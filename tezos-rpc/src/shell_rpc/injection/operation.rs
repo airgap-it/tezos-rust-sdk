@@ -1,6 +1,6 @@
 use crate::http::Http;
 
-use {crate::client::TezosRPCContext, crate::error::Error};
+use {crate::client::TezosRpcContext, crate::error::Error};
 
 fn path() -> String {
     format!("{}/operation", super::path())
@@ -8,16 +8,16 @@ fn path() -> String {
 
 /// A builder to construct the properties of a request to inject an operation in node and broadcast it.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a str,
     do_async: Option<bool>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, payload: &'a str) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, payload: &'a str) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             payload,
@@ -77,15 +77,15 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`POST /injection/operation?[async]&[chain=<chain_id>]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-operation)
 pub fn post<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     signed_operation_contents: &'a str,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, signed_operation_contents)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, signed_operation_contents)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
-    use {crate::client::TezosRPC, crate::error::Error, httpmock::prelude::*};
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_operation_injection() -> Result<(), Error> {
@@ -106,7 +106,7 @@ mod tests {
                 .json_body(operation_hash);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let op_hash = client
             .inject_operation(&signed_operation_contents.to_string())
             .do_async(false)

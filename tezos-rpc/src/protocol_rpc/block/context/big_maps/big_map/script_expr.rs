@@ -1,7 +1,7 @@
 use crate::http::Http;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::models::contract::UnparsingMode,
+    crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::UnparsingMode,
     crate::protocol_rpc::block::BlockID, serde::Serialize, tezos_michelson::micheline::Micheline,
 };
 
@@ -20,8 +20,8 @@ struct NormalizedPayload {
 
 /// A builder to construct the properties of a request to access the value associated with a key in a big map.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
@@ -29,13 +29,13 @@ pub struct RPCRequestBuilder<'a, HttpClient: Http> {
     unparsing_mode: Option<UnparsingMode>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     pub fn new(
-        ctx: &'a TezosRPCContext<HttpClient>,
+        ctx: &'a TezosRpcContext<HttpClient>,
         big_map_id: &'a u32,
         script_expr: &'a str,
     ) -> Self {
-        RPCRequestBuilder {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -108,20 +108,20 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>/normalized`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr-normalized)
 pub fn get_or_post<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     big_map_id: &'a u32,
     script_expr: &'a str,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, big_map_id, script_expr)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, big_map_id, script_expr)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use crate::models::contract::UnparsingMode;
 
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -149,7 +149,7 @@ mod tests {
                 .body(value);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let big_map = client
             .get_big_map_value(&big_map_id, &big_map_key)
             .block_id(&block_id)
@@ -192,7 +192,7 @@ mod tests {
                 .body(value);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let big_map = client
             .get_big_map_value(&big_map_id, &big_map_key)
             .block_id(&block_id)

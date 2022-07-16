@@ -3,7 +3,7 @@ use crate::http::Http;
 pub mod script_expr;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
+    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
     tezos_michelson::micheline::Micheline,
 };
 
@@ -13,8 +13,8 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32) -> Str
 
 /// A builder to construct the properties of a request to get the list of values in a big map
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
@@ -22,9 +22,9 @@ pub struct RPCRequestBuilder<'a, HttpClient: Http> {
     length: Option<&'a u32>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, big_map_id: &'a u32) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, big_map_id: &'a u32) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -92,17 +92,17 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
 pub fn get<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     big_map_id: &'a u32,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, big_map_id)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, big_map_id)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -128,7 +128,7 @@ mod tests {
                 .body(big_map);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let big_map = client
             .get_big_map(&big_map_id)
             .block_id(&block_id)

@@ -1,6 +1,6 @@
 use crate::http::Http;
 
-use {crate::client::TezosRPCContext, crate::error::Error, serde::Serialize};
+use {crate::client::TezosRpcContext, crate::error::Error, serde::Serialize};
 
 fn path() -> String {
     format!("{}/block", super::path())
@@ -25,17 +25,17 @@ pub struct InjectionBlockPayload {
 
 /// A builder to construct the properties of a request to inject a block in the node and broadcast it.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     payload: &'a InjectionBlockPayload,
     force: Option<bool>,
     do_async: Option<bool>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, payload: &'a InjectionBlockPayload) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, payload: &'a InjectionBlockPayload) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             payload,
@@ -99,17 +99,17 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`POST /injection/block?[async]&[force]&[chain=<chain_id>]]`](https://tezos.gitlab.io/shell/rpc.html#post-injection-block)
 pub fn post<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     payload: &'a InjectionBlockPayload,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, payload)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, payload)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         super::{InjectionBlockPayload, OperationPayload},
-        crate::client::TezosRPC,
+        crate::client::TezosRpc,
         crate::error::Error,
         httpmock::prelude::*,
     };
@@ -145,7 +145,7 @@ mod tests {
                 .json_body(block_hash);
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let op_hash = client
             .inject_block(&payload)
             .force(false)

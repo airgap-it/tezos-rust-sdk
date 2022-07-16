@@ -1,5 +1,5 @@
 use crate::{
-    client::TezosRPCContext,
+    client::TezosRpcContext,
     error::Error,
     http::Http,
     models::operation::{OperationGroup, OperationWithMetadata},
@@ -12,16 +12,16 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to simulate the application of the operations.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     operations: &'a Vec<&'a OperationGroup>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, operations: &'a Vec<&OperationGroup>) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operations: &'a Vec<&OperationGroup>) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -57,17 +57,17 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
 pub fn post<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     operations: &'a Vec<&OperationGroup>,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, operations)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, operations)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC,
+            client::TezosRpc,
             constants::DEFAULT_CHAIN_ALIAS,
             error::Error,
             models::operation::{
@@ -118,7 +118,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(response);
         });
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         let result = client
             .preapply_operations(&vec![&operation_group])

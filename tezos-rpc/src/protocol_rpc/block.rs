@@ -5,7 +5,7 @@ pub mod helpers;
 
 use {
     crate::models::block::BlockID,
-    crate::{client::TezosRPCContext, error::Error, models::block::Block},
+    crate::{client::TezosRpcContext, error::Error, models::block::Block},
     derive_more::Display,
     serde::{Deserialize, Serialize},
 };
@@ -16,16 +16,16 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 /// A builder to construct the properties of a request to get all the information about a block.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     metadata: MetadataArg,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -90,16 +90,16 @@ pub enum MetadataArg {
 /// * `metadata` : Specifies whether or not if the operations metadata should be returned. To get the metadata, even if it is needed to recompute them, use `always`. To avoid getting the metadata, use `never`. By default, the metadata will be returned depending on the node's metadata size limit policy.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>?[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
-pub fn get<HttpClient: Http>(ctx: &TezosRPCContext<HttpClient>) -> RPCRequestBuilder<HttpClient> {
-    RPCRequestBuilder::new(ctx)
+pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBuilder<HttpClient> {
+    RpcRequestBuilder::new(ctx)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         super::*,
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             models::block::TestChainStatusName,
         },
         httpmock::prelude::*,
@@ -119,7 +119,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_genesis.json"));
         });
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         let response = client
             .get_block()
@@ -176,7 +176,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_1.json"));
         });
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         client
             .get_block()
@@ -202,7 +202,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_ithaca.json"));
         });
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         client
             .get_block()
@@ -228,7 +228,7 @@ mod tests {
                 .header("content-type", "application/json")
                 .body(include_str!("block/__TEST_DATA__/block_jakarta.json"));
         });
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
 
         client
             .get_block()

@@ -1,7 +1,7 @@
 use crate::http::Http;
 
 use {
-    crate::client::TezosRPCContext, crate::error::Error, crate::models::contract::ContractScript,
+    crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::ContractScript,
     crate::models::contract::UnparsingMode, crate::protocol_rpc::block::BlockID, serde::Serialize,
 };
 
@@ -17,8 +17,8 @@ struct NormalizedPayload {
 
 /// A builder to construct the properties of a request to access the code and data of the contract.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
@@ -26,9 +26,9 @@ pub struct RPCRequestBuilder<'a, HttpClient: Http> {
     normalize_types: Option<bool>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRPCContext<HttpClient>, contract: &'a str) -> Self {
-        RPCRequestBuilder {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a str) -> Self {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -106,17 +106,17 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
 pub fn get_or_post<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     address: &'a str,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, address)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, address)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             models::contract::UnparsingMode, protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -141,7 +141,7 @@ mod tests {
                 .body(include_str!("__TEST_DATA__/optimized_contract_script.json"));
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let script = client
             .get_contract_script(&contract_address.to_string())
             .block_id(&block_id)
@@ -185,7 +185,7 @@ mod tests {
                 .body(include_str!("__TEST_DATA__/optimized_contract_script.json"));
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let script = client
             .get_contract_script(&contract_address.to_string())
             .unparsing_mode(UnparsingMode::Readable)

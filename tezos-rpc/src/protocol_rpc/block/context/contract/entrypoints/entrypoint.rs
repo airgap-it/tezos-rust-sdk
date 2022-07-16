@@ -2,7 +2,7 @@ use tezos_michelson::micheline::Micheline;
 
 use crate::http::Http;
 
-use {crate::client::TezosRPCContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
+use {crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
 
 fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S, entrypoint: S) -> String {
     format!(
@@ -14,8 +14,8 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S, entrypoint:
 
 /// A builder to construct the properties of a request to obtain the type of a given entrypoint.
 #[derive(Clone, Copy)]
-pub struct RPCRequestBuilder<'a, HttpClient: Http> {
-    ctx: &'a TezosRPCContext<HttpClient>,
+pub struct RpcRequestBuilder<'a, HttpClient: Http> {
+    ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a str,
     block_id: &'a BlockID,
     contract: &'a str,
@@ -23,13 +23,13 @@ pub struct RPCRequestBuilder<'a, HttpClient: Http> {
     normalize_types: Option<bool>,
 }
 
-impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
+impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     pub fn new(
-        ctx: &'a TezosRPCContext<HttpClient>,
+        ctx: &'a TezosRpcContext<HttpClient>,
         contract: &'a str,
         entrypoint: &'a str,
     ) -> Self {
-        RPCRequestBuilder {
+        RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
@@ -87,18 +87,18 @@ impl<'a, HttpClient: Http> RPCRequestBuilder<'a, HttpClient> {
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints/<entrypoint>?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
 pub fn get<'a, HttpClient: Http>(
-    ctx: &'a TezosRPCContext<HttpClient>,
+    ctx: &'a TezosRpcContext<HttpClient>,
     address: &'a str,
     entrypoint: &'a str,
-) -> RPCRequestBuilder<'a, HttpClient> {
-    RPCRequestBuilder::new(ctx, address, entrypoint)
+) -> RpcRequestBuilder<'a, HttpClient> {
+    RpcRequestBuilder::new(ctx, address, entrypoint)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "http"))]
 mod tests {
     use {
         crate::{
-            client::TezosRPC, constants::DEFAULT_CHAIN_ALIAS, error::Error,
+            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
             protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
@@ -127,7 +127,7 @@ mod tests {
                 .body(include_str!("__TEST_DATA__/entrypoint.json"));
         });
 
-        let client = TezosRPC::new(rpc_url);
+        let client = TezosRpc::new(rpc_url);
         let entrypoints = client
             .get_contract_entrypoint(&contract_address.to_string(), &entrypoint.to_string())
             .normalize_types(true)
