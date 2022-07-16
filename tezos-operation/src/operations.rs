@@ -65,7 +65,7 @@ pub trait Operation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnsignedOperation {
     branch: BlockHash,
     contents: Vec<OperationContent>,
@@ -369,7 +369,7 @@ mod test {
     use hex_literal::hex;
 
     #[test]
-    fn test_forge() -> Result<()> {
+    fn test_forge_operation() -> Result<()> {
         for (operation, bytes) in operations_with_bytes() {
             let forged = operation.to_forged_bytes()?;
             assert_eq!(bytes, forged);
@@ -378,15 +378,59 @@ mod test {
     }
 
     #[test]
-    fn test_unforge() -> Result<()> {
+    fn test_unforge_operation() -> Result<()> {
         for (operation, bytes) in operations_with_bytes() {
+            let unforged = UnsignedOperation::from_forged_bytes(bytes)?;
+            assert_eq!(operation, unforged);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_forge_operation_content() -> Result<()> {
+        for (operation, bytes) in operation_contents_with_bytes() {
+            let forged = operation.to_forged_bytes()?;
+            assert_eq!(bytes, forged);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_unforge_operation_content() -> Result<()> {
+        for (operation, bytes) in operation_contents_with_bytes() {
             let unforged_operation = OperationContent::from_forged_bytes(bytes)?;
             assert_eq!(operation, unforged_operation);
         }
         Ok(())
     }
 
-    fn operations_with_bytes() -> Vec<(OperationContent, &'static [u8])> {
+    fn operations_with_bytes() -> Vec<(UnsignedOperation, &'static [u8])> {
+        vec![
+            (
+                UnsignedOperation::new("BLyKu3tnc9NCuiFfCqfeVGPCoZTyW63dYh2XAYxkM7fQYKCqsju".try_into().unwrap(), vec![]), 
+                &hex!("a5db12a8a7716fa5445bd374c8b3239c876dde8397efae0eb0dd223dc23a51c7")
+            ),
+            (
+                UnsignedOperation::new(
+                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), 
+                    vec![SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()]
+                ), 
+                &hex!("86db32fcecf30277eef3ef9f397118ed067957dd998979fd723ea0a0d50beead01000000016cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214")
+            ),
+            (
+                UnsignedOperation::new(
+                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), 
+                    vec![
+                        SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
+                        SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into(),
+                    ]
+                ), 
+                &hex!("86db32fcecf30277eef3ef9f397118ed067957dd998979fd723ea0a0d50beead01000000019d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce68330100000002921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170")
+            ),
+        ]
+    }
+
+    fn operation_contents_with_bytes() -> Vec<(OperationContent, &'static [u8])> {
         vec![
             (
                 SeedNonceRevelation::new(
