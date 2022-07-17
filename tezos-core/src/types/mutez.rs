@@ -6,13 +6,21 @@ use derive_more::{
     DivAssign, Mul, MulAssign, Not, Octal, Product, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign,
     Sub, SubAssign, Sum,
 };
+use lazy_static::lazy_static;
 use num_traits::ToPrimitive;
 use regex::Regex;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
-use crate::internal::coder::{Decoder, Encoder, MutezBytesCoder};
+use crate::internal::coder::{ConsumingDecoder, Decoder, Encoder, MutezBytesCoder};
+use crate::internal::consumable_list::ConsumableList;
 use crate::{Error, Result};
 
-use super::number::natural::Natural;
+use super::number::Nat;
+
+lazy_static! {
+    static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
+}
 
 #[derive(
     Add,
@@ -52,12 +60,16 @@ use super::number::natural::Natural;
 #[mul_assign(forward)]
 #[rem(forward)]
 #[rem_assign(forward)]
-pub struct Mutez(i64);
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String")
+)]
+pub struct Mutez(#[cfg_attr(feature = "serde", serde(serialize_with = "i64_to_string"))] i64);
 
 impl Mutez {
     pub fn is_valid(value: &str) -> bool {
-        let re = Regex::new(r"^[0-9]+$").unwrap();
-        re.is_match(value)
+        REGEX.is_match(value)
     }
 
     pub(super) fn value(&self) -> u64 {
@@ -67,6 +79,22 @@ impl Mutez {
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MutezBytesCoder::encode(self)
     }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        MutezBytesCoder::decode(bytes)
+    }
+
+    pub fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self> {
+        MutezBytesCoder::decode_consuming(bytes)
+    }
+}
+
+#[cfg(feature = "serde")]
+fn i64_to_string<S>(value: &i64, s: S) -> core::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    s.serialize_str(&value.to_string())
 }
 
 impl FromStr for Mutez {
@@ -242,10 +270,10 @@ impl TryFrom<&str> for Mutez {
     }
 }
 
-impl TryFrom<&Natural> for Mutez {
+impl TryFrom<&Nat> for Mutez {
     type Error = Error;
 
-    fn try_from(value: &Natural) -> Result<Self> {
+    fn try_from(value: &Nat) -> Result<Self> {
         value.to_string().try_into()
     }
 }

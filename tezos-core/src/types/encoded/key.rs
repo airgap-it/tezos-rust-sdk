@@ -1,3 +1,6 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::{
     internal::coder::{EncodedBytesCoder, PublicKeyBytesCoder},
     types::encoded::{
@@ -7,7 +10,12 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum Key {
     Secret(SecretKey),
     Public(PublicKey),
@@ -37,7 +45,7 @@ impl Encoded for Key {
         if PublicKey::is_valid_base58(&value) {
             return Ok(Self::Public(PublicKey::new(value)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData { description: value })
     }
 
     fn to_bytes(&self) -> Result<Vec<u8>> {
@@ -90,7 +98,12 @@ impl TryFrom<&Key> for Vec<u8> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum SecretKey {
     Ed25519(Ed25519SecretKey),
     Secp256K1(Secp256K1SecretKey),
@@ -140,7 +153,7 @@ impl Encoded for SecretKey {
         if P256SecretKey::is_valid_base58(&value) {
             return Ok(Self::P256(P256SecretKey::new(value)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData { description: value })
     }
 
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
@@ -189,7 +202,12 @@ impl TryFrom<&SecretKey> for Vec<u8> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum PublicKey {
     Ed25519(Ed25519PublicKey),
     Secp256K1(Secp256K1PublicKey),
@@ -239,7 +257,7 @@ impl Encoded for PublicKey {
         if P256PublicKey::is_valid_base58(&value) {
             return Ok(Self::P256(P256PublicKey::new(value)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData { description: value })
     }
 }
 

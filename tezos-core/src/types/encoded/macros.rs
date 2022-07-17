@@ -120,9 +120,13 @@ macro_rules! make_encoded_struct {
             use $crate::{
                 types::encoded::{Encoded, MetaEncoded, TraitMetaEncoded},
                 Error, Result,
+                internal::{consumable_list::ConsumableList, coder::ConsumingDecoder},
             };
+            #[cfg(feature = "serde")]
+            use serde::{Deserialize, Serialize};
 
-            #[derive(Debug)]
+            #[derive(Debug, Clone, PartialEq, Eq)]
+            #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde( try_from = "String"))]
             pub struct $name(String);
 
             impl $name {
@@ -136,6 +140,14 @@ macro_rules! make_encoded_struct {
 
                 pub fn is_valid_prefixed_bytes(value: &[u8]) -> bool {
                     META.is_valid_prefixed_bytes(value)
+                }
+
+                pub fn is_valid_consumable_bytes(value: &[u8]) -> bool {
+                    META.is_valid_consumable_bytes(value)
+                }
+
+                pub fn is_valid_prefixed_consumable_bytes(value: &[u8]) -> bool {
+                    META.is_valid_prefixed_consumable_bytes(value)
                 }
             }
 
@@ -154,11 +166,18 @@ macro_rules! make_encoded_struct {
                     if META.is_valid_base58(&value) {
                         return Ok($name(value));
                     }
-                    return Err(Error::InvalidBase58EncodedData);
+                    return Err(Error::InvalidBase58EncodedData { description: value });
                 }
 
                 fn from_bytes(bytes: &[u8]) -> Result<Self> {
-                    <Self as Encoded>::Coder::decode_with_meta(bytes, &META)
+                    Self::Coder::decode_with_meta(bytes, &META)
+                }
+
+                fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self>
+                where
+                    Self::Coder: ConsumingDecoder<Self, u8, Error>,
+                {
+                    Self::Coder::decode_consuming_with_meta(bytes, &META)
                 }
             }
 

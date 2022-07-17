@@ -5,4 +5,5 @@ WORKDIR /usr/src/tezos-rust-sdk
 
 ADD . ./
 
+RUN rustup component add rustfmt
 RUN cargo build --release

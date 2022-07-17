@@ -6,7 +6,7 @@ use crate::{
         coder::{ConsumingDecoder, Decoder, Encoder},
         consumable_list::{ConsumableBytes, ConsumableList},
     },
-    types::number::integer::Integer,
+    types::number::Int,
     Error, Result,
 };
 
@@ -14,8 +14,8 @@ use super::natural::NaturalBytesCoder;
 
 pub struct IntegerBytesCoder;
 
-impl Encoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
-    fn encode(value: &Integer) -> Result<Vec<u8>> {
+impl Encoder<Int, Vec<u8>, Error> for IntegerBytesCoder {
+    fn encode(value: &Int) -> Result<Vec<u8>> {
         let value: BigInt = value.to_integer()?;
         let abs = value.abs().to_biguint().unwrap();
 
@@ -44,16 +44,16 @@ impl Encoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
     }
 }
 
-impl Decoder<Integer, Vec<u8>, Error> for IntegerBytesCoder {
-    fn decode(value: &Vec<u8>) -> Result<Integer> {
+impl Decoder<Int, Vec<u8>, Error> for IntegerBytesCoder {
+    fn decode(value: &Vec<u8>) -> Result<Int> {
         let value = &mut ConsumableBytes::new(value);
 
         Self::decode_consuming(value)
     }
 }
 
-impl ConsumingDecoder<Integer, u8, Error> for IntegerBytesCoder {
-    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Integer> {
+impl ConsumingDecoder<Int, u8, Error> for IntegerBytesCoder {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Int> {
         let byte = value.consume_first()?;
         let part = BigInt::from(byte & 0b0011_1111u8);
         let sign = if (byte & 0b0100_0000u8) == 0b0100_0000u8 {
@@ -81,7 +81,7 @@ impl ConsumingDecoder<Integer, u8, Error> for IntegerBytesCoder {
 mod test {
     use super::*;
 
-    fn test_values() -> Result<Vec<(Integer, Vec<u8>)>> {
+    fn test_values() -> Result<Vec<(Int, Vec<u8>)>> {
         Ok(vec![
             (
                 "-41547452475632687683489977342365486797893454355756867843".try_into()?,

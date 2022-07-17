@@ -1,4 +1,4 @@
-use std::{result, string::FromUtf8Error};
+use std::result;
 
 use derive_more::{Display, Error as DError, From};
 
@@ -21,12 +21,10 @@ pub enum Error {
     UnknownMichelsonPrimName,
     UnknownMichelsonPrimTag,
     InvalidBytes,
-    InvalidStringConversion { source: FromUtf8Error },
     InvalidMicheline,
     InvalidPrimitiveApplication,
     InvalidMichelineLiteral,
     MichelineValueSchemaMismatch,
-    JSON { source: serde_json::Error },
 }
 
 pub type Result<T> = result::Result<T, Error>;

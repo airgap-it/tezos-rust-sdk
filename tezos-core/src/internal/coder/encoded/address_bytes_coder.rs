@@ -3,8 +3,10 @@ use std::ops::Add;
 use crate::{
     internal::{
         coder::{
-            encoded::implicit_address_bytes_coder::ImplicitAddressBytesCoder, Decoder, Encoder,
+            encoded::implicit_address_bytes_coder::ImplicitAddressBytesCoder, ConsumingDecoder,
+            Decoder, Encoder,
         },
+        consumable_list::ConsumableList,
         types::BytesTag,
     },
     types::encoded::Address,
@@ -40,6 +42,22 @@ impl Decoder<Address, [u8], Error> for AddressBytesCoder {
             AddressTag::Originated => Ok(Address::Originated(ContractAddressBytesCoder::decode(
                 &bytes,
             )?)),
+        }
+    }
+}
+
+impl ConsumingDecoder<Address, u8, Error> for AddressBytesCoder {
+    fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Address> {
+        let tag_byte = value.consume_first()?;
+        let tag = AddressTag::recognize(&[tag_byte]).ok_or(Error::InvalidBytes)?;
+
+        match tag {
+            AddressTag::Implicit => Ok(Address::Implicit(
+                ImplicitAddressBytesCoder::decode_consuming(value)?,
+            )),
+            AddressTag::Originated => Ok(Address::Originated(
+                ContractAddressBytesCoder::decode_consuming(value)?,
+            )),
         }
     }
 }

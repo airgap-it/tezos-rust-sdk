@@ -12,7 +12,10 @@ pub use self::{
 };
 
 use crate::{
-    internal::coder::{Decoder, Encoder},
+    internal::{
+        coder::{ConsumingDecoder, Decoder, Encoder},
+        consumable_list::ConsumableList,
+    },
     Error, Result,
 };
 
@@ -35,6 +38,13 @@ pub trait Encoded: Sized {
 
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
         Self::Coder::decode(bytes)
+    }
+
+    fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self>
+    where
+        Self::Coder: ConsumingDecoder<Self, u8, Error>,
+    {
+        Self::Coder::decode_consuming(bytes)
     }
 }
 
@@ -131,10 +141,10 @@ make_encoded_structs!(
     },
     {
         use {
-            internal::coder::ContractHashBytesCoder,
+            internal::coder::EncodedBytesCoder,
         }
         struct contract_hash::ContractHash;
-        coder: ContractHashBytesCoder;
+        coder: EncodedBytesCoder;
         meta {
             base58_prefix: "KT1",
             base58_length: 36,

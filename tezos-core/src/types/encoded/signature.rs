@@ -1,5 +1,11 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::{
-    internal::coder::EncodedBytesCoder,
+    internal::{
+        coder::{ConsumingDecoder, EncodedBytesCoder},
+        consumable_list::ConsumableList,
+    },
     types::encoded::{
         ed25519_signature::Ed25519Signature, generic_signature::GenericSignature,
         p256_signature::P256Signature, secp256_k1_signature::Secp256K1Signature, Encoded,
@@ -8,7 +14,12 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum Signature {
     Generic(GenericSignature),
     Ed25519(Ed25519Signature),
@@ -61,7 +72,9 @@ impl Encoded for Signature {
         if P256Signature::is_valid_base58(&base58) {
             return Ok(Self::P256(P256Signature::new(base58)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData {
+            description: base58,
+        })
     }
 
     fn to_bytes(&self) -> crate::Result<Vec<u8>> {
@@ -86,7 +99,60 @@ impl Encoded for Signature {
         if P256Signature::is_valid_bytes(bytes) {
             return Ok(Self::P256(P256Signature::from_bytes(bytes)?));
         }
-        Err(Error::InvalidBytes)
+
+        Ok(Self::Generic(GenericSignature::from_bytes(bytes)?))
+    }
+
+    fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self>
+    where
+        Self::Coder: ConsumingDecoder<Self, u8, Error>,
+    {
+        if GenericSignature::is_valid_prefixed_consumable_bytes(bytes.inner_value()) {
+            return Ok(Self::Generic(GenericSignature::from_consumable_bytes(
+                bytes,
+            )?));
+        }
+        if Ed25519Signature::is_valid_prefixed_consumable_bytes(bytes.inner_value()) {
+            return Ok(Self::Ed25519(Ed25519Signature::from_consumable_bytes(
+                bytes,
+            )?));
+        }
+        if Secp256K1Signature::is_valid_prefixed_consumable_bytes(bytes.inner_value()) {
+            return Ok(Self::Secp256K1(Secp256K1Signature::from_consumable_bytes(
+                bytes,
+            )?));
+        }
+        if P256Signature::is_valid_prefixed_consumable_bytes(bytes.inner_value()) {
+            return Ok(Self::P256(P256Signature::from_consumable_bytes(bytes)?));
+        }
+
+        Ok(Self::Generic(GenericSignature::from_consumable_bytes(
+            bytes,
+        )?))
+    }
+}
+
+impl From<GenericSignature> for Signature {
+    fn from(value: GenericSignature) -> Self {
+        Self::Generic(value)
+    }
+}
+
+impl From<Ed25519Signature> for Signature {
+    fn from(value: Ed25519Signature) -> Self {
+        Self::Ed25519(value)
+    }
+}
+
+impl From<Secp256K1Signature> for Signature {
+    fn from(value: Secp256K1Signature) -> Self {
+        Self::Secp256K1(value)
+    }
+}
+
+impl From<P256Signature> for Signature {
+    fn from(value: P256Signature) -> Self {
+        Self::P256(value)
     }
 }
 

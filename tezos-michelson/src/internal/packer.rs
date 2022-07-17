@@ -984,6 +984,11 @@ mod test {
                 data::try_string("2022-01-20T10:43:57.103Z").unwrap(),
                 Some(types::timestamp()),
             ),
+            (
+                &hex!("050a0000001a016077cd98fd8aca94851b83a4c44203b705d2004b006d696e74"),
+                data::try_string("KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7%mint").unwrap(),
+                Some(types::address())
+            ),
         ]
     }
 

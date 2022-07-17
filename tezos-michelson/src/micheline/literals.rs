@@ -1,16 +1,17 @@
 mod int;
-
+#[cfg(feature = "serde")]
 use int::IntDef;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use tezos_core::types::number::natural::Natural;
+use tezos_core::types::number::Nat;
 
 pub use crate::common::{bytes::Bytes, string::String};
 use crate::{Error, Result};
-pub use tezos_core::types::number::integer::Integer as Int;
+pub use tezos_core::types::number::Int;
 
 use super::Micheline;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -90,13 +91,13 @@ impl From<Int> for Micheline {
     }
 }
 
-impl From<Natural> for Micheline {
-    fn from(value: Natural) -> Self {
+impl From<Nat> for Micheline {
+    fn from(value: Nat) -> Self {
         Literal::Int(value.into()).into()
     }
 }
 
-impl TryFrom<Micheline> for Natural {
+impl TryFrom<Micheline> for Nat {
     type Error = Error;
 
     fn try_from(value: Micheline) -> Result<Self> {

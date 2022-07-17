@@ -1,5 +1,5 @@
 mod common;
-pub mod error;
+mod error;
 mod internal;
 pub mod micheline;
 pub mod michelson;

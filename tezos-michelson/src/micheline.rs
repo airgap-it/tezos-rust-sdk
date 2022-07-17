@@ -2,7 +2,7 @@ pub mod literals;
 pub mod primitive_application;
 pub mod sequence;
 mod utils;
-
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::internal::{
     coder::{Decoder, Encoder},
@@ -23,7 +23,7 @@ use crate::{
     Error, Result,
 };
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum Micheline {
     Literal(Literal),
@@ -168,10 +168,12 @@ impl From<Michelson> for Micheline {
 }
 
 #[cfg(test)]
+#[cfg(feature = "serde")]
 mod test {
     use serde_json::json;
 
     use super::*;
+    use crate::Error;
 
     #[test]
     fn test_micheline_to_json() -> Result<()> {
@@ -184,7 +186,12 @@ mod test {
     #[test]
     fn test_json_to_micheline() -> Result<()> {
         for (value, json) in micheline_values() {
-            assert_eq!(value, serde_json::from_value(json)?);
+            assert_eq!(
+                value,
+                serde_json::from_value(json).map_err(|_| Error::Internal {
+                    description: "Invalid json".into()
+                })?
+            );
         }
         Ok(())
     }

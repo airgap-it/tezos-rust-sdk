@@ -12,13 +12,14 @@ num-integer = "0.1"
 regex = "1"
 hex = "0.4"
 serde = { version = "1", features = ["derive"], optional = true }
-serde_json = { version = "1", features = ["preserve_order"], optional = true }
 chrono = "0.4"
+lazy_static = "1"
+
 tezos-core = { path = "../tezos-core" }
 
 [dev-dependencies]
 hex-literal = "0.3"
+serde_json = { version = "1", features = ["preserve_order"] }
 
 [features]
-default = ["serde"]
-serde = ["dep:serde", "dep:serde_json"]
+serde = ["dep:serde"]

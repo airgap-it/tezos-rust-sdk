@@ -1,3 +1,6 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::{
     contract_hash::ContractHash, ed25519_public_key_hash::Ed25519PublicKeyHash,
     p256_public_key_hash::P256PublicKeyHash, secp256_k1_public_key_hash::Secp256K1PublicKeyHash,
@@ -8,6 +11,12 @@ use crate::{
     Error, Result,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum Address {
     Implicit(ImplicitAddress),
     Originated(ContractAddress),
@@ -37,7 +46,7 @@ impl Encoded for Address {
         if ContractAddress::is_valid_base58(&value) {
             return Ok(Self::Originated(ContractAddress::new(value)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData { description: value })
     }
 }
 
@@ -85,6 +94,12 @@ impl From<ContractAddress> for Address {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String", untagged)
+)]
 pub enum ImplicitAddress {
     TZ1(Ed25519PublicKeyHash),
     TZ2(Secp256K1PublicKeyHash),
@@ -134,7 +149,7 @@ impl Encoded for ImplicitAddress {
         if P256PublicKeyHash::is_valid_base58(&value) {
             return Ok(Self::TZ3(P256PublicKeyHash::new(value)?));
         }
-        Err(Error::InvalidBase58EncodedData)
+        Err(Error::InvalidBase58EncodedData { description: value })
     }
 }
 
@@ -199,6 +214,12 @@ impl From<P256PublicKeyHash> for ImplicitAddress {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String")
+)]
 pub struct ContractAddress(String);
 
 impl ContractAddress {
@@ -267,7 +288,9 @@ impl Encoded for ContractAddress {
     fn new(value: String) -> Result<Self> {
         let (address, _) = Self::split_to_components(value.as_str())?;
         if !ContractHash::is_valid_base58(address) {
-            return Err(Error::InvalidBase58EncodedData);
+            return Err(Error::InvalidBase58EncodedData {
+                description: address.into(),
+            });
         }
         Ok(Self(value))
     }
