@@ -1,4 +1,4 @@
-use crate::client::TezosRpcContext;
+use crate::client::{TezosRpcChainId, TezosRpcContext};
 use crate::error::Error;
 use crate::http::Http;
 
@@ -10,7 +10,7 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     /// The requested number of predecessors to return.
     length: Option<u32>,
     /// Requests blocks starting with the current head if `None` is provided.
@@ -32,7 +32,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -78,7 +78,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         self.ctx
             .http_client()
-            .get_with_query(self::path(self.chain_id).as_str(), &Some(query))
+            .get_with_query(self::path(self.chain_id.value()).as_str(), &Some(query))
             .await
     }
 }
@@ -93,11 +93,9 @@ pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBui
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use crate::client::TezosRpcChainId;
 
-    use {
-        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        httpmock::prelude::*,
-    };
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_blocks() -> Result<(), Error> {
@@ -109,7 +107,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()))
+                .path(super::path(&TezosRpcChainId::Main.value()))
                 .query_param("length", "1")
                 .query_param(
                     "head",

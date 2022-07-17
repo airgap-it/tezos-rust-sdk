@@ -1,21 +1,23 @@
+use tezos_core::types::encoded::{ChainId, Encoded};
+
 #[cfg(feature = "http")]
 use crate::http::default::HttpClient;
 use crate::http::Http;
 
 use {
-    crate::constants, crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
+    crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
     crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
 #[derive(Debug)]
 pub struct TezosRpcContext<HttpClient: Http> {
-    chain_id: String,
+    chain_id: TezosRpcChainId,
     http_client: HttpClient,
 }
 
 impl<HttpClient: Http> TezosRpcContext<HttpClient> {
     /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
-    pub fn chain_id(&self) -> &str {
+    pub fn chain_id(&self) -> &TezosRpcChainId {
         &self.chain_id
     }
 
@@ -23,7 +25,7 @@ impl<HttpClient: Http> TezosRpcContext<HttpClient> {
         &self.http_client
     }
 
-    pub fn new(chain_id: String, http_client: HttpClient) -> Self {
+    pub fn new(chain_id: TezosRpcChainId, http_client: HttpClient) -> Self {
         Self {
             chain_id,
             http_client,
@@ -34,6 +36,35 @@ impl<HttpClient: Http> TezosRpcContext<HttpClient> {
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
         self.http_client
             .change_rpc_endpoint(rpc_endpoint.to_string());
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TezosRpcChainId {
+    Main,
+    Id(ChainId),
+}
+
+impl TezosRpcChainId {
+    const MAIN_VALUE: &'static str = "main";
+
+    pub fn value(&self) -> &str {
+        match self {
+            TezosRpcChainId::Main => Self::MAIN_VALUE,
+            TezosRpcChainId::Id(chain_id) => chain_id.value(),
+        }
+    }
+}
+
+impl From<ChainId> for TezosRpcChainId {
+    fn from(value: ChainId) -> Self {
+        Self::Id(value)
+    }
+}
+
+impl Default for TezosRpcChainId {
+    fn default() -> Self {
+        Self::Main
     }
 }
 
@@ -63,9 +94,9 @@ impl TezosRpc<HttpClient> {
     /// ```rust
     /// use tezos_rpc::client::TezosRpc;
     ///
-    /// let client = TezosRpc::new_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), "NetXLH1uAxK7CCh".into());
+    /// let client = TezosRpc::new_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), Default::default());
     /// ```
-    pub fn new_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+    pub fn new_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self::new_rpc_with_chain_id(rpc_endpoint, chain_id)
     }
 }
@@ -85,7 +116,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// let client = TezosRpc::<HttpClient>::new_rpc("https://tezos-node.prod.gke.papers.tech".into());
     /// ```
     pub fn new_rpc(rpc_endpoint: String) -> Self {
-        Self::new_rpc_with_chain_id(rpc_endpoint, constants::DEFAULT_CHAIN_ALIAS.into())
+        Self::new_rpc_with_chain_id(rpc_endpoint, Default::default())
     }
 
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
@@ -98,9 +129,9 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// use tezos_rpc::{client::TezosRpc, http::default::HttpClient};
     ///
     /// #[cfg(feature = "http")]
-    /// let client = TezosRpc::<HttpClient>::new_rpc_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), "NetXLH1uAxK7CCh".into());
+    /// let client = TezosRpc::<HttpClient>::new_rpc_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), Default::default());
     /// ```
-    pub fn new_rpc_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+    pub fn new_rpc_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self {
             context: TezosRpcContext::new(chain_id, HttpClient::new(rpc_endpoint)),
         }

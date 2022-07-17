@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::{
@@ -24,7 +24,7 @@ struct RunOperationParam<'a> {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
     operation: &'a Operation,
 }
@@ -40,7 +40,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -54,11 +54,11 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<OperationWithMetadata, Error> {
-        let path = self::path(self.chain_id, self.block_id);
+        let path = self::path(self.chain_id.value(), self.block_id);
 
         let param = RunOperationParam {
             operation: self.operation,
-            chain_id: self.chain_id,
+            chain_id: self.chain_id.value(),
         };
 
         self.ctx
@@ -84,7 +84,6 @@ mod tests {
         super::*,
         crate::{
             client::TezosRpc,
-            constants::DEFAULT_CHAIN_ALIAS,
             error::Error,
             models::operation::{
                 kind::OperationKind, operation_contents_and_result::endorsement::Endorsement,
@@ -122,7 +121,7 @@ mod tests {
         };
         let body = serde_json::to_string(&RunOperationParam {
             operation: &operation_group,
-            chain_id: &DEFAULT_CHAIN_ALIAS.to_string(),
+            chain_id: TezosRpcChainId::Main.value(),
         })?;
         let response = serde_json::to_string(&OperationWithMetadata {
             contents: operation_group.contents.clone(),
@@ -131,7 +130,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(POST)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id))
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id))
                 .body(body);
             then.status(200)
                 .header("content-type", "application/json")

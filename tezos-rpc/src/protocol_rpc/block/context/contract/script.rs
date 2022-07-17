@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::ContractScript,
@@ -19,7 +19,7 @@ struct NormalizedPayload {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
     contract: &'a str,
     unparsing_mode: Option<UnparsingMode>,
@@ -39,7 +39,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -76,13 +76,13 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     pub async fn send(&self) -> Result<ContractScript, Error> {
         if self.unparsing_mode.is_none() {
-            let path = self::path(self.chain_id, self.block_id, self.contract);
+            let path = self::path(self.chain_id.value(), self.block_id, self.contract);
 
             self.ctx.http_client().get(path.as_str()).await
         } else {
             let path = format!(
                 "{}/normalized",
-                self::path(self.chain_id, self.block_id, self.contract)
+                self::path(self.chain_id.value(), self.block_id, self.contract)
             );
 
             let param = NormalizedPayload {
@@ -114,10 +114,12 @@ pub fn get_or_post<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use crate::client::TezosRpcChainId;
+
     use {
         crate::{
-            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
-            models::contract::UnparsingMode, protocol_rpc::block::BlockID,
+            client::TezosRpc, error::Error, models::contract::UnparsingMode,
+            protocol_rpc::block::BlockID,
         },
         httpmock::prelude::*,
     };
@@ -132,7 +134,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &block_id,
                 &contract_address.to_string(),
             ));
@@ -174,7 +176,7 @@ mod tests {
                 .path(format!(
                     "{}/normalized",
                     super::path(
-                        &DEFAULT_CHAIN_ALIAS.to_string(),
+                        TezosRpcChainId::Main.value(),
                         &block_id,
                         &contract_address.to_string(),
                     )

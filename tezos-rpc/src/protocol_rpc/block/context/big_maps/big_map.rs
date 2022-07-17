@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 pub mod script_expr;
 
@@ -15,7 +15,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32) -> Str
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
     offset: Option<&'a u32>,
@@ -35,7 +35,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -74,7 +74,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             query.push(("length", length.to_string()));
         }
 
-        let path = self::path(self.chain_id, self.block_id, self.big_map_id);
+        let path = self::path(self.chain_id.value(), self.block_id, self.big_map_id);
 
         self.ctx
             .http_client()
@@ -100,11 +100,10 @@ pub fn get<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use crate::client::TezosRpcChainId;
+
     use {
-        crate::{
-            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
-            protocol_rpc::block::BlockID,
-        },
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
         httpmock::prelude::*,
     };
 
@@ -119,7 +118,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &block_id,
                 &big_map_id,
             ));

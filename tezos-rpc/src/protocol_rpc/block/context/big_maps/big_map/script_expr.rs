@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::UnparsingMode,
@@ -22,7 +22,7 @@ struct NormalizedPayload {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
     big_map_id: &'a u32,
     script_expr: &'a str,
@@ -46,7 +46,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -74,7 +74,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     pub async fn send(&self) -> Result<Micheline, Error> {
         let mut path = self::path(
-            self.chain_id,
+            self.chain_id.value(),
             self.block_id,
             self.big_map_id,
             self.script_expr,
@@ -117,13 +117,10 @@ pub fn get_or_post<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use crate::models::contract::UnparsingMode;
+    use crate::{client::TezosRpcChainId, models::contract::UnparsingMode};
 
     use {
-        crate::{
-            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
-            protocol_rpc::block::BlockID,
-        },
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
         httpmock::prelude::*,
     };
 
@@ -139,7 +136,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &block_id,
                 &big_map_id,
                 &big_map_key,
@@ -180,7 +177,7 @@ mod tests {
                 .path(format!(
                     "{}/normalized",
                     super::path(
-                        &DEFAULT_CHAIN_ALIAS.to_string(),
+                        TezosRpcChainId::Main.value(),
                         &block_id,
                         &big_map_id,
                         &big_map_key,

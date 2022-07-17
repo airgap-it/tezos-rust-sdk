@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::invalid_block::InvalidBlock,
@@ -12,7 +12,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_hash: S) -> String {
 #[derive(Clone, Copy)]
 pub struct GetRPCRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_hash: &'a str,
 }
 
@@ -26,14 +26,14 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
     }
 
     pub async fn send(&self) -> Result<InvalidBlock, Error> {
-        let path = self::path(self.chain_id, self.block_hash);
+        let path = self::path(self.chain_id.value(), self.block_hash);
 
         self.ctx.http_client().get(path.as_str()).await
     }
@@ -43,7 +43,7 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
 #[derive(Clone, Copy)]
 pub struct DeleteRPCRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_hash: &'a str,
 }
 
@@ -57,14 +57,14 @@ impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
     }
 
     pub async fn send(&self) -> Result<(), Error> {
-        let path = self::path(self.chain_id, self.block_hash);
+        let path = self::path(self.chain_id.value(), self.block_hash);
 
         self.ctx
             .http_client()
@@ -97,10 +97,9 @@ pub fn delete<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use {
-        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        httpmock::prelude::*,
-    };
+    use crate::client::TezosRpcChainId;
+
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_invalid_block() -> Result<(), Error> {
@@ -124,7 +123,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &invalid_block_hash.to_string(),
             ));
             then.status(200)
@@ -165,7 +164,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(DELETE).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &invalid_block_hash.to_string(),
             ));
             then.status(200)

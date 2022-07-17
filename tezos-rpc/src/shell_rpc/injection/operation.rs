@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {crate::client::TezosRpcContext, crate::error::Error};
 
@@ -10,7 +10,7 @@ fn path() -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     payload: &'a str,
     do_async: Option<bool>,
 }
@@ -27,7 +27,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     /// Modify chain identifier to be used in the request.
     /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -48,7 +48,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             query.push(("async", do_async.to_string()));
         }
         // Add `chain` query parameter
-        query.push(("chain", self.ctx.chain_id().into()));
+        query.push(("chain", self.ctx.chain_id().value().into()));
 
         self.ctx
             .http_client()
