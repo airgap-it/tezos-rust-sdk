@@ -48,7 +48,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         self.ctx
             .http_client()
-            .post::<_, _, ()>(path.as_str(), self.operations, &None)
+            .post::<_, _, ()>(path.as_str(), self.operations, None)
             .await
     }
 }

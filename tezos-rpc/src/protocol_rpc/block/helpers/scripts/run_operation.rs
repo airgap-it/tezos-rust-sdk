@@ -58,12 +58,12 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         let param = RunOperationParam {
             operation: self.operation,
-            chain_id: self.chain_id.value(),
+            chain_id: self.chain_id.chain_id_value(),
         };
 
         self.ctx
             .http_client()
-            .post::<_, _, ()>(path.as_str(), &param, &None)
+            .post::<_, _, ()>(path.as_str(), &param, None)
             .await
     }
 }
@@ -121,7 +121,7 @@ mod tests {
         };
         let body = serde_json::to_string(&RunOperationParam {
             operation: &operation_group,
-            chain_id: TezosRpcChainId::Main.value(),
+            chain_id: TezosRpcChainId::Main.chain_id_value(),
         })?;
         let response = serde_json::to_string(&OperationWithMetadata {
             contents: operation_group.contents.clone(),

@@ -41,7 +41,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         self.ctx
             .http_client()
-            .patch::<_, serde_json::Value>(path.as_str(), &Some(self.payload))
+            .patch::<_, serde_json::Value>(path.as_str(), Some(self.payload))
             .await?;
 
         Ok(())

@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::BlockHash;
+
 use crate::{client::TezosRpcChainId, http::Http};
 
 use {crate::client::TezosRpcContext, crate::error::Error, serde::Serialize};
@@ -9,7 +11,7 @@ fn path() -> String {
 #[derive(Serialize)]
 pub struct OperationPayload {
     /// A block identifier (Base58Check-encoded)
-    pub branch: String,
+    pub branch: BlockHash,
     /// Signed operation data
     pub data: String,
 }
@@ -82,7 +84,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         self.ctx
             .http_client()
-            .post(self::path().as_str(), self.payload, &Some(query))
+            .post(self::path().as_str(), self.payload, Some(&query))
             .await
     }
 }
@@ -124,7 +126,9 @@ mod tests {
             data: "blahblahblah".to_string(),
             operations: vec![
                 vec![OperationPayload {
-                    branch: "BLLRYycW8GicK1MDEyT9rQNfgSx9utBjM5Pz3QNUNs6W8PTJY9c".to_string(),
+                    branch: "BLLRYycW8GicK1MDEyT9rQNfgSx9utBjM5Pz3QNUNs6W8PTJY9c"
+                        .try_into()
+                        .unwrap(),
                     data: "blahblahblah".to_string(),
                 }],
                 vec![],

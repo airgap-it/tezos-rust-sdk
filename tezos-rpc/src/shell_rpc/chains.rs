@@ -1,5 +1,5 @@
 pub mod chain;
 
-fn path() -> String {
-    "/chains".into()
+fn path() -> &'static str {
+    "/chains"
 }

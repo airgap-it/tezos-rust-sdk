@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{BlockHash, Encoded};
+
 use crate::{client::TezosRpcChainId, http::Http};
 
 use {
@@ -13,11 +15,11 @@ fn path<S: AsRef<str>>(chain_id: S, block_hash: S) -> String {
 pub struct GetRPCRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_hash: &'a str,
+    block_hash: &'a BlockHash,
 }
 
 impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a BlockHash) -> Self {
         GetRPCRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -33,7 +35,7 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<InvalidBlock, Error> {
-        let path = self::path(self.chain_id.value(), self.block_hash);
+        let path = self::path(self.chain_id.value(), self.block_hash.value());
 
         self.ctx.http_client().get(path.as_str()).await
     }
@@ -44,11 +46,11 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
 pub struct DeleteRPCRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_hash: &'a str,
+    block_hash: &'a BlockHash,
 }
 
 impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, block_hash: &'a BlockHash) -> Self {
         DeleteRPCRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -64,11 +66,11 @@ impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<(), Error> {
-        let path = self::path(self.chain_id.value(), self.block_hash);
+        let path = self::path(self.chain_id.value(), self.block_hash.value());
 
         self.ctx
             .http_client()
-            .delete::<(), serde_json::Value>(path.as_str(), &None)
+            .delete::<(), serde_json::Value>(path.as_str(), None)
             .await?;
 
         Ok(())
@@ -80,7 +82,7 @@ impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
 /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
 pub fn get<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    block_hash: &'a str,
+    block_hash: &'a BlockHash,
 ) -> GetRPCRequestBuilder<'a, HttpClient> {
     GetRPCRequestBuilder::new(ctx, block_hash)
 }
@@ -90,13 +92,15 @@ pub fn get<'a, HttpClient: Http>(
 /// [`DELETE <'a>/chains'a /<chain_id>/invalid_blocks/<bl'a ock_hash>`](htDeleteRPCRequestBuilder<'a>hell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
 pub fn delete<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    block_hash: &'a str,
+    block_hash: &'a BlockHash,
 ) -> DeleteRPCRequestBuilder<'a, HttpClient> {
     DeleteRPCRequestBuilder::new(ctx, block_hash)
 }
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use tezos_core::types::encoded::{BlockHash, Encoded};
+
     use crate::client::TezosRpcChainId;
 
     use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
@@ -133,7 +137,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let response = client
-            .get_invalid_block(&invalid_block_hash.to_string())
+            .get_invalid_block(&invalid_block_hash.try_into().unwrap())
             .send()
             .await?;
 
@@ -160,12 +164,14 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let invalid_block_hash = "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2";
+        let invalid_block_hash: BlockHash = "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+            .try_into()
+            .unwrap();
 
         server.mock(|when, then| {
             when.method(DELETE).path(super::path(
                 TezosRpcChainId::Main.value(),
-                &invalid_block_hash.to_string(),
+                invalid_block_hash.value(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -175,7 +181,7 @@ mod tests {
         let client = TezosRpc::new(rpc_url);
 
         client
-            .remove_invalid_block(&invalid_block_hash.to_string())
+            .remove_invalid_block(&invalid_block_hash)
             .send()
             .await
     }

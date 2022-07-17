@@ -228,12 +228,6 @@ impl Default for BlockID {
     }
 }
 
-impl Default for &BlockID {
-    fn default() -> Self {
-        &BlockID::Head
-    }
-}
-
 impl BlockID {
     pub fn value(&self) -> String {
         match self {

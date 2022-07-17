@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{BlockHash, Encoded};
+
 use crate::client::{TezosRpcChainId, TezosRpcContext};
 use crate::error::Error;
 use crate::http::Http;
@@ -14,7 +16,7 @@ pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     /// The requested number of predecessors to return.
     length: Option<u32>,
     /// Requests blocks starting with the current head if `None` is provided.
-    head: Option<&'a str>,
+    head: Option<&'a BlockHash>,
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
     min_date: Option<u64>,
@@ -46,7 +48,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Request blocks starting from a given block.
-    pub fn head(&mut self, head: &'a str) -> &mut Self {
+    pub fn head(&mut self, head: &'a BlockHash) -> &mut Self {
         self.head = Some(head);
 
         self
@@ -69,7 +71,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         }
         if let Some(head) = self.head {
             // Add `head` query parameter
-            query.push(("head", head.to_string()));
+            query.push(("head", head.value().into()));
         }
         if let Some(min_date) = self.min_date {
             // Add `min_date` query parameter
@@ -124,7 +126,11 @@ mod tests {
         let response = client
             .get_blocks()
             .length(&1)
-            .head(&"BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8".to_string())
+            .head(
+                &"BMaCWKEayxSBRFMLongZCjAnLREtFC5Shnqb6v8qdcLsDZvZPq8"
+                    .try_into()
+                    .unwrap(),
+            )
             .min_date(&1)
             .send()
             .await?;

@@ -55,7 +55,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             .post(
                 self::path().as_str(),
                 &self.payload.to_string(),
-                &Some(query),
+                Some(&query),
             )
             .await
     }

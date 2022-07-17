@@ -59,9 +59,13 @@ pub fn get<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use crate::{client::TezosRpcChainId, protocol_rpc::block::BlockID};
+    use crate::{
+        client::{TezosRpc, TezosRpcChainId},
+        error::Error,
+        protocol_rpc::block::BlockID,
+    };
 
-    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
+    use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_get_genesis_constants() -> Result<(), Error> {

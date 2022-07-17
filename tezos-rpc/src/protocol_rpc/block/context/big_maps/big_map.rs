@@ -7,7 +7,7 @@ use {
     tezos_michelson::micheline::Micheline,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: u32) -> String {
     format!("{}/{}", super::path(chain_id, block_id), big_map_id)
 }
 
@@ -17,13 +17,13 @@ pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
-    big_map_id: &'a u32,
+    big_map_id: u32,
     offset: Option<&'a u32>,
     length: Option<&'a u32>,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, big_map_id: &'a u32) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, big_map_id: u32) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -93,7 +93,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
 pub fn get<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    big_map_id: &'a u32,
+    big_map_id: u32,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, big_map_id)
 }
@@ -120,7 +120,7 @@ mod tests {
             when.method(GET).path(super::path(
                 TezosRpcChainId::Main.value(),
                 &block_id,
-                &big_map_id,
+                big_map_id,
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -129,7 +129,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let big_map = client
-            .get_big_map(&big_map_id)
+            .get_big_map(big_map_id)
             .block_id(&block_id)
             .length(&100)
             .offset(&100)
