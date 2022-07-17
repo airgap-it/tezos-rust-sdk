@@ -1,5 +1,8 @@
 use crate::{
-    client::TezosRpcContext, error::Error, http::Http, models::constants::Constants,
+    client::{TezosRpcChainId, TezosRpcContext},
+    error::Error,
+    http::Http,
+    models::constants::Constants,
     protocol_rpc::block::BlockID,
 };
 
@@ -11,7 +14,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
 }
 
@@ -25,7 +28,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -39,7 +42,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<Constants, Error> {
-        let path = self::path(self.chain_id, self.block_id);
+        let path = self::path(self.chain_id.value(), self.block_id);
 
         self.ctx.http_client().get(path.as_str()).await
     }
@@ -56,9 +59,13 @@ pub fn get<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use crate::{constants::DEFAULT_CHAIN_ALIAS, protocol_rpc::block::BlockID};
+    use crate::{
+        client::{TezosRpc, TezosRpcChainId},
+        error::Error,
+        protocol_rpc::block::BlockID,
+    };
 
-    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
+    use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_get_genesis_constants() -> Result<(), Error> {
@@ -69,7 +76,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!(
@@ -95,7 +102,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!(
@@ -122,7 +129,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id));
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id));
             then.status(200)
                 .header("content-type", "application/json")
                 .body(include_str!(

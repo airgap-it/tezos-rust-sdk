@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ScriptExprHash;
+
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::error::RpcError,
@@ -17,7 +19,7 @@ pub struct RegisterGlobalConstantOperationResult {
     pub consumed_milligas: Option<String>,
     /// Script expression (Base58Check-encoded)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub global_address: Option<String>,
+    pub global_address: Option<ScriptExprHash>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
 }

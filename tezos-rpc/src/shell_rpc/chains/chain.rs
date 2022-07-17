@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 pub mod blocks;
 pub mod chain_id;
@@ -16,7 +16,7 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     payload: &'a PatchChainPayload,
 }
 
@@ -30,18 +30,18 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
     }
 
     pub async fn send(&self) -> Result<(), Error> {
-        let path = self::path(self.chain_id);
+        let path = self::path(self.chain_id.value());
 
         self.ctx
             .http_client()
-            .patch::<_, serde_json::Value>(path.as_str(), &Some(self.payload))
+            .patch::<_, serde_json::Value>(path.as_str(), Some(self.payload))
             .await?;
 
         Ok(())
@@ -67,7 +67,7 @@ pub fn patch<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use crate::constants::DEFAULT_CHAIN_ALIAS;
+    use crate::client::TezosRpcChainId;
 
     use {crate::client::TezosRpc, crate::error::Error, httpmock::MockServer};
 
@@ -78,7 +78,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(httpmock::Method::PATCH)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()));
+                .path(super::path(TezosRpcChainId::Main.value()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(serde_json::json!({}));
@@ -90,6 +90,6 @@ mod tests {
             bootstrapped: false,
         };
 
-        super::patch(&client.context, &req).send().await
+        super::patch(&client.context(), &req).send().await
     }
 }

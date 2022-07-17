@@ -1,11 +1,13 @@
+use lazy_static::lazy_static;
+use num_bigint::{BigUint, ToBigUint};
+use num_traits::{Num, Unsigned};
+use regex::Regex;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
     str::FromStr,
 };
-
-use num_bigint::{BigUint, ToBigUint};
-use num_traits::{Num, Unsigned};
-use regex::Regex;
 
 use crate::{
     internal::{
@@ -16,7 +18,16 @@ use crate::{
     Error, Result,
 };
 
+lazy_static! {
+    static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(try_from = "String")
+)]
 pub struct Nat(String);
 
 impl Nat {
@@ -42,8 +53,7 @@ impl Nat {
     }
 
     pub fn is_valid(value: &str) -> bool {
-        let re = Regex::new(r"^[0-9]+$").unwrap();
-        re.is_match(value)
+        REGEX.is_match(value)
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {

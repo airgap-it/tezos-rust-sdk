@@ -67,7 +67,9 @@ impl MetaEncoded {
             .iter()
             .find(|item| item.is_valid_base58(value))
             .map(|item| *item)
-            .ok_or(Error::InvalidBase58EncodedData)
+            .ok_or(Error::InvalidBase58EncodedData {
+                description: value.into(),
+            })
     }
 
     pub fn recognize_bytes(value: &[u8]) -> Result<&'static MetaEncoded> {
@@ -75,7 +77,7 @@ impl MetaEncoded {
             .iter()
             .find(|item| item.is_valid_prefixed_bytes(value))
             .map(|item| *item)
-            .ok_or(Error::InvalidBase58EncodedData)
+            .ok_or(Error::InvalidBytes)
     }
 
     pub fn recognize_consumable_bytes(value: &[u8]) -> Result<&'static MetaEncoded> {
@@ -83,7 +85,7 @@ impl MetaEncoded {
             .iter()
             .find(|item| item.is_valid_prefixed_consumable_bytes(value))
             .map(|item| *item)
-            .ok_or(Error::InvalidBase58EncodedData)
+            .ok_or(Error::InvalidBytes)
     }
 }
 

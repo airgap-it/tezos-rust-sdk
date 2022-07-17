@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ImplicitAddress;
+
 use {
     crate::serde_utils,
     num_bigint::BigInt,
@@ -22,7 +24,7 @@ pub struct ContractInfo {
     )]
     pub counter: Option<BigInt>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub delegate: Option<String>,
+    pub delegate: Option<ImplicitAddress>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub script: Option<ContractScript>,
 }

@@ -1,11 +1,13 @@
-use crate::http::Http;
+use tezos_core::types::encoded::{Encoded, ScriptExprHash};
+
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::UnparsingMode,
     crate::protocol_rpc::block::BlockID, serde::Serialize, tezos_michelson::micheline::Micheline,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: &u32, key: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: u32, key: S) -> String {
     format!(
         "{}/{}",
         super::path(chain_id, block_id, big_map_id),
@@ -22,31 +24,31 @@ struct NormalizedPayload {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
-    big_map_id: &'a u32,
-    script_expr: &'a str,
+    big_map_id: u32,
+    script_expr: &'a ScriptExprHash,
     unparsing_mode: Option<UnparsingMode>,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     pub fn new(
         ctx: &'a TezosRpcContext<HttpClient>,
-        big_map_id: &'a u32,
-        script_expr: &'a str,
+        big_map_id: u32,
+        script_expr: &'a ScriptExprHash,
     ) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
             big_map_id,
-            script_expr: script_expr,
+            script_expr,
             unparsing_mode: None,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -74,10 +76,10 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     pub async fn send(&self) -> Result<Micheline, Error> {
         let mut path = self::path(
-            self.chain_id,
+            self.chain_id.value(),
             self.block_id,
             self.big_map_id,
-            self.script_expr,
+            self.script_expr.value(),
         );
 
         if self.unparsing_mode.is_none() {
@@ -91,7 +93,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
             self.ctx
                 .http_client()
-                .post::<_, _, ()>(path.as_str(), &param, &None)
+                .post::<_, _, ()>(path.as_str(), &param, None)
                 .await
         }
     }
@@ -109,21 +111,20 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`POST /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>/normalized`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr-normalized)
 pub fn get_or_post<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    big_map_id: &'a u32,
-    script_expr: &'a str,
+    big_map_id: u32,
+    script_expr: &'a ScriptExprHash,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, big_map_id, script_expr)
 }
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use crate::models::contract::UnparsingMode;
+    use tezos_core::types::encoded::{Encoded, ScriptExprHash};
+
+    use crate::{client::TezosRpcChainId, models::contract::UnparsingMode};
 
     use {
-        crate::{
-            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
-            protocol_rpc::block::BlockID,
-        },
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
         httpmock::prelude::*,
     };
 
@@ -134,15 +135,17 @@ mod tests {
 
         let value = include_str!("__TEST_DATA__/michelson_value.json");
         let big_map_id: u32 = 162771;
-        let big_map_key = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E".to_string();
+        let big_map_key: ScriptExprHash = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E"
+            .try_into()
+            .unwrap();
         let block_id = BlockID::Level(100);
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &block_id,
-                &big_map_id,
-                &big_map_key,
+                big_map_id,
+                big_map_key.value(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -151,7 +154,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let big_map = client
-            .get_big_map_value(&big_map_id, &big_map_key)
+            .get_big_map_value(big_map_id, &big_map_key)
             .block_id(&block_id)
             .send()
             .await?;
@@ -168,7 +171,9 @@ mod tests {
 
         let value = include_str!("__TEST_DATA__/michelson_value.json");
         let big_map_id: u32 = 162771;
-        let big_map_key = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E".to_string();
+        let big_map_key: ScriptExprHash = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E"
+            .try_into()
+            .unwrap();
         let block_id = BlockID::Level(100);
 
         let body = serde_json::to_string(&super::NormalizedPayload {
@@ -180,10 +185,10 @@ mod tests {
                 .path(format!(
                     "{}/normalized",
                     super::path(
-                        &DEFAULT_CHAIN_ALIAS.to_string(),
+                        TezosRpcChainId::Main.value(),
                         &block_id,
-                        &big_map_id,
-                        &big_map_key,
+                        big_map_id,
+                        big_map_key.value(),
                     )
                 ))
                 .body(body);
@@ -194,7 +199,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let big_map = client
-            .get_big_map_value(&big_map_id, &big_map_key)
+            .get_big_map_value(big_map_id, &big_map_key)
             .block_id(&block_id)
             .unparsing_mode(UnparsingMode::Optimized)
             .send()

@@ -1,4 +1,6 @@
-use crate::http::Http;
+use tezos_core::types::encoded::{Address, Encoded};
+
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
@@ -13,23 +15,23 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
-    contract: &'a str,
+    contract: &'a Address,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a Address) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
-            contract: contract,
+            contract,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -43,7 +45,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<BigInt, Error> {
-        let path = self::path(self.chain_id, self.block_id, self.contract);
+        let path = self::path(self.chain_id.value(), self.block_id, self.contract.value());
 
         let balance: String = self.ctx.http_client().get(path.as_str()).await?;
 
@@ -56,19 +58,20 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
 pub fn get<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    address: &'a str,
+    address: &'a Address,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, address)
 }
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use tezos_core::types::encoded::{Address, Encoded};
+
+    use crate::client::TezosRpcChainId;
+
     use {
-        crate::client::TezosRpc,
-        crate::error::Error,
-        crate::{constants::DEFAULT_CHAIN_ALIAS, protocol_rpc::block::BlockID},
-        httpmock::prelude::*,
-        num_bigint::BigInt,
+        crate::client::TezosRpc, crate::error::Error, crate::protocol_rpc::block::BlockID,
+        httpmock::prelude::*, num_bigint::BigInt,
     };
 
     #[tokio::test]
@@ -76,15 +79,15 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let contract_address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL";
+        let contract_address: Address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".try_into().unwrap();
         let expected_balance = BigInt::from(9999999999999999999 as u64);
         let block_id = BlockID::Head;
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
-                &DEFAULT_CHAIN_ALIAS.to_string(),
+                TezosRpcChainId::Main.value(),
                 &block_id,
-                &contract_address.to_string(),
+                contract_address.value(),
             ));
             then.status(200)
                 .header("content-type", "application/json")
@@ -93,7 +96,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let balance = client
-            .get_contract_balance(&contract_address.to_string())
+            .get_contract_balance(&contract_address)
             .block_id(&block_id)
             .send()
             .await?;

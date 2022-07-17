@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{BlockHash, ChainId, OperationHash, ProtocolHash, Signature};
+
 pub mod kind;
 pub mod metadata;
 pub mod operation_contents_and_result;
@@ -26,16 +28,16 @@ use {
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct OperationGroup {
+pub struct Operation {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub protocol: Option<String>,
+    pub protocol: Option<ProtocolHash>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub chain_id: Option<String>,
+    pub chain_id: Option<ChainId>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hash: Option<String>,
-    pub branch: String,
+    pub hash: Option<OperationHash>,
+    pub branch: BlockHash,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub signature: Option<String>,
+    pub signature: Option<Signature>,
     pub contents: Vec<OperationContent>,
 }
 
@@ -66,5 +68,5 @@ pub enum OperationContent {
 pub struct OperationWithMetadata {
     pub contents: Vec<OperationContent>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub signature: Option<String>,
+    pub signature: Option<Signature>,
 }

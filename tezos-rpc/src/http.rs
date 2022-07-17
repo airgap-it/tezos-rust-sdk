@@ -22,19 +22,19 @@ pub trait Http {
         &self,
         url: &str,
         body: &B,
-        query: &Option<Q>,
+        query: Option<&Q>,
     ) -> Result<T, Error>;
 
     async fn patch<B: Serialize + Sync, T: DeserializeOwned>(
         &self,
         url: &str,
-        body: &Option<B>,
+        body: Option<&B>,
     ) -> Result<T, Error>;
 
     async fn delete<B: Serialize + Sync, T: DeserializeOwned>(
         &self,
         url: &str,
-        body: &Option<B>,
+        body: Option<&B>,
     ) -> Result<T, Error>;
 }
 
@@ -106,12 +106,12 @@ pub mod default {
             &self,
             url: &str,
             body: &B,
-            query: &Option<Q>,
+            query: Option<&Q>,
         ) -> Result<T, Error> {
             self.handle_response(
                 self.client
                     .post(self.url(url))
-                    .query(query)
+                    .query(&query)
                     .json(body)
                     .send()
                     .await?,
@@ -123,7 +123,7 @@ pub mod default {
         async fn patch<B: Serialize + Sync, T: DeserializeOwned>(
             &self,
             url: &str,
-            body: &Option<B>,
+            body: Option<&B>,
         ) -> Result<T, Error> {
             let mut req = self.client.patch(self.url(url));
 
@@ -138,7 +138,7 @@ pub mod default {
         async fn delete<B: Serialize + Sync, T: DeserializeOwned>(
             &self,
             url: &str,
-            body: &Option<B>,
+            body: Option<&B>,
         ) -> Result<T, Error> {
             let mut req = self.client.delete(self.url(url));
 

@@ -1,4 +1,4 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {crate::client::TezosRpcContext, crate::error::Error, crate::models::checkpoint::Checkpoint};
 
@@ -10,7 +10,7 @@ fn path<S: AsRef<str>>(chain_id: S) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
@@ -22,14 +22,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
     }
 
     pub async fn send(&self) -> Result<Checkpoint, Error> {
-        let path = self::path(self.chain_id);
+        let path = self::path(self.chain_id.value());
 
         self.ctx.http_client().get(path.as_str()).await
     }
@@ -44,10 +44,9 @@ pub fn get<HttpClient: Http>(ctx: &TezosRpcContext<HttpClient>) -> RpcRequestBui
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use {
-        crate::client::TezosRpc, crate::constants::DEFAULT_CHAIN_ALIAS, crate::error::Error,
-        httpmock::prelude::*,
-    };
+    use crate::client::TezosRpcChainId;
+
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_get_caboose() -> Result<(), Error> {
@@ -61,7 +60,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string()));
+                .path(super::path(TezosRpcChainId::Main.value()));
             then.status(200)
                 .header("content-type", "application/json")
                 .json_body(valid_response);
@@ -73,6 +72,8 @@ mod tests {
         assert_eq!(
             response.block_hash,
             "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2"
+                .try_into()
+                .unwrap()
         );
         assert_eq!(response.level, 2424833);
 

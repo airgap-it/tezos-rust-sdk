@@ -1,10 +1,10 @@
-use crate::http::Http;
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::{
         client::TezosRpcContext,
         error::Error,
-        models::operation::{OperationGroup, OperationWithMetadata},
+        models::operation::{Operation, OperationWithMetadata},
         protocol_rpc::block::BlockID,
     },
     serde::Serialize,
@@ -16,7 +16,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 
 #[derive(Serialize)]
 struct RunOperationParam<'a> {
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
     chain_id: &'a str,
 }
 
@@ -24,13 +24,13 @@ struct RunOperationParam<'a> {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operation: &'a OperationGroup) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, operation: &'a Operation) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
@@ -40,7 +40,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -54,16 +54,16 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     pub async fn send(&self) -> Result<OperationWithMetadata, Error> {
-        let path = self::path(self.chain_id, self.block_id);
+        let path = self::path(self.chain_id.value(), self.block_id);
 
         let param = RunOperationParam {
             operation: self.operation,
-            chain_id: self.chain_id,
+            chain_id: self.chain_id.chain_id_value(),
         };
 
         self.ctx
             .http_client()
-            .post::<_, _, ()>(path.as_str(), &param, &None)
+            .post::<_, _, ()>(path.as_str(), &param, None)
             .await
     }
 }
@@ -73,7 +73,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
 pub fn post<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    operation: &'a OperationGroup,
+    operation: &'a Operation,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, operation)
 }
@@ -84,11 +84,10 @@ mod tests {
         super::*,
         crate::{
             client::TezosRpc,
-            constants::DEFAULT_CHAIN_ALIAS,
             error::Error,
             models::operation::{
                 kind::OperationKind, operation_contents_and_result::endorsement::Endorsement,
-                OperationContent, OperationGroup, OperationWithMetadata,
+                Operation, OperationContent, OperationWithMetadata,
             },
             protocol_rpc::block::BlockID,
         },
@@ -101,9 +100,9 @@ mod tests {
         let rpc_url = server.base_url();
 
         let block_id = BlockID::Level(1);
-        let operation_group = OperationGroup {
-            protocol: Some("PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY".to_string()),
-            branch: "BKoVxMrDZHW8yvh6u5pWwCS9qYi8ApUtjt5KMMBN5ofikNW1cJW".to_string(),
+        let operation_group = Operation {
+            protocol: Some("PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY".try_into().unwrap()),
+            branch: "BKoVxMrDZHW8yvh6u5pWwCS9qYi8ApUtjt5KMMBN5ofikNW1cJW".try_into().unwrap(),
             contents: vec![
                 OperationContent::Endorsement(
                     Endorsement {
@@ -111,18 +110,18 @@ mod tests {
                         slot: Some(0),
                         level: Some(2510083),
                         round: Some(0),
-                        block_payload_hash: Some("vh32fG1tMNPtzZiKPHinfLPSAU3m2piFSgud4jBdaGSKJQH6q7Xd".to_string()),
+                        block_payload_hash: Some("vh32fG1tMNPtzZiKPHinfLPSAU3m2piFSgud4jBdaGSKJQH6q7Xd".try_into().unwrap()),
                         metadata: None
                     }
                 )
             ],
-            signature: Some("sigqmbZ1v6kN6FC6L9aAZZkcrkF5NjmepPMqzn3FLW5PB31ERYPAy4ku4s865hY4eK4NGj6hjpR56W5GZquZKGQ9ibnFmtiR".to_string()),
+            signature: Some("sigqmbZ1v6kN6FC6L9aAZZkcrkF5NjmepPMqzn3FLW5PB31ERYPAy4ku4s865hY4eK4NGj6hjpR56W5GZquZKGQ9ibnFmtiR".try_into().unwrap()),
             chain_id: None,
             hash: None,
         };
         let body = serde_json::to_string(&RunOperationParam {
             operation: &operation_group,
-            chain_id: &DEFAULT_CHAIN_ALIAS.to_string(),
+            chain_id: TezosRpcChainId::Main.chain_id_value(),
         })?;
         let response = serde_json::to_string(&OperationWithMetadata {
             contents: operation_group.contents.clone(),
@@ -131,7 +130,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(POST)
-                .path(super::path(&DEFAULT_CHAIN_ALIAS.to_string(), &block_id))
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id))
                 .body(body);
             then.status(200)
                 .header("content-type", "application/json")

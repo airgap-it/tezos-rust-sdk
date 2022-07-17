@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{ImplicitAddress, ProtocolHash};
+
 use {
     crate::models::operation::kind::OperationKind,
     serde::{Deserialize, Serialize},
@@ -8,11 +10,11 @@ pub struct Ballot {
     /// [OperationKind::Ballot]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
+    pub source: ImplicitAddress,
     /// integer ∈ [-2^31-1, 2^31]
     pub period: i32,
     /// A protocol identifier (Base58Check-encoded)
-    pub proposal: String,
+    pub proposal: ProtocolHash,
     /// Ballot statement
     pub ballot: BallotStatement,
 }

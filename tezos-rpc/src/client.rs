@@ -1,29 +1,31 @@
+use tezos_core::types::encoded::{Address, BlockHash, ChainId, Encoded, ScriptExprHash};
+
 #[cfg(feature = "http")]
 use crate::http::default::HttpClient;
 use crate::http::Http;
 
 use {
-    crate::constants, crate::models::operation::OperationGroup, crate::protocol_rpc,
-    crate::shell_rpc, crate::shell_rpc::injection::block::InjectionBlockPayload,
+    crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
+    crate::shell_rpc::injection::block::InjectionBlockPayload,
 };
 
 #[derive(Debug)]
 pub struct TezosRpcContext<HttpClient: Http> {
-    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
-    chain_id: String,
+    chain_id: TezosRpcChainId,
     http_client: HttpClient,
 }
 
 impl<HttpClient: Http> TezosRpcContext<HttpClient> {
-    pub fn chain_id(&self) -> &str {
+    /// A chain identifier. This is either a chain hash in Base58Check notation or a one the predefined aliases: 'main', 'test'.
+    pub fn chain_id(&self) -> &TezosRpcChainId {
         &self.chain_id
     }
 
-    pub fn http_client(&self) -> &HttpClient {
+    pub(crate) fn http_client(&self) -> &HttpClient {
         &self.http_client
     }
 
-    pub fn new(chain_id: String, http_client: HttpClient) -> Self {
+    pub fn new(chain_id: TezosRpcChainId, http_client: HttpClient) -> Self {
         Self {
             chain_id,
             http_client,
@@ -32,14 +34,50 @@ impl<HttpClient: Http> TezosRpcContext<HttpClient> {
 
     /// Changes the rpc endpoint used in RPC requests.
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
-        self.http_client
-            .change_rpc_endpoint(rpc_endpoint.to_string());
+        self.http_client.change_rpc_endpoint(rpc_endpoint.into());
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TezosRpcChainId {
+    Main,
+    Id(ChainId),
+}
+
+impl TezosRpcChainId {
+    const MAIN_ALIAS_VALUE: &'static str = "main";
+    const MAIN_CHAIN_ID_VALUE: &'static str = "NetXdQprcVkpaWU";
+
+    pub fn value(&self) -> &str {
+        match self {
+            TezosRpcChainId::Main => Self::MAIN_ALIAS_VALUE,
+            TezosRpcChainId::Id(chain_id) => chain_id.value(),
+        }
+    }
+
+    pub fn chain_id_value(&self) -> &str {
+        match self {
+            TezosRpcChainId::Main => Self::MAIN_CHAIN_ID_VALUE,
+            TezosRpcChainId::Id(chain_id) => chain_id.value(),
+        }
+    }
+}
+
+impl From<ChainId> for TezosRpcChainId {
+    fn from(value: ChainId) -> Self {
+        Self::Id(value)
+    }
+}
+
+impl Default for TezosRpcChainId {
+    fn default() -> Self {
+        Self::Main
     }
 }
 
 #[derive(Debug)]
 pub struct TezosRpc<HttpClient: Http> {
-    pub context: TezosRpcContext<HttpClient>,
+    context: TezosRpcContext<HttpClient>,
 }
 
 #[cfg(feature = "http")]
@@ -63,14 +101,18 @@ impl TezosRpc<HttpClient> {
     /// ```rust
     /// use tezos_rpc::client::TezosRpc;
     ///
-    /// let client = TezosRpc::new_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), "NetXLH1uAxK7CCh".into());
+    /// let client = TezosRpc::new_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), Default::default());
     /// ```
-    pub fn new_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+    pub fn new_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self::new_rpc_with_chain_id(rpc_endpoint, chain_id)
     }
 }
 
 impl<HttpClient: Http> TezosRpc<HttpClient> {
+    pub fn context(&self) -> &TezosRpcContext<HttpClient> {
+        &self.context
+    }
+
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
     ///
     /// ```rust
@@ -81,7 +123,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// let client = TezosRpc::<HttpClient>::new_rpc("https://tezos-node.prod.gke.papers.tech".into());
     /// ```
     pub fn new_rpc(rpc_endpoint: String) -> Self {
-        Self::new_rpc_with_chain_id(rpc_endpoint, constants::DEFAULT_CHAIN_ALIAS.into())
+        Self::new_rpc_with_chain_id(rpc_endpoint, Default::default())
     }
 
     /// Creates a Tezos RPC client that will connect to the specified node RPC.
@@ -94,9 +136,9 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// use tezos_rpc::{client::TezosRpc, http::default::HttpClient};
     ///
     /// #[cfg(feature = "http")]
-    /// let client = TezosRpc::<HttpClient>::new_rpc_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), "NetXLH1uAxK7CCh".into());
+    /// let client = TezosRpc::<HttpClient>::new_rpc_with_chain_id("https://tezos-node.prod.gke.papers.tech".into(), Default::default());
     /// ```
-    pub fn new_rpc_with_chain_id(rpc_endpoint: String, chain_id: String) -> Self {
+    pub fn new_rpc_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self {
             context: TezosRpcContext::new(chain_id, HttpClient::new(rpc_endpoint)),
         }
@@ -139,7 +181,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#get-chains-chain-id-invalid-blocks-block-hash)
     pub fn get_invalid_block<'a>(
         &'a self,
-        block_hash: &'a str,
+        block_hash: &'a BlockHash,
     ) -> shell_rpc::chains::chain::invalid_blocks::block::GetRPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::invalid_blocks::block::get(&self.context, block_hash)
     }
@@ -149,7 +191,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`DELETE /chains/<chain_id>/invalid_blocks/<block_hash>`](https://tezos.gitlab.io/shell/rpc.html#delete-chains-chain-id-invalid-blocks-block-hash)
     pub fn remove_invalid_block<'a>(
         &'a self,
-        block_hash: &'a str,
+        block_hash: &'a BlockHash,
     ) -> shell_rpc::chains::chain::invalid_blocks::block::DeleteRPCRequestBuilder<HttpClient> {
         shell_rpc::chains::chain::invalid_blocks::block::delete(&self.context, block_hash)
     }
@@ -261,7 +303,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
     pub fn get_contract<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::RpcRequestBuilder<'a, HttpClient> {
         protocol_rpc::block::context::contract::get(&self.context, address)
     }
@@ -271,7 +313,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/balance`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-balance)
     pub fn get_contract_balance<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::balance::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::balance::get(&self.context, address)
     }
@@ -281,7 +323,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/counter`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-counter)
     pub fn get_contract_counter<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::counter::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::counter::get(&self.context, address)
     }
@@ -291,7 +333,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/manager_key`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-manager-key)
     pub fn get_contract_manager_key<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::manager_key::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::manager_key::get(&self.context, address)
     }
@@ -301,7 +343,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/delegate`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-delegate)
     pub fn get_contract_delegate<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::delegate::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::delegate::get(&self.context, address)
     }
@@ -315,7 +357,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
     pub fn get_contract_entrypoints<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::entrypoints::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::entrypoints::get(&self.context, address)
     }
@@ -329,7 +371,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block>/context/contracts/<contract_id>/entrypoints/<entrypoint>?[normalize_types]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-contracts-contract-id-entrypoints)
     pub fn get_contract_entrypoint<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
         entrypoint: &'a str,
     ) -> protocol_rpc::block::context::contract::entrypoints::entrypoint::RpcRequestBuilder<
         HttpClient,
@@ -350,7 +392,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/context/contracts/<contract_id>/script/normalized`](https://tezos.gitlab.io/active/rpc.html#post-block-id-context-contracts-contract-id-script-normalized)
     pub fn get_contract_script<'a>(
         &'a self,
-        address: &'a str,
+        address: &'a Address,
     ) -> protocol_rpc::block::context::contract::script::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::contract::script::get_or_post(&self.context, address)
     }
@@ -365,7 +407,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
     pub fn get_big_map<'a>(
         &'a self,
-        id: &'a u32,
+        id: u32,
     ) -> protocol_rpc::block::context::big_maps::big_map::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::context::big_maps::big_map::get(&self.context, id)
     }
@@ -382,8 +424,8 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>/<script_expr>/normalized`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id-script-expr-normalized)
     pub fn get_big_map_value<'a>(
         &'a self,
-        big_map_id: &'a u32,
-        script_expr: &'a str,
+        big_map_id: u32,
+        script_expr: &'a ScriptExprHash,
     ) -> protocol_rpc::block::context::big_maps::big_map::script_expr::RpcRequestBuilder<
         'a,
         HttpClient,
@@ -400,7 +442,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/preapply/operations`](https://tezos.gitlab.io/active/rpc.html#post-block-id-helpers-preapply-operations)
     pub fn preapply_operations<'a>(
         &'a self,
-        operations: &'a Vec<&OperationGroup>,
+        operations: &'a Vec<&Operation>,
     ) -> protocol_rpc::block::helpers::preapply::operations::RpcRequestBuilder<'a, HttpClient> {
         protocol_rpc::block::helpers::preapply::operations::post(&self.context, operations)
     }
@@ -410,7 +452,7 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`POST /chains/<chain_id>/blocks/<block_id>/helpers/scripts/run_operation`](https://tezos.gitlab.io/api/rpc.html#post-block-id-helpers-scripts-run-operation)
     pub fn run_operation<'a>(
         &'a self,
-        operation: &'a OperationGroup,
+        operation: &'a Operation,
     ) -> protocol_rpc::block::helpers::scripts::run_operation::RpcRequestBuilder<'a, HttpClient>
     {
         protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)

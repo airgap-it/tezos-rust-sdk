@@ -1,4 +1,6 @@
-use crate::http::Http;
+use tezos_core::types::encoded::{Address, Encoded};
+
+use crate::{client::TezosRpcChainId, http::Http};
 
 pub mod balance;
 pub mod counter;
@@ -24,25 +26,25 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
-    contract: &'a str,
+    contract: &'a Address,
     normalize_types: Option<bool>,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
-    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a str) -> Self {
+    pub fn new(ctx: &'a TezosRpcContext<HttpClient>, contract: &'a Address) -> Self {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockID::Head,
-            contract: contract,
+            contract,
             normalize_types: None,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -70,7 +72,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             query.push(("normalize_types", normalize_types.to_string()));
         }
 
-        let path = self::path(self.chain_id, self.block_id, self.contract);
+        let path = self::path(self.chain_id.value(), self.block_id, self.contract.value());
 
         self.ctx
             .http_client()
@@ -89,19 +91,19 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// [`GET ../<block_id>/context/contracts/<contract_id>?[normalize_types]`](https://tezos.gitlab.io/jakarta/rpc.html#get-block-id-context-contracts-contract-id)
 pub fn get<'a, HttpClient: Http>(
     ctx: &'a TezosRpcContext<HttpClient>,
-    address: &'a str,
+    address: &'a Address,
 ) -> RpcRequestBuilder<'a, HttpClient> {
     RpcRequestBuilder::new(ctx, address)
 }
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
+    use tezos_core::types::encoded::{Address, Encoded};
+
+    use crate::client::TezosRpcChainId;
 
     use {
-        crate::{
-            client::TezosRpc, constants::DEFAULT_CHAIN_ALIAS, error::Error,
-            protocol_rpc::block::BlockID,
-        },
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
         httpmock::prelude::*,
         num_bigint::BigInt,
     };
@@ -112,15 +114,15 @@ mod tests {
         let rpc_url = server.base_url();
 
         let block_id = BlockID::Level(1);
-        let contract_address = "KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA";
+        let contract_address: Address = "KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA".try_into().unwrap();
         let normalize_types = true;
 
         server.mock(|when, then| {
             when.method(GET)
                 .path(super::path(
-                    &DEFAULT_CHAIN_ALIAS.to_string(),
+                    TezosRpcChainId::Main.value(),
                     &block_id,
-                    &contract_address.to_string(),
+                    contract_address.value(),
                 ))
                 .query_param("normalize_types", normalize_types.to_string());
             then.status(200)
@@ -130,7 +132,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let contract = client
-            .get_contract(&contract_address.to_string())
+            .get_contract(&contract_address)
             .normalize_types(normalize_types)
             .block_id(&block_id)
             .send()

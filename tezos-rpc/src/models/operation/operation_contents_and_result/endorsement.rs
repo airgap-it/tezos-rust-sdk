@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{BlockPayloadHash, ImplicitAddress};
+
 use {
     crate::models::balance_update::BalanceUpdate,
     crate::models::operation::kind::OperationKind,
@@ -20,13 +22,13 @@ pub struct Endorsement {
     pub round: Option<i32>,
     /// Hash of a consensus value (Base58Check-encoded)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub block_payload_hash: Option<String>,
+    pub block_payload_hash: Option<BlockPayloadHash>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct EndorsementMetadata {
     /// Public key hash (Base58Check-encoded)
-    pub delegate: String,
+    pub delegate: ImplicitAddress,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub balance_updates: Option<Vec<BalanceUpdate>>,
     /// integer ∈ [-2^30, 2^30]
