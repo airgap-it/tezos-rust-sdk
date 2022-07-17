@@ -18,8 +18,8 @@ pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     chain_id: &'a TezosRpcChainId,
     block_id: &'a BlockID,
     big_map_id: u32,
-    offset: Option<&'a u32>,
-    length: Option<&'a u32>,
+    offset: Option<u32>,
+    length: Option<u32>,
 }
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
@@ -49,14 +49,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Configure request to skip the first `offset` values. Useful in combination with `length` for pagination.
-    pub fn offset(&mut self, offset: &'a u32) -> &mut Self {
+    pub fn offset(&mut self, offset: u32) -> &mut Self {
         self.offset = Some(offset);
 
         self
     }
 
     /// Configure request to only retrieve `length` values. Useful in combination with `offset` for pagination.
-    pub fn length(&mut self, length: &'a u32) -> &mut Self {
+    pub fn length(&mut self, length: u32) -> &mut Self {
         self.length = Some(length);
 
         self
@@ -131,8 +131,8 @@ mod tests {
         let big_map = client
             .get_big_map(big_map_id)
             .block_id(&block_id)
-            .length(&100)
-            .offset(&100)
+            .length(100)
+            .offset(100)
             .send()
             .await?;
 

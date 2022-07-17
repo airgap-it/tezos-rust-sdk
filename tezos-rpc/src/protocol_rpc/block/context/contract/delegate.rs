@@ -98,7 +98,7 @@ mod tests {
             .block_id(&block_id)
             .send()
             .await?;
-        assert_eq!(delegate, Some(expected_delegate.to_string()));
+        assert_eq!(delegate, Some(expected_delegate.into()));
 
         Ok(())
     }

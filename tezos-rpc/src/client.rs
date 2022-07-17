@@ -34,8 +34,7 @@ impl<HttpClient: Http> TezosRpcContext<HttpClient> {
 
     /// Changes the rpc endpoint used in RPC requests.
     pub fn change_rpc_endpoint(&mut self, rpc_endpoint: &str) {
-        self.http_client
-            .change_rpc_endpoint(rpc_endpoint.to_string());
+        self.http_client.change_rpc_endpoint(rpc_endpoint.into());
     }
 }
 

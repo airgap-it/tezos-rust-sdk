@@ -52,11 +52,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
         self.ctx
             .http_client()
-            .post(
-                self::path().as_str(),
-                &self.payload.to_string(),
-                Some(&query),
-            )
+            .post(self::path().as_str(), &self.payload, Some(&query))
             .await
     }
 }
@@ -108,7 +104,7 @@ mod tests {
 
         let client = TezosRpc::new(rpc_url);
         let op_hash = client
-            .inject_operation(&signed_operation_contents.to_string())
+            .inject_operation(signed_operation_contents)
             .do_async(false)
             .send()
             .await?;

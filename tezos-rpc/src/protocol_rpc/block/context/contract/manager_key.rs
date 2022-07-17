@@ -96,7 +96,7 @@ mod tests {
             .send()
             .await?;
 
-        assert_eq!(manager_key, Some(expected_manager.to_string()));
+        assert_eq!(manager_key, Some(expected_manager.into()));
 
         Ok(())
     }

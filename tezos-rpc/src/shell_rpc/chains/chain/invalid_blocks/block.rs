@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(response.errors[0].id, "proto.alpha.Failed_to_get_script");
         assert_eq!(
             response.errors[0].contract,
-            Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string())
+            Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".into())
         );
 
         Ok(())

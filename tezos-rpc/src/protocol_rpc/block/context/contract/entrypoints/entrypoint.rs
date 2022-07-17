@@ -126,7 +126,7 @@ mod tests {
                     TezosRpcChainId::Main.value(),
                     &block_id,
                     contract_address.value(),
-                    &entrypoint.to_string(),
+                    entrypoint,
                 ))
                 .query_param("normalize_types", "true");
             then.status(200)

@@ -89,7 +89,7 @@ impl From<&str> for Entrypoint {
             DO => Entrypoint::Do,
             SET_DELEGATE => Entrypoint::SetDelegate,
             REMOVE_DELEGATE => Entrypoint::RemoveDelegate,
-            _ => Entrypoint::Named(value.to_string()),
+            _ => Entrypoint::Named(value.into()),
         }
     }
 }
@@ -123,11 +123,11 @@ impl<'a> Into<&'a str> for &'a Entrypoint {
 impl Into<String> for Entrypoint {
     fn into(self) -> String {
         match self {
-            Entrypoint::Default => DEFAULT.to_string(),
-            Entrypoint::Root => ROOT.to_string(),
-            Entrypoint::Do => DO.to_string(),
-            Entrypoint::SetDelegate => SET_DELEGATE.to_string(),
-            Entrypoint::RemoveDelegate => REMOVE_DELEGATE.to_string(),
+            Entrypoint::Default => DEFAULT.into(),
+            Entrypoint::Root => ROOT.into(),
+            Entrypoint::Do => DO.into(),
+            Entrypoint::SetDelegate => SET_DELEGATE.into(),
+            Entrypoint::RemoveDelegate => REMOVE_DELEGATE.into(),
             Entrypoint::Named(value) => value,
         }
     }

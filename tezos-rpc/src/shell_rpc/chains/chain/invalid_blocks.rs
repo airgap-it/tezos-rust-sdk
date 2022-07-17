@@ -102,7 +102,7 @@ mod tests {
         );
         assert_eq!(
             invalid_block.errors[0].contract,
-            Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".to_string())
+            Some("KT1XRPEPXbZK25r3Htzp2o1x7xdMMmfocKNW".into())
         );
 
         Ok(())

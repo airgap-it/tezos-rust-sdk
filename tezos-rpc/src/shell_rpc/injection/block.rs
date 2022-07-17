@@ -123,13 +123,13 @@ mod tests {
 
         let block_hash = "BLEpXjUTYFaow75TR53W4nJFWLfPy2xrYhmoCckrxELznS5uDA2";
         let payload = InjectionBlockPayload {
-            data: "blahblahblah".to_string(),
+            data: "blahblahblah".into(),
             operations: vec![
                 vec![OperationPayload {
                     branch: "BLLRYycW8GicK1MDEyT9rQNfgSx9utBjM5Pz3QNUNs6W8PTJY9c"
                         .try_into()
                         .unwrap(),
-                    data: "blahblahblah".to_string(),
+                    data: "blahblahblah".into(),
                 }],
                 vec![],
                 vec![],
