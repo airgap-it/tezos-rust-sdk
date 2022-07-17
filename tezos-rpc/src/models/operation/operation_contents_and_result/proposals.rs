@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{ImplicitAddress, ProtocolHash};
+
 use {
     crate::models::operation::kind::OperationKind,
     serde::{Deserialize, Serialize},
@@ -8,9 +10,9 @@ pub struct Proposals {
     /// [OperationKind::Proposals]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
+    pub source: ImplicitAddress,
     /// integer ∈ [-2^31-1, 2^31]
     pub period: i32,
     /// A vector of protocol identifiers (Base58Check-encoded)
-    pub proposals: Vec<String>,
+    pub proposals: Vec<ProtocolHash>,
 }

@@ -1,4 +1,5 @@
 use hex;
+use lazy_static::lazy_static;
 use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -7,6 +8,10 @@ use crate::{
     michelson::data::Data as MichelsonData,
     {Error, Result},
 };
+
+lazy_static! {
+    static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -27,8 +32,7 @@ impl Bytes {
     }
 
     pub fn is_valid(value: &str) -> bool {
-        let re = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
-        re.is_match(value)
+        REGEX.is_match(value)
     }
 
     pub fn from_string(value: String) -> Result<Self> {

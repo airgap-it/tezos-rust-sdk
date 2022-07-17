@@ -122,8 +122,11 @@ macro_rules! make_encoded_struct {
                 Error, Result,
                 internal::{consumable_list::ConsumableList, coder::ConsumingDecoder},
             };
+            #[cfg(feature = "serde")]
+            use serde::{Deserialize, Serialize};
 
             #[derive(Debug, Clone, PartialEq, Eq)]
+            #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde( try_from = "String"))]
             pub struct $name(String);
 
             impl $name {
@@ -163,7 +166,7 @@ macro_rules! make_encoded_struct {
                     if META.is_valid_base58(&value) {
                         return Ok($name(value));
                     }
-                    return Err(Error::InvalidBase58EncodedData);
+                    return Err(Error::InvalidBase58EncodedData { description: value });
                 }
 
                 fn from_bytes(bytes: &[u8]) -> Result<Self> {

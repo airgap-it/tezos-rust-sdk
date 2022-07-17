@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::{BlockHash, Signature};
+
 use {
     super::endorsement::Endorsement,
     crate::models::operation::kind::OperationKind,
@@ -18,9 +20,9 @@ pub struct DoubleEndorsementEvidence {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InlinedEndorsement {
     /// A block identifier (Base58Check-encoded)
-    pub branch: String,
+    pub branch: BlockHash,
     pub operations: Endorsement,
     /// A Ed25519, Secp256k1 or P256 signature (Base58Check-encoded)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub signature: Option<String>,
+    pub signature: Option<Signature>,
 }

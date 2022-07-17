@@ -50,7 +50,7 @@ pub use self::{
         OperationContent as TraitOperationContent,
         OperationManagerContent as TraitOperationManagerContent,
     },
-    transaction::{CommonEntrypoint, Entrypoint, Parameters, Transaction},
+    transaction::{Entrypoint, Parameters, PrimitiveEntrypoint, Transaction},
 };
 
 pub trait Operation {

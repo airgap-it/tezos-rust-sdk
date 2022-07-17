@@ -106,7 +106,7 @@ impl Parameters {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Entrypoint {
-    Common(CommonEntrypoint),
+    Primitive(PrimitiveEntrypoint),
     Named(String),
 }
 
@@ -115,7 +115,7 @@ impl Entrypoint {
 
     pub fn tag(&self) -> u8 {
         match self {
-            Entrypoint::Common(value) => value.tag(),
+            Entrypoint::Primitive(value) => value.tag(),
             Entrypoint::Named(_) => Self::named_tag(),
         }
     }
@@ -127,23 +127,23 @@ impl Entrypoint {
 
 impl Entrypoint {
     fn default() -> Self {
-        Self::Common(CommonEntrypoint::Default)
+        Self::Primitive(PrimitiveEntrypoint::Default)
     }
 
     pub fn root() -> Self {
-        Self::Common(CommonEntrypoint::Root)
+        Self::Primitive(PrimitiveEntrypoint::Root)
     }
 
     pub fn r#do() -> Self {
-        Self::Common(CommonEntrypoint::Do)
+        Self::Primitive(PrimitiveEntrypoint::Do)
     }
 
     pub fn set_delegate() -> Self {
-        Self::Common(CommonEntrypoint::SetDelegate)
+        Self::Primitive(PrimitiveEntrypoint::SetDelegate)
     }
 
     pub fn remove_delegate() -> Self {
-        Self::Common(CommonEntrypoint::RemoveDelegate)
+        Self::Primitive(PrimitiveEntrypoint::RemoveDelegate)
     }
 
     pub fn named(name: String) -> Self {
@@ -159,7 +159,7 @@ impl Default for Entrypoint {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
 #[repr(u8)]
-pub enum CommonEntrypoint {
+pub enum PrimitiveEntrypoint {
     Default = 0,
     Root = 1,
     Do = 2,
@@ -167,7 +167,7 @@ pub enum CommonEntrypoint {
     RemoveDelegate = 4,
 }
 
-impl CommonEntrypoint {
+impl PrimitiveEntrypoint {
     const DEFAULT: &'static str = "default";
     const ROOT: &'static str = "root";
     const DO: &'static str = "do";

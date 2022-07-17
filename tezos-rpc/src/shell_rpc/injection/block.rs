@@ -1,4 +1,6 @@
-use crate::http::Http;
+use tezos_core::types::encoded::BlockHash;
+
+use crate::{client::TezosRpcChainId, http::Http};
 
 use {crate::client::TezosRpcContext, crate::error::Error, serde::Serialize};
 
@@ -9,7 +11,7 @@ fn path() -> String {
 #[derive(Serialize)]
 pub struct OperationPayload {
     /// A block identifier (Base58Check-encoded)
-    pub branch: String,
+    pub branch: BlockHash,
     /// Signed operation data
     pub data: String,
 }
@@ -27,7 +29,7 @@ pub struct InjectionBlockPayload {
 #[derive(Clone, Copy)]
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
-    chain_id: &'a str,
+    chain_id: &'a TezosRpcChainId,
     payload: &'a InjectionBlockPayload,
     force: Option<bool>,
     do_async: Option<bool>,
@@ -35,7 +37,7 @@ pub struct RpcRequestBuilder<'a, HttpClient: Http> {
 
 impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     pub fn new(ctx: &'a TezosRpcContext<HttpClient>, payload: &'a InjectionBlockPayload) -> Self {
-        RpcRequestBuilder {
+        Self {
             ctx,
             chain_id: ctx.chain_id(),
             payload,
@@ -46,7 +48,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     /// Modify chain identifier to be used in the request.
     /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
-    pub fn chain_id(&mut self, chain_id: &'a str) -> &mut Self {
+    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
         self.chain_id = chain_id;
 
         self
@@ -78,11 +80,11 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             query.push(("force", force.to_string()));
         }
         // Add `chain` query parameter
-        query.push(("chain", self.ctx.chain_id().into()));
+        query.push(("chain", self.ctx.chain_id().value().into()));
 
         self.ctx
             .http_client()
-            .post(self::path().as_str(), self.payload, &Some(query))
+            .post(self::path().as_str(), self.payload, Some(&query))
             .await
     }
 }
@@ -121,11 +123,13 @@ mod tests {
 
         let block_hash = "BLEpXjUTYFaow75TR53W4nJFWLfPy2xrYhmoCckrxELznS5uDA2";
         let payload = InjectionBlockPayload {
-            data: "blahblahblah".to_string(),
+            data: "blahblahblah".into(),
             operations: vec![
                 vec![OperationPayload {
-                    branch: "BLLRYycW8GicK1MDEyT9rQNfgSx9utBjM5Pz3QNUNs6W8PTJY9c".to_string(),
-                    data: "blahblahblah".to_string(),
+                    branch: "BLLRYycW8GicK1MDEyT9rQNfgSx9utBjM5Pz3QNUNs6W8PTJY9c"
+                        .try_into()
+                        .unwrap(),
+                    data: "blahblahblah".into(),
                 }],
                 vec![],
                 vec![],

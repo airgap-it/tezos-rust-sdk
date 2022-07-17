@@ -1,3 +1,5 @@
+use tezos_core::types::encoded::ScriptExprHash;
+
 use {
     super::Kind,
     crate::models::operation::operation_result::DiffAction,
@@ -17,7 +19,7 @@ pub struct Diff {
     pub action: DiffAction,
     pub updates: Vec<Update>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub key_hash: Option<String>,
+    pub key_hash: Option<ScriptExprHash>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<Micheline>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -32,7 +34,7 @@ pub struct Diff {
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Update {
-    pub key_hash: String,
+    pub key_hash: ScriptExprHash,
     pub key: Micheline,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<Micheline>,

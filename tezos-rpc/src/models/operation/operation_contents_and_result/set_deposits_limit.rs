@@ -1,3 +1,8 @@
+use tezos_core::types::{
+    encoded::{Address, ImplicitAddress},
+    mutez::Mutez,
+};
+
 use {
     crate::models::{
         balance_update::BalanceUpdate, operation::kind::OperationKind,
@@ -11,13 +16,13 @@ pub struct SetDepositsLimit {
     /// [OperationKind::SetDepositsLimit]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
-    pub fee: String,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
     pub counter: String,
     pub gas_limit: String,
     pub storage_limit: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub limit: Option<u64>,
+    pub limit: Option<Mutez>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<SetDepositsLimitsMetadata>,
 }
@@ -36,10 +41,10 @@ pub struct InternalSetDepositsLimitOperationResult {
     /// [OperationKind::SetDepositsLimit]
     pub kind: OperationKind,
     /// Public key hash (Base58Check-encoded)
-    pub source: String,
+    pub source: Address,
     /// integer ∈ [0, 2^16-1]
     pub nonce: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub limit: Option<u64>,
+    pub limit: Option<Mutez>,
     pub result: SetDepositsLimitOperationResult,
 }

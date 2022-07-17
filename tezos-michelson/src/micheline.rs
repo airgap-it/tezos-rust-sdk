@@ -173,6 +173,7 @@ mod test {
     use serde_json::json;
 
     use super::*;
+    use crate::Error;
 
     #[test]
     fn test_micheline_to_json() -> Result<()> {
@@ -185,7 +186,12 @@ mod test {
     #[test]
     fn test_json_to_micheline() -> Result<()> {
         for (value, json) in micheline_values() {
-            assert_eq!(value, serde_json::from_value(json)?);
+            assert_eq!(
+                value,
+                serde_json::from_value(json).map_err(|_| Error::Internal {
+                    description: "Invalid json".into()
+                })?
+            );
         }
         Ok(())
     }
