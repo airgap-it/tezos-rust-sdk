@@ -654,4 +654,17 @@ make_encoded_structs!(
             &GenericSignature,
         }
     },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct tx_rollup_id::TxRollupId;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txr1",
+            base58_length: 37,
+            bytes_prefix: [1, 128, 120, 31,],
+            bytes_length: 20,
+        }
+    },
 );

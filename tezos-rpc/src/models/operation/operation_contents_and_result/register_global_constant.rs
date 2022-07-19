@@ -1,14 +1,10 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress},
-    mutez::Mutez,
-};
-
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
         models::operation::operation_result::operations::register_global_constant::RegisterGlobalConstantOperationResult,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::{encoded::ImplicitAddress, mutez::Mutez},
     tezos_michelson::micheline::Micheline,
 };
 
@@ -29,21 +25,7 @@ pub struct RegisterGlobalConstant {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RegisterGlobalConstantMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
     pub operation_result: RegisterGlobalConstantOperationResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<InternalRegisterGlobalConstantOperationResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalRegisterGlobalConstantOperationResult {
-    /// [OperationKind::RegisterGlobalConstant]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    pub value: Micheline,
-    pub result: RegisterGlobalConstantOperationResult,
+    #[serde(default)]
+    pub balance_updates: Vec<BalanceUpdate>,
 }

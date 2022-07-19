@@ -1,7 +1,4 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress},
-    mutez::Mutez,
-};
+use crate::models::operation::operation_result::operations::InternalOperationResult;
 
 use {
     crate::{
@@ -9,6 +6,10 @@ use {
         models::operation::operation_result::operations::transaction::TransactionOperationResult,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::{
+        encoded::{Address, ImplicitAddress},
+        mutez::Mutez,
+    },
     tezos_michelson::micheline::Micheline,
 };
 
@@ -43,28 +44,10 @@ pub struct TransactionMetadata {
     #[serde(default)]
     pub balance_updates: Vec<BalanceUpdate>,
     #[serde(default)]
-    pub internal_operation_results: Vec<InternalTransactionOperationResult>,
+    pub internal_operation_results: Vec<InternalOperationResult>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalTransactionOperationResult {
-    /// [OperationKind::Transaction]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    /// Mutez
-    pub amount: Mutez,
-    /// Address (Base58Check-encoded)
-    pub destination: Address,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameters: Option<TransactionParameters>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<TransactionOperationResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransactionParameters {
     pub entrypoint: Entrypoint,
     pub value: Micheline,

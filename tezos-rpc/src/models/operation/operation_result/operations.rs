@@ -4,16 +4,26 @@ pub mod register_global_constant;
 pub mod reveal;
 pub mod set_deposits_limit;
 pub mod transaction;
+pub mod tx_rollup_origination;
 
 use {
-    self::delegation::{DelegationOperationResult, DelegationSuccessfulManagerOperationResult},
-    self::origination::{OriginationOperationResult, OriginationSuccessfulManagerOperationResult},
+    self::delegation::{
+        DelegationOperationResult, DelegationSuccessfulManagerOperationResult,
+        InternalDelegationOperationResult,
+    },
+    self::origination::{
+        InternalOriginationOperationResult, OriginationOperationResult,
+        OriginationSuccessfulManagerOperationResult,
+    },
     self::register_global_constant::RegisterGlobalConstantOperationResult,
     self::reveal::{RevealOperationResult, RevealSuccessfulManagerOperationResult},
     self::set_deposits_limit::{
         SetDepositsLimitOperationResult, SetDepositsLimitSuccessfulManagerOperationResult,
     },
-    self::transaction::{TransactionOperationResult, TransactionSuccessfulManagerOperationResult},
+    self::transaction::{
+        InternalTransactionOperationResult, TransactionOperationResult,
+        TransactionSuccessfulManagerOperationResult,
+    },
     serde::{Deserialize, Serialize},
 };
 
@@ -36,4 +46,12 @@ pub enum SuccessfulManagerOperationResult {
     Reveal(RevealSuccessfulManagerOperationResult),
     Delegation(DelegationSuccessfulManagerOperationResult),
     SetDepositsLimits(SetDepositsLimitSuccessfulManagerOperationResult),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(untagged)]
+pub enum InternalOperationResult {
+    Transaction(InternalTransactionOperationResult),
+    Origination(InternalOriginationOperationResult),
+    Delegation(InternalDelegationOperationResult),
 }

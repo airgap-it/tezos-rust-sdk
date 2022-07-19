@@ -1,15 +1,18 @@
-use tezos_core::types::encoded::ContractAddress;
-
 use {
     crate::{
         models::balance_update::BalanceUpdate,
         models::error::RpcError,
         models::operation::kind::OperationKind,
+        models::operation::operation_contents_and_result::transaction::TransactionParameters,
         models::operation::operation_result::{
             big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff, OperationResultStatus,
         },
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::{
+        encoded::{Address, ContractAddress},
+        mutez::Mutez,
+    },
     tezos_michelson::micheline::Micheline,
 };
 
@@ -64,4 +67,22 @@ pub struct TransactionSuccessfulManagerOperationResult {
     pub allocated_destination_contract: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lazy_storage_diff: Option<LazyStorageDiff>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct InternalTransactionOperationResult {
+    /// [OperationKind::Transaction]
+    pub kind: OperationKind,
+    /// Public key hash (Base58Check-encoded)
+    pub source: Address,
+    /// integer ∈ [0, 2^16-1]
+    pub nonce: u16,
+    /// Mutez
+    pub amount: Mutez,
+    /// Address (Base58Check-encoded)
+    pub destination: Address,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parameters: Option<TransactionParameters>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<TransactionOperationResult>,
 }

@@ -23,6 +23,7 @@ use {
         operation_contents_and_result::seed_nonce_revelation::SeedNonceRevelation,
         operation_contents_and_result::set_deposits_limit::SetDepositsLimit,
         operation_contents_and_result::transaction::Transaction,
+        operation_contents_and_result::tx_rollup_origination::TxRollupOrigination,
     },
     serde::{Deserialize, Serialize},
 };
@@ -62,6 +63,8 @@ pub enum OperationContent {
     FailingNoop(FailingNoop),
     // Removed in hangzhou protocol (https://tezos.gitlab.io/protocols/tenderbake.html)
     DoubleBakingEvidence(DoubleBakingEvidence),
+    // Added in Jakarta
+    TxRollupOrigination(TxRollupOrigination),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
