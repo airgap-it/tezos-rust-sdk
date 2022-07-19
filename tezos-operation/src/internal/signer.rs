@@ -178,6 +178,7 @@ impl Verifier<P256PublicKey> for OperationSigner {
 
 #[cfg(test)]
 mod test {
+    #[cfg(any(feature = "ed25519", feature = "secp256_k1", feature = "p256"))]
     use crate::operations::SeedNonceRevelation;
 
     use super::*;
@@ -208,6 +209,7 @@ mod test {
         Ok(())
     }
 
+    #[cfg(feature = "ed25519")]
     fn ed25519_key_pair() -> (SecretKey, PublicKey) {
         (
             "edskRv7VyXGVZb8EsrR7D9XKUbbAQNQGtALP6QeB16ZCD7SmmJpzyeneJVg3Mq56YLbxRA1kSdAXiswwPiaVfR3NHGMCXCziuZ".try_into().unwrap(),
@@ -215,6 +217,7 @@ mod test {
         )
     }
 
+    #[cfg(feature = "secp256_k1")]
     fn secp256_k1_pair() -> (SecretKey, PublicKey) {
         (
             "spsk1SsrWCpufeXkNruaG9L3Mf9dRyd4D8HsM8ftqseN1fne3x9LNk"
@@ -226,7 +229,8 @@ mod test {
         )
     }
 
-    fn p246_pair() -> (SecretKey, PublicKey) {
+    #[cfg(feature = "p256")]
+    fn p256_pair() -> (SecretKey, PublicKey) {
         (
             "p2sk2rVhhi5EfEdhJ3wQGsdc4ZEN3i7Z8f73Bn1xp1JKjETNyJ85oW"
                 .try_into()
@@ -240,6 +244,7 @@ mod test {
     fn operations_with_signatures(
     ) -> Vec<((SecretKey, PublicKey), Vec<(UnsignedOperation, Signature)>)> {
         vec![
+            #[cfg(feature = "ed25519")]
             (
                 ed25519_key_pair(), 
                 vec![
@@ -262,6 +267,7 @@ mod test {
                     ),
                 ]
             ),
+            #[cfg(feature = "secp256_k1")]
             (
                 secp256_k1_pair(),
                 vec![
@@ -284,8 +290,9 @@ mod test {
                     ),
                 ]
             ),
+            #[cfg(feature = "p256")]
             (
-                p246_pair(),
+                p256_pair(),
                 vec![
                     (
                         UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![]),

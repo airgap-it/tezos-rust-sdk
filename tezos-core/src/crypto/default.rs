@@ -83,6 +83,7 @@ impl CryptoProvider for DefaultP256CryptoProvider {
 
 #[cfg(test)]
 mod test {
+    #[cfg(any(feature = "ed25519", feature = "secp256_k1", feature = "p256"))]
     use super::*;
 
     fn ed25519_pair() -> (&'static [u8], &'static [u8]) {
