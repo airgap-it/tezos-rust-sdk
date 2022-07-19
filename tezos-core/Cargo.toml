@@ -15,11 +15,15 @@ regex = "1"
 sodiumoxide = { version = "0.2", optional = true }
 k256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
 p256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
-sha2 = { version = "0.10", optional = true }
 hex = "0.4"
 lazy_static = "1"
 serde = { version = "1", features = ["derive"], optional = true }
+blake2 = "0.10"
+cfg-if = "1"
 
 [features]
-crypto = ["dep:sodiumoxide", "dep:k256", "dep:p256", "dep:sha2"]
+full_crypto = ["ed25519", "secp256_k1", "p256"]
+ed25519 = ["dep:sodiumoxide"]
+secp256_k1 = ["dep:k256"]
+p256 = ["dep:p256"]
 serde = ["dep:serde"]

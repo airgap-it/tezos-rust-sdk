@@ -16,3 +16,9 @@ tezos-michelson = { path = "../tezos-michelson" }
 
 [dev-dependencies]
 hex-literal = "0.3"
+
+[features]
+full_crypto = ["ed25519", "secp256_k1", "p256"]
+ed25519 = ["tezos-core/ed25519"]
+secp256_k1 = ["tezos-core/secp256_k1"]
+p256 = ["tezos-core/p256"]

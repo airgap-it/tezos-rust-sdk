@@ -1,43 +1,12 @@
-#![cfg(feature = "crypto")]
-
+#[cfg(any(feature = "ed25519", feature = "secp256_k1", feature = "p256"))]
 use crate::{CryptoProvider, Error, Result};
 
-pub struct DefaultCryptoProvider;
+#[cfg(feature = "ed25519")]
+pub struct DefaultEd25519CryptoProvider;
 
-impl DefaultCryptoProvider {
-    pub fn new() -> Self {
-        DefaultCryptoProvider {}
-    }
-}
-
-impl CryptoProvider for DefaultCryptoProvider {
-    fn sha256(&self, message: &[u8]) -> Vec<u8> {
-        use sha2::{Digest, Sha256};
-
-        let mut hasher = Sha256::new();
-        hasher.update(message);
-
-        hasher.finalize().to_vec()
-    }
-
-    fn blake2b(&self, message: &[u8], size: usize) -> Result<Vec<u8>> {
-        use sodiumoxide::crypto::generichash;
-
-        let mut hasher =
-            generichash::State::new(Some(size), None).map_err(|_error| Error::Internal {
-                description: "blake2b failed".into(),
-            })?;
-        hasher.update(message).map_err(|_error| Error::Internal {
-            description: "blake2b failed".into(),
-        })?;
-        let hash = hasher.finalize().map_err(|_error| Error::Internal {
-            description: "blake2b failed".into(),
-        })?;
-
-        Ok(hash.as_ref().to_owned())
-    }
-
-    fn sign_ed25519(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
+#[cfg(feature = "ed25519")]
+impl CryptoProvider for DefaultEd25519CryptoProvider {
+    fn sign(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
         use sodiumoxide::crypto::sign;
 
         let secret = sign::SecretKey::from_slice(secret).ok_or(Error::InvalidSecretKeyBytes)?;
@@ -45,7 +14,7 @@ impl CryptoProvider for DefaultCryptoProvider {
         return Ok(signature.to_bytes().to_vec());
     }
 
-    fn verify_ed25519(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
+    fn verify(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
         use sodiumoxide::crypto::sign;
 
         let key = sign::PublicKey::from_slice(public_key).ok_or(Error::InvalidPublicKeyBytes)?;
@@ -53,8 +22,14 @@ impl CryptoProvider for DefaultCryptoProvider {
             .map_err(|_error| Error::InvalidSignatureBytes)?;
         Ok(sign::verify_detached(&signature, &message, &key))
     }
+}
 
-    fn sign_secp256_k1(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
+#[cfg(feature = "secp256_k1")]
+pub struct DefaultSecp256K1CryptoProvider;
+
+#[cfg(feature = "secp256_k1")]
+impl CryptoProvider for DefaultSecp256K1CryptoProvider {
+    fn sign(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
         use k256::ecdsa::signature::Signer;
 
         let sk = k256::ecdsa::SigningKey::from_bytes(secret)
@@ -65,12 +40,7 @@ impl CryptoProvider for DefaultCryptoProvider {
         Ok(signature.to_vec())
     }
 
-    fn verify_secp256_k1(
-        &self,
-        message: &[u8],
-        signature: &[u8],
-        public_key: &[u8],
-    ) -> Result<bool> {
+    fn verify(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
         use k256::ecdsa::signature::{Signature, Verifier};
 
         let vk = k256::ecdsa::VerifyingKey::from_sec1_bytes(public_key)
@@ -79,8 +49,14 @@ impl CryptoProvider for DefaultCryptoProvider {
             .map_err(|_error| Error::InvalidSignatureBytes)?;
         Ok(vk.verify(message, &signature).is_ok())
     }
+}
 
-    fn sign_p256(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
+#[cfg(feature = "p256")]
+pub struct DefaultP256CryptoProvider;
+
+#[cfg(feature = "p256")]
+impl CryptoProvider for DefaultP256CryptoProvider {
+    fn sign(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
         use p256::ecdsa::signature::Signer;
 
         let sk = p256::ecdsa::SigningKey::from_bytes(secret)
@@ -91,7 +67,7 @@ impl CryptoProvider for DefaultCryptoProvider {
         Ok(signature.to_vec())
     }
 
-    fn verify_p256(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
+    fn verify(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
         use p256::ecdsa::signature::{Signature, Verifier};
 
         let vk = p256::ecdsa::VerifyingKey::from_sec1_bytes(public_key)
@@ -147,155 +123,10 @@ mod test {
         )
     }
 
-    #[test]
-    fn test_sha256() {
-        let cp = DefaultCryptoProvider::new();
-        let values: Vec<(&'static [u8], &'static [u8])> = vec![
-            (
-                &[5],
-                &[
-                    231, 123, 154, 154, 233, 227, 11, 13, 189, 182, 245, 16, 162, 100, 239, 157,
-                    231, 129, 80, 29, 123, 107, 146, 174, 137, 235, 5, 156, 90, 183, 67, 219,
-                ],
-            ),
-            (
-                &[232],
-                &[
-                    230, 242, 7, 80, 154, 250, 57, 8, 218, 17, 108, 230, 26, 117, 118, 149, 66, 72,
-                    217, 254, 100, 163, 198, 82, 180, 147, 204, 165, 124, 227, 110, 46,
-                ],
-            ),
-            (
-                &[198, 25, 66, 244, 46, 210, 223],
-                &[
-                    41, 166, 48, 22, 99, 163, 175, 185, 52, 234, 164, 249, 228, 202, 167, 242, 32,
-                    250, 193, 2, 185, 235, 107, 46, 88, 169, 69, 239, 198, 180, 196, 65,
-                ],
-            ),
-            (
-                &[91, 153, 45, 247, 188, 95, 208, 89, 41, 99],
-                &[
-                    219, 171, 243, 8, 243, 63, 141, 192, 106, 228, 172, 212, 151, 203, 34, 20, 52,
-                    47, 161, 16, 245, 147, 214, 115, 141, 236, 204, 218, 76, 251, 84, 171,
-                ],
-            ),
-            (
-                &[
-                    216, 196, 197, 10, 51, 195, 253, 102, 136, 225, 146, 141, 249,
-                ],
-                &[
-                    187, 169, 148, 236, 172, 5, 127, 112, 1, 127, 128, 186, 2, 248, 206, 184, 77,
-                    3, 24, 237, 172, 96, 103, 98, 82, 136, 186, 255, 65, 252, 195, 169,
-                ],
-            ),
-            (
-                &[
-                    162, 10, 204, 150, 253, 130, 126, 138, 110, 118, 253, 118, 8, 85, 45, 106,
-                ],
-                &[
-                    191, 173, 24, 245, 192, 34, 41, 184, 222, 37, 149, 230, 97, 227, 95, 87, 168,
-                    196, 229, 149, 168, 11, 8, 116, 45, 128, 31, 174, 87, 192, 1, 194,
-                ],
-            ),
-            (
-                &[
-                    8, 237, 44, 83, 82, 114, 130, 14, 183, 132, 83, 88, 111, 108, 92, 217, 40, 118,
-                    176,
-                ],
-                &[
-                    62, 19, 183, 101, 134, 160, 147, 63, 57, 1, 12, 202, 109, 85, 236, 97, 188,
-                    153, 231, 57, 113, 200, 87, 136, 208, 95, 137, 224, 234, 204, 248, 44,
-                ],
-            ),
-        ];
-        for (message, expected) in values {
-            let hashed = cp.sha256(message);
-            assert_eq!(expected, hashed);
-        }
-    }
-
-    #[test]
-    fn test_blake2b() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
-        let values: Vec<((&'static [u8], usize), &'static [u8])> = vec![
-            (
-                (&[5], 16),
-                &[
-                    174, 212, 251, 183, 209, 87, 13, 208, 187, 184, 163, 220, 41, 60, 2, 109,
-                ],
-            ),
-            (
-                (&[232], 17),
-                &[
-                    26, 194, 124, 128, 79, 131, 145, 185, 117, 92, 18, 253, 244, 172, 151, 111, 91,
-                ],
-            ),
-            (
-                (&[198, 25, 66, 244, 46, 210, 223], 20),
-                &[
-                    100, 120, 77, 133, 18, 167, 103, 33, 106, 110, 28, 73, 218, 108, 26, 128, 47,
-                    34, 48, 250,
-                ],
-            ),
-            (
-                (&[91, 153, 45, 247, 188, 95, 208, 89, 41, 99], 18),
-                &[
-                    247, 43, 151, 85, 189, 16, 34, 178, 112, 242, 39, 56, 122, 153, 213, 134, 184,
-                    235,
-                ],
-            ),
-            (
-                (
-                    &[
-                        216, 196, 197, 10, 51, 195, 253, 102, 136, 225, 146, 141, 249,
-                    ],
-                    19,
-                ),
-                &[
-                    167, 243, 83, 66, 151, 34, 117, 146, 193, 175, 26, 177, 38, 127, 158, 75, 217,
-                    157, 249,
-                ],
-            ),
-            (
-                (
-                    &[
-                        162, 10, 204, 150, 253, 130, 126, 138, 110, 118, 253, 118, 8, 85, 45, 106,
-                    ],
-                    32,
-                ),
-                &[
-                    149, 66, 94, 41, 248, 162, 176, 1, 175, 163, 41, 123, 117, 245, 3, 72, 0, 194,
-                    231, 60, 47, 7, 212, 122, 118, 95, 11, 98, 31, 140, 204, 64,
-                ],
-            ),
-            (
-                (
-                    &[
-                        8, 237, 44, 83, 82, 114, 130, 14, 183, 132, 83, 88, 111, 108, 92, 217, 40,
-                        118, 176,
-                    ],
-                    64,
-                ),
-                &[
-                    207, 36, 98, 207, 203, 183, 54, 157, 111, 4, 64, 81, 195, 251, 61, 193, 137,
-                    44, 228, 29, 76, 103, 46, 116, 2, 56, 128, 85, 108, 250, 135, 193, 182, 229,
-                    166, 43, 14, 130, 204, 83, 154, 196, 143, 145, 120, 13, 210, 93, 147, 103, 173,
-                    88, 136, 226, 36, 207, 118, 195, 226, 23, 60, 70, 18, 41,
-                ],
-            ),
-        ];
-
-        for ((message, size), expected) in values {
-            let hashed = cp.blake2b(message, size)?;
-            assert_eq!(expected, hashed)
-        }
-
-        Ok(())
-    }
-
+    #[cfg(feature = "ed25519")]
     #[test]
     fn test_ed25519_sign() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultEd25519CryptoProvider;
         let values: Vec<(&'static [u8], &'static [u8])> = vec![
             (
                 &[
@@ -324,16 +155,17 @@ mod test {
         ];
         let secret = ed25519_pair().0;
         for (message, expected) in values {
-            let signature = cp.sign_ed25519(message, secret)?;
+            let signature = cp.sign(message, secret)?;
             assert_eq!(expected, signature);
         }
 
         Ok(())
     }
 
+    #[cfg(feature = "ed25519")]
     #[test]
     fn test_ed25519_verify() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultEd25519CryptoProvider;
         let values: Vec<((&'static [u8], &'static [u8]), bool)> = vec![
             (
                 (
@@ -399,16 +231,17 @@ mod test {
 
         let public_key = ed25519_pair().1;
         for ((message, signature), expected) in values {
-            let result = cp.verify_ed25519(message, signature, public_key)?;
+            let result = cp.verify(message, signature, public_key)?;
             assert_eq!(expected, result);
         }
 
         Ok(())
     }
 
+    #[cfg(feature = "secp256_k1")]
     #[test]
     fn test_secp256_k1_sign() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultSecp256K1CryptoProvider;
         let values: Vec<(&'static [u8], &'static [u8])> = vec![
             (
                 &[
@@ -449,16 +282,17 @@ mod test {
         ];
         let secret = secp256_k1_pair().0;
         for (message, expected) in values {
-            let signature = cp.sign_secp256_k1(message, secret)?;
+            let signature = cp.sign(message, secret)?;
             assert_eq!(expected, signature);
         }
 
         Ok(())
     }
 
+    #[cfg(feature = "secp256_k1")]
     #[test]
     fn test_secp256_k1_verify() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultSecp256K1CryptoProvider;
         let values: Vec<((&'static [u8], &'static [u8]), bool)> = vec![
             (
                 (
@@ -546,16 +380,17 @@ mod test {
 
         let public_key = secp256_k1_pair().1;
         for ((message, signature), expected) in values {
-            let result = cp.verify_secp256_k1(message, signature, public_key)?;
+            let result = cp.verify(message, signature, public_key)?;
             assert_eq!(expected, result);
         }
 
         Ok(())
     }
 
+    #[cfg(feature = "p256")]
     #[test]
     fn test_p256_sign() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultP256CryptoProvider;
         let values: Vec<(&'static [u8], &'static [u8])> = vec![
             (
                 &[
@@ -596,16 +431,17 @@ mod test {
         ];
         let secret = p256_pair().0;
         for (message, expected) in values {
-            let signature = cp.sign_p256(message, secret)?;
+            let signature = cp.sign(message, secret)?;
             assert_eq!(expected, signature);
         }
 
         Ok(())
     }
 
+    #[cfg(feature = "p256")]
     #[test]
     fn test_p256_verify() -> Result<()> {
-        let cp = DefaultCryptoProvider::new();
+        let cp = DefaultP256CryptoProvider;
         let values: Vec<((&'static [u8], &'static [u8]), bool)> = vec![
             (
                 (
@@ -692,7 +528,7 @@ mod test {
 
         let public_key = p256_pair().1;
         for ((message, signature), expected) in values {
-            let result = cp.verify_p256(message, signature, public_key)?;
+            let result = cp.verify(message, signature, public_key)?;
             assert_eq!(expected, result);
         }
 
