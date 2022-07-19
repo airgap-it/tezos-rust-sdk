@@ -175,3 +175,137 @@ impl Verifier<P256PublicKey> for OperationSigner {
         })
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::operations::SeedNonceRevelation;
+
+    use super::*;
+
+    #[test]
+    fn test_sign() -> Result<()> {
+        for ((key, _), operations) in operations_with_signatures() {
+            for (operation, signature) in operations {
+                let signed = operation.into_signed_operation(&key)?;
+
+                assert_eq!(&signature, signed.signature());
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_verify() -> Result<()> {
+        for ((_, key), operations) in operations_with_signatures() {
+            for (operation, signature) in operations {
+                let signed = SignedOperation::from(operation, signature);
+
+                assert!(signed.verify(&key)?);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn ed25519_key_pair() -> (SecretKey, PublicKey) {
+        (
+            "edskRv7VyXGVZb8EsrR7D9XKUbbAQNQGtALP6QeB16ZCD7SmmJpzyeneJVg3Mq56YLbxRA1kSdAXiswwPiaVfR3NHGMCXCziuZ".try_into().unwrap(),
+            "edpkttZKC51wemRqL2QxwpMnEKxWnbd35pq47Y6xsCHp5M1f7LN8NP".try_into().unwrap(),
+        )
+    }
+
+    fn secp256_k1_pair() -> (SecretKey, PublicKey) {
+        (
+            "spsk1SsrWCpufeXkNruaG9L3Mf9dRyd4D8HsM8ftqseN1fne3x9LNk"
+                .try_into()
+                .unwrap(),
+            "sppk7ZpH5qAjTDZn1o1TW7z2QbQZUcMHRn2wtV4rRfz15eLQrvPkt6k"
+                .try_into()
+                .unwrap(),
+        )
+    }
+
+    fn p246_pair() -> (SecretKey, PublicKey) {
+        (
+            "p2sk2rVhhi5EfEdhJ3wQGsdc4ZEN3i7Z8f73Bn1xp1JKjETNyJ85oW"
+                .try_into()
+                .unwrap(),
+            "p2pk67fo5oy6byruqDtzVixbM7L3cVBDRMcFhA33XD5w2HF4fRXDJhw"
+                .try_into()
+                .unwrap(),
+        )
+    }
+
+    fn operations_with_signatures(
+    ) -> Vec<((SecretKey, PublicKey), Vec<(UnsignedOperation, Signature)>)> {
+        vec![
+            (
+                ed25519_key_pair(), 
+                vec![
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![]), 
+                        "edsigtfLuR4pGGfJwYgWZbWi9JGzjLA8ThhThxqFGC8V6u4WTdS4fM7VFQKoN9jPDLKiAW75PtG1bykpnRa6ozr8m12iKGYCxNd".try_into().unwrap()
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()
+                        ]), 
+                        "edsigtyP4ZD5NtBBkAkrmXQZg84xt9uCiHBpjqZj2HE65d4V9dkDapSVJ6jvaA4gEEgksVJzqSxdv2rnMyBzPoAfBQwNEqt8Y1x".try_into().unwrap()
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
+                            SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into()
+                        ]), 
+                        "edsigu5i46oiR9Ye45rUJnPNLkEWkLvvGG5uzHCzPuoNFemNAguHBFn5hXiBivnHHdSzGqsMBc8c5cxAUr8Ue6FUVufbM3hECdU".try_into().unwrap()
+                    ),
+                ]
+            ),
+            (
+                secp256_k1_pair(),
+                vec![
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![]),
+                        "spsig1LLFq38AD2eLN6qqVSFsTRsG2UP5JGj87EgiVoiDDmaoCghVButYNbP8RoqrJqq8hCeacJY2hKx5zfm4QpmQKytZYeKjNw".try_into().unwrap(), // "spsig1LPnrCkaRypLUz3UYdxQGVpxfSAxWwSV2HpaitKWvqRN6CDqqLJwWNn1S9kEWT2ZLrWq7m2361YVMN4LNkc9FVPdxBjYZi".try_into().unwrap(),
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()
+                        ]),
+                        "spsig1LivvNV6aDUqUNyVwRS9xSEQfzoPkwUZqXEhT8tpeGFEHvUVoPCfVDSoKabUwqc7ERKVwZFtjXKGSHXpNxwKkhxxqsL9iT".try_into().unwrap(), // "spsig1SC5sFkHG4YssRxQJQ5onZ8GNvfQDqk5cz1e6fdPhCNva3baoPCiE9fk6JcyUedEDFAEeMBgC7L6LeYBhFHpVrxjs96iuB".try_into().unwrap(),
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
+                            SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into()
+                        ]),
+                        "spsig1J84hkDfZ216y94k94GwqnrEADm1KHTz5SFmrSRfBC6hfkpxwRw29nAa1baGGwmAdDNwUyrQsWFqJXdw1t3isd28U8AMAu".try_into().unwrap(), // "spsig1XFTLzrozPJ7Kc9aVNwK4hjpub7cWu8a95LmSKNucsPZjrgq3QRcQWtvo1fbBzpeWPK56XaUiJRN6B59kzueT6LCqTWK8R".try_into().unwrap(),
+                    ),
+                ]
+            ),
+            (
+                p246_pair(),
+                vec![
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![]),
+                        "p2sigeAUuv22uDfL2PacEnGPMATgYiqJFGS7iYvXnG19cQHa75Ak8ie5LJKZrFKRqiNHsu31ga1Ymn2h2d2oJfFNqDPuBSYAH4".try_into().unwrap(), // "p2sigY5tNCTjyR3w2rbgBHnkcEChmtk43Gt6BKqwX2TsNdpVojk3QgRy9Wf3TMkAyRnagy4LrhC4AfVDFBQK87sqBipsNkCt5N".try_into().unwrap(),
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()
+                        ]),
+                        "p2sigTtg4JV68veqnEXLTvbnc6snBNkDt417QpF7HPVwKQYswhCaD1hLBn1RDTHEgU8eKGD8sEz1g36y6wyoUdknJH4EwAKKdr".try_into().unwrap(), // "p2sigUMZVy7WyyvYawCt8oW4eMvXCTWtmU6PCfsTbKmAUXuHFCcH8ER7ZwtNqsnwYER9DRKXfao9xhUFfYdxZPFFDi4J7nckvt".try_into().unwrap(),
+                    ),
+                    (
+                        UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
+                            SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
+                            SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into()
+                        ]),
+                        "p2sigPCKxgbzaH1zxX8Hb4cFvTpUUK2rbESVSPbvgcVSUmzfP8Q3kLYwNkATj2bJrDdPEAn8xqSWq6pia3Sidb2LQzC2DkSTVZ".try_into().unwrap(), // "p2sigrjm1STjRF4ygPiPzd4L34MzCErExERsH79jWwJTdYqdaYbYA29UfE1y8f78268B2xNdT3gzR5tXR7G21DCYyYkGnFe3Dm".try_into().unwrap(),
+                    ),
+                ]
+            )
+        ]
+    }
+}

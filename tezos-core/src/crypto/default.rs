@@ -2,6 +2,7 @@
 use crate::{CryptoProvider, Error, Result};
 
 #[cfg(feature = "ed25519")]
+#[derive(Debug)]
 pub struct DefaultEd25519CryptoProvider;
 
 #[cfg(feature = "ed25519")]
@@ -25,6 +26,7 @@ impl CryptoProvider for DefaultEd25519CryptoProvider {
 }
 
 #[cfg(feature = "secp256_k1")]
+#[derive(Debug)]
 pub struct DefaultSecp256K1CryptoProvider;
 
 #[cfg(feature = "secp256_k1")]
@@ -52,6 +54,7 @@ impl CryptoProvider for DefaultSecp256K1CryptoProvider {
 }
 
 #[cfg(feature = "p256")]
+#[derive(Debug)]
 pub struct DefaultP256CryptoProvider;
 
 #[cfg(feature = "p256")]
