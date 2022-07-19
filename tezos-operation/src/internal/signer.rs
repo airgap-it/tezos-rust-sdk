@@ -246,7 +246,7 @@ mod test {
         vec![
             #[cfg(feature = "ed25519")]
             (
-                ed25519_key_pair(), 
+                ed25519_key_pair(),
                 vec![
                     (
                         UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![]), 
@@ -255,14 +255,14 @@ mod test {
                     (
                         UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
                             SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()
-                        ]), 
+                        ]),
                         "edsigtyP4ZD5NtBBkAkrmXQZg84xt9uCiHBpjqZj2HE65d4V9dkDapSVJ6jvaA4gEEgksVJzqSxdv2rnMyBzPoAfBQwNEqt8Y1x".try_into().unwrap()
                     ),
                     (
                         UnsignedOperation::new("BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), vec![
                             SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
                             SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into()
-                        ]), 
+                        ]),
                         "edsigu5i46oiR9Ye45rUJnPNLkEWkLvvGG5uzHCzPuoNFemNAguHBFn5hXiBivnHHdSzGqsMBc8c5cxAUr8Ue6FUVufbM3hECdU".try_into().unwrap()
                     ),
                 ]
