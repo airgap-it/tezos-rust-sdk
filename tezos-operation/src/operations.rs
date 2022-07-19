@@ -18,7 +18,7 @@ mod transaction;
 use num_derive::FromPrimitive;
 use tezos_core::{
     internal::coder::{Decoder, Encoder},
-    types::encoded::{BlockHash, PublicKey, SecretKey, Signature},
+    types::encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
     Tezos,
 };
 
@@ -132,6 +132,23 @@ impl SignedOperation {
         &self.signature
     }
 
+    pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn verify(&self, key: &PublicKey) -> Result<bool> {
+        let tezos: Tezos = Default::default();
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn to_injectable_string(&self) -> Result<String> {
+        let forged_bytes = self.to_forged_bytes()?;
+        let signature_bytes = self.signature().to_bytes()?;
+        Ok(hex::encode([forged_bytes, signature_bytes].concat()))
+    }
+
     pub fn new(branch: BlockHash, contents: Vec<OperationContent>, signature: Signature) -> Self {
         Self {
             branch,
@@ -142,17 +159,6 @@ impl SignedOperation {
 
     pub fn from(operation: UnsignedOperation, signature: Signature) -> Self {
         Self::new(operation.branch, operation.contents, signature)
-    }
-
-    pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
-        let signer = OperationSigner::new(tezos.get_crypto());
-        signer.verify(self, key)
-    }
-
-    pub fn verify(&self, key: &PublicKey) -> Result<bool> {
-        let tezos: Tezos = Default::default();
-        let signer = OperationSigner::new(tezos.get_crypto());
-        signer.verify(self, key)
     }
 }
 
