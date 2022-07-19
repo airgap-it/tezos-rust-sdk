@@ -41,6 +41,7 @@ pub enum Error {
     InvalidAddress,
     InvalidContractAddress,
     InvalidHexString,
+    CryptoProviderNotSet,
 }
 
 pub type Result<T> = result::Result<T, Error>;

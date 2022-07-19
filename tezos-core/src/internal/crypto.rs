@@ -1,25 +1,43 @@
 use crate::crypto::CryptoProvider;
-use crate::Result;
+use crate::{Error, Result};
 
 pub struct Crypto {
-    crypto_provider: Box<dyn CryptoProvider>,
+    ed25519_provider: Option<Box<dyn CryptoProvider>>,
+    secp256_k1_provider: Option<Box<dyn CryptoProvider>>,
+    p256_provider: Option<Box<dyn CryptoProvider>>,
 }
 
 impl Crypto {
-    pub fn new(crypto_provider: Box<dyn CryptoProvider>) -> Self {
-        Crypto { crypto_provider }
-    }
-
-    pub fn sha256(&self, message: &[u8]) -> Vec<u8> {
-        self.crypto_provider.sha256(message)
+    pub fn new(
+        ed25519_provider: Option<Box<dyn CryptoProvider>>,
+        secp256_k1_provider: Option<Box<dyn CryptoProvider>>,
+        p256_provider: Option<Box<dyn CryptoProvider>>,
+    ) -> Self {
+        Self {
+            ed25519_provider,
+            secp256_k1_provider,
+            p256_provider,
+        }
     }
 
     pub fn blake2b(&self, message: &[u8], size: usize) -> Result<Vec<u8>> {
-        self.crypto_provider.blake2b(message, size)
+        use blake2::{
+            digest::{Update, VariableOutput},
+            Blake2bVar,
+        };
+        let mut hasher = Blake2bVar::new(size).unwrap();
+        hasher.update(message);
+        let mut buf = Vec::<u8>::new();
+        buf.resize(size, 0);
+        hasher.finalize_variable(&mut buf).unwrap();
+        Ok(buf)
     }
 
     pub fn sign_ed25519(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
-        self.crypto_provider.sign_ed25519(message, secret)
+        self.ed25519_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .sign(message, secret)
     }
 
     pub fn verify_ed25519(
@@ -28,12 +46,17 @@ impl Crypto {
         signature: &[u8],
         public_key: &[u8],
     ) -> Result<bool> {
-        self.crypto_provider
-            .verify_ed25519(message, signature, public_key)
+        self.ed25519_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .verify(message, signature, public_key)
     }
 
     pub fn sign_secp256_k1(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
-        self.crypto_provider.sign_secp256_k1(message, secret)
+        self.secp256_k1_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .sign(message, secret)
     }
 
     pub fn verify_secp256_k1(
@@ -42,16 +65,23 @@ impl Crypto {
         signature: &[u8],
         public_key: &[u8],
     ) -> Result<bool> {
-        self.crypto_provider
-            .verify_secp256_k1(message, signature, public_key)
+        self.secp256_k1_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .verify(message, signature, public_key)
     }
 
     pub fn sign_p256(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
-        self.crypto_provider.sign_p256(message, secret)
+        self.p256_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .sign(message, secret)
     }
 
     pub fn verify_p256(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
-        self.crypto_provider
-            .verify_p256(message, signature, public_key)
+        self.p256_provider
+            .as_ref()
+            .ok_or(Error::CryptoProviderNotSet)?
+            .verify(message, signature, public_key)
     }
 }
