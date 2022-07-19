@@ -1,6 +1,3 @@
-mod int;
-#[cfg(feature = "serde")]
-use int::IntDef;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::types::number::Nat;
@@ -18,7 +15,7 @@ use super::Micheline;
     serde(rename_all = "lowercase")
 )]
 pub enum Literal {
-    Int(#[cfg_attr(feature = "serde", serde(with = "IntDef"))] Int),
+    Int(Int),
     String(String),
     Bytes(Bytes),
 }

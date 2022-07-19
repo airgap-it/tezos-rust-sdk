@@ -18,13 +18,17 @@ mod transaction;
 use num_derive::FromPrimitive;
 use tezos_core::{
     internal::coder::{Decoder, Encoder},
-    types::encoded::{BlockHash, Signature},
+    types::encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
+    Tezos,
 };
 
 use crate::{
-    internal::coder::{
-        operation_bytes_coder::OperationBytesCoder,
-        operation_content_bytes_coder::OperationContentBytesCoder,
+    internal::{
+        coder::{
+            operation_bytes_coder::OperationBytesCoder,
+            operation_content_bytes_coder::OperationContentBytesCoder,
+        },
+        signer::{OperationSigner, Signer, Verifier},
     },
     Result,
 };
@@ -79,6 +83,25 @@ impl UnsignedOperation {
     pub fn from_forged_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self> {
         OperationBytesCoder::decode(bytes.as_ref())
     }
+
+    pub fn into_signed_operation_with(
+        self,
+        key: &SecretKey,
+        tezos: &Tezos,
+    ) -> Result<SignedOperation> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+        let signature = signer.sign(&self, key)?;
+
+        Ok(SignedOperation::new(self.branch, self.contents, signature))
+    }
+
+    pub fn into_signed_operation(self, key: &SecretKey) -> Result<SignedOperation> {
+        let tezos: Tezos = Default::default();
+        let signer = OperationSigner::new(tezos.get_crypto());
+        let signature = signer.sign(&self, key)?;
+
+        Ok(SignedOperation::new(self.branch, self.contents, signature))
+    }
 }
 
 impl Operation for UnsignedOperation {
@@ -107,6 +130,35 @@ pub struct SignedOperation {
 impl SignedOperation {
     pub fn signature(&self) -> &Signature {
         &self.signature
+    }
+
+    pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn verify(&self, key: &PublicKey) -> Result<bool> {
+        let tezos: Tezos = Default::default();
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn to_injectable_string(&self) -> Result<String> {
+        let forged_bytes = self.to_forged_bytes()?;
+        let signature_bytes = self.signature().to_bytes()?;
+        Ok(hex::encode([forged_bytes, signature_bytes].concat()))
+    }
+
+    pub fn new(branch: BlockHash, contents: Vec<OperationContent>, signature: Signature) -> Self {
+        Self {
+            branch,
+            contents,
+            signature,
+        }
+    }
+
+    pub fn from(operation: UnsignedOperation, signature: Signature) -> Self {
+        Self::new(operation.branch, operation.contents, signature)
     }
 }
 

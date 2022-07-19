@@ -202,6 +202,24 @@ impl TryFrom<&SecretKey> for Vec<u8> {
     }
 }
 
+impl From<Ed25519SecretKey> for SecretKey {
+    fn from(value: Ed25519SecretKey) -> Self {
+        Self::Ed25519(value)
+    }
+}
+
+impl From<Secp256K1SecretKey> for SecretKey {
+    fn from(value: Secp256K1SecretKey) -> Self {
+        Self::Secp256K1(value)
+    }
+}
+
+impl From<P256SecretKey> for SecretKey {
+    fn from(value: P256SecretKey) -> Self {
+        Self::P256(value)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -290,6 +308,24 @@ impl TryFrom<&PublicKey> for Vec<u8> {
 
     fn try_from(value: &PublicKey) -> Result<Self> {
         value.to_bytes()
+    }
+}
+
+impl From<Ed25519PublicKey> for PublicKey {
+    fn from(value: Ed25519PublicKey) -> Self {
+        Self::Ed25519(value)
+    }
+}
+
+impl From<Secp256K1PublicKey> for PublicKey {
+    fn from(value: Secp256K1PublicKey) -> Self {
+        Self::Secp256K1(value)
+    }
+}
+
+impl From<P256PublicKey> for PublicKey {
+    fn from(value: P256PublicKey) -> Self {
+        Self::P256(value)
     }
 }
 
