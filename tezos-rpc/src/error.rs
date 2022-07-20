@@ -5,6 +5,9 @@ pub enum Error {
     Core {
         source: tezos_core::Error,
     },
+    Operation {
+        source: tezos_operation::Error,
+    },
     #[cfg(feature = "http")]
     HttpError {
         source: reqwest::Error,

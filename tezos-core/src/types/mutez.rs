@@ -7,6 +7,7 @@ use derive_more::{
     Sub, SubAssign, Sum,
 };
 use lazy_static::lazy_static;
+use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use regex::Regex;
 #[cfg(feature = "serde")]
@@ -130,6 +131,14 @@ impl TryFrom<u64> for Mutez {
     type Error = Error;
 
     fn try_from(value: u64) -> Result<Self> {
+        Ok(Self(value.try_into()?))
+    }
+}
+
+impl TryFrom<BigUint> for Mutez {
+    type Error = Error;
+
+    fn try_from(value: BigUint) -> Result<Self> {
         Ok(Self(value.try_into()?))
     }
 }

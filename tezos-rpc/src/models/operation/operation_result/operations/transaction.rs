@@ -1,5 +1,3 @@
-use crate::models::operation::operation_result::OperationResult;
-
 use {
     crate::{
         models::balance_update::BalanceUpdate,
@@ -43,46 +41,6 @@ pub struct TransactionOperationResult {
     pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
-}
-
-impl OperationResult for TransactionOperationResult {
-    fn status(&self) -> OperationResultStatus {
-        self.status
-    }
-
-    fn originated_contracts(&self) -> Option<&Vec<ContractAddress>> {
-        self.originated_contracts.as_ref()
-    }
-
-    fn consumed_gas(&self) -> num_bigint::BigUint {
-        self.consumed_gas
-            .as_ref()
-            .map_or(0u8.into(), |consumed_gas| {
-                consumed_gas.parse().unwrap_or(0u8.into())
-            })
-    }
-
-    fn consumed_milligas(&self) -> num_bigint::BigUint {
-        self.consumed_milligas
-            .as_ref()
-            .map_or(0u8.into(), |consumed_gas| {
-                consumed_gas.parse().unwrap_or(0u8.into())
-            })
-    }
-
-    fn paid_storage_size_diff(&self) -> Option<num_bigint::BigUint> {
-        self.paid_storage_size_diff
-            .as_ref()
-            .map(|consumed_gas| consumed_gas.parse().unwrap_or(0u8.into()))
-    }
-
-    fn allocated_destination_contract(&self) -> Option<bool> {
-        self.allocated_destination_contract
-    }
-
-    fn lazy_storage_diff(&self) -> Option<&Vec<LazyStorageDiff>> {
-        self.lazy_storage_diff.as_ref()
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

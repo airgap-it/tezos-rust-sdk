@@ -1,3 +1,10 @@
+mod delegation;
+mod origination;
+mod register_global_constant;
+mod reveal;
+mod set_deposits_limit;
+mod transaction;
+
 use async_trait::async_trait;
 use num_bigint::BigUint;
 use tezos_core::types::mutez::Mutez;
@@ -7,10 +14,13 @@ use crate::{
     client::TezosRpc,
     http::Http,
     models::{
-        limits::{Limits, OperationLimits},
+        limits::{
+            Limits, OperationLimits, BASE_FEE, FEE_PER_GAS_UNIT, FEE_PER_STORAGE_BYTE,
+            FEE_SAFTY_MARGIN, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN,
+        },
         operation::{
-            operation_contents_and_result::reveal::RevealMetadata,
-            operation_result::operations::reveal::RevealOperationResult, OperationContent,
+            operation_result::{operations::InternalOperationResult, OperationResultStatus},
+            OperationContent,
         },
     },
     Result,
@@ -247,13 +257,30 @@ impl UpdateWith<Vec<OperationContent>> for UnsignedOperation {
 }
 
 impl UpdateWith<OperationContent> for tezos_operation::operations::OperationContent {
-    fn update_with(self, value: OperationContent) -> Result<Self> {
-        if !operation_content_matches(&self, &value) {
+    fn update_with(self, rpc_operation_content: OperationContent) -> Result<Self> {
+        if !operation_content_matches(&self, &rpc_operation_content) {
             return Ok(self);
         }
 
-        todo!()
+        if let Some(metadata_limits) = rpc_operation_content.metadata_limits() {
+            let forged = (&self).to_forged_bytes()?;
+            let size = forged.len() + 32 + 64; // content size + forged branch size + forged signature size
+            let fee = fee(size, &metadata_limits)?;
+            return Ok(self.apply(Some(fee), &metadata_limits));
+        }
+
+        return Ok(self);
     }
+}
+
+fn fee(operation_size: usize, limits: &OperationLimits) -> Result<Mutez> {
+    let gas_fee: Mutez = (BigUint::from(FEE_PER_GAS_UNIT) * limits.gas.clone()).try_into()?;
+    let storage_fee: Mutez =
+        (BigUint::from(FEE_PER_STORAGE_BYTE) * BigUint::from(operation_size)).try_into()?;
+    let base: Mutez = BASE_FEE.into();
+    let safty_margin: Mutez = FEE_SAFTY_MARGIN.into();
+
+    Ok(base + gas_fee + storage_fee + safty_margin)
 }
 
 fn operation_content_matches(
@@ -289,47 +316,85 @@ fn operation_content_matches(
 impl OperationContent {
     fn metadata_limits(&self) -> Option<OperationLimits> {
         match self {
-            Self::Reveal(value) => todo!(),
-            Self::Transaction(value) => todo!(),
-            Self::Origination(value) => todo!(),
-            Self::Delegation(value) => todo!(),
-            Self::RegisterGlobalConstant(value) => todo!(),
-            Self::SetDepositsLimit(value) => todo!(),
-            Self::FailingNoop(value) => todo!(),
-            Self::DoubleBakingEvidence(value) => todo!(),
+            Self::Reveal(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
+            Self::Transaction(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
+            Self::Origination(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
+            Self::Delegation(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
+            Self::RegisterGlobalConstant(value) => {
+                value.metadata.as_ref().map(|metadata| metadata.limits())
+            }
+            Self::SetDepositsLimit(value) => {
+                value.metadata.as_ref().map(|metadata| metadata.limits())
+            }
             _ => None,
         }
     }
 }
 
-impl RevealMetadata {
-    fn limits(&self) -> Result<OperationLimits> {
-        todo!()
-        // if let Some(results) = self.internal_operation_results.as_ref() {
-        //     let operation_result_limits = (&self.operation_result)
-        //         .limits()
-        //         .unwrap_or(OperationLimits::zero());
+trait RpcMetadata<OperationResult: RpcOperationResult> {
+    fn operation_result(&self) -> &OperationResult;
+    fn internal_operation_results(&self) -> Option<&Vec<InternalOperationResult>>;
 
-        //     results
-        //         .into_iter()
-        //         .try_fold(operation_result_limits, |acc, result| {
-        //             let limits = result.result.limits()?;
+    fn limits(&self) -> OperationLimits {
+        if let Some(results) = self.internal_operation_results() {
+            let operation_result_limits = self.operation_result().limits();
 
-        //             Ok(OperationLimits {
-        //                 gas: acc.gas + limits.gas,
-        //                 storage: acc.storage + limits.storage,
-        //             })
-        //         })
-        // } else {
-        //     Ok((&self.operation_result)
-        //         .limits()
-        //         .unwrap_or(OperationLimits::zero()))
-        // }
+            results
+                .into_iter()
+                .fold(operation_result_limits, |acc, result| {
+                    let limits = result.limits();
+
+                    OperationLimits {
+                        gas: acc.gas + limits.gas,
+                        storage: acc.storage + limits.storage,
+                    }
+                })
+        } else {
+            self.operation_result().limits()
+        }
     }
 }
 
-impl RevealOperationResult {
-    fn limits(&self) -> Result<OperationLimits> {
-        todo!()
+impl InternalOperationResult {
+    fn limits(&self) -> OperationLimits {
+        match self {
+            Self::Transaction(value) => value
+                .result
+                .as_ref()
+                .map_or(OperationLimits::zero(), |result| result.limits()),
+            Self::Origination(value) => value.result.limits(),
+            Self::Delegation(value) => value.result.limits(),
+        }
+    }
+}
+
+trait RpcOperationResult {
+    fn status(&self) -> OperationResultStatus;
+    fn number_of_originated_contracts(&self) -> usize;
+    fn consumed_gas(&self) -> BigUint;
+    fn consumed_milligas(&self) -> BigUint;
+    fn paid_storage_size_diff(&self) -> Option<BigUint>;
+    fn allocated_destination_contract(&self) -> Option<bool>;
+
+    fn limits(&self) -> OperationLimits {
+        OperationLimits {
+            gas: self.consumed_gas() + GAS_SAFETY_MARGIN,
+            storage: self.paid_storage_size_diff().unwrap_or(0u8.into())
+                + self.burn_fee()
+                + STORAGE_SAFETY_MARGIN,
+        }
+    }
+
+    fn burn_fee(&self) -> BigUint {
+        let mut sum: BigUint = 0u8.into();
+        if let Some(allocated) = self.allocated_destination_contract() {
+            if allocated {
+                sum += 257u16;
+            }
+        }
+
+        sum += (self.number_of_originated_contracts() as u64) * 257;
+
+        return sum;
     }
 }

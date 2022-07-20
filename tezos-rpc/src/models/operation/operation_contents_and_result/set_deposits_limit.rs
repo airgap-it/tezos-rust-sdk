@@ -21,7 +21,7 @@ pub struct SetDepositsLimit {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<Mutez>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub metadata: Option<SetDepositsLimitsMetadata>,
+    pub metadata: Option<SetDepositsLimitMetadata>,
 }
 
 impl From<tezos_operation::operations::SetDepositsLimit> for SetDepositsLimit {
@@ -55,7 +55,7 @@ impl TryFrom<SetDepositsLimit> for tezos_operation::operations::SetDepositsLimit
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SetDepositsLimitsMetadata {
+pub struct SetDepositsLimitMetadata {
     pub operation_result: SetDepositsLimitOperationResult,
     #[serde(default)]
     pub balance_updates: Vec<BalanceUpdate>,
