@@ -667,4 +667,43 @@ make_encoded_structs!(
             bytes_length: 20,
         }
     },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct message_result_hash::MessageResultHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txmr",
+            base58_length: 54,
+            bytes_prefix: [18, 7, 206, 87,],
+            bytes_length: 32,
+        }
+    },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct commitment_hash::CommitmentHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txc",
+            base58_length: 53,
+            bytes_prefix: [79, 148, 17,],
+            bytes_length: 32,
+        }
+    },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct inbox_hash::InboxHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txi",
+            base58_length: 53,
+            bytes_prefix: [79, 148, 196,],
+            bytes_length: 32,
+        }
+    },
 );

@@ -17395,6 +17395,45 @@
                                 "paid_storage_size_diff": "40"
                             }
                         }
+                    },
+                    {
+                        "kind": "tx_rollup_commit",
+                        "source": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                        "fee": "735",
+                        "counter": "252482",
+                        "gas_limit": "3838",
+                        "storage_limit": "0",
+                        "rollup": "txr1YMZxstAHqQ9V313sYjLBCHBXsvSmDZuTs",
+                        "commitment": {
+                            "level": 154,
+                            "messages": [
+                                "txmr3FHSit5k6Ldo8uznva32RHPbwtEsc97uKEugmCzZPsHGdjVAV3"
+                            ],
+                            "predecessor": "txc2gtmSU4eo6eXmwGZk5fakgWZgk2ikN8U2FHxvqwDE4MM4HLSZP",
+                            "inbox_merkle_root": "txi2UiqcaYpuRyPHs9VvYHe836b4FBzxqXzRuPhPYBJGFDxnYFPsp"
+                        },
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                                    "change": "-735",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "735",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "3738",
+                                "consumed_milligas": "3737940"
+                            }
+                        }
                     }
                 ],
                 "signature": "sigTSYQbSJcgYpDJ7HXCmVSvvNeLAfhS7GrVKK6LKNmAhLJBxHfnkSVRm4uhXowCVucFnBTxmdY6LSVwbbZSMrpiJWMjndyM"

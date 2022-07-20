@@ -4,6 +4,7 @@ pub mod register_global_constant;
 pub mod reveal;
 pub mod set_deposits_limit;
 pub mod transaction;
+pub mod tx_rollup_commit;
 pub mod tx_rollup_origination;
 pub mod tx_rollup_submit_batch;
 
