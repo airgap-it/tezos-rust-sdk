@@ -17466,6 +17466,38 @@
                                 "level": 151
                             }
                         }
+                    },
+                    {
+                        "kind": "tx_rollup_remove_commitment",
+                        "source": "tz1MDU45gNc9Ko1Q9obcz6hQkKSMiQRib6GZ",
+                        "fee": "574",
+                        "counter": "266510",
+                        "gas_limit": "3272",
+                        "storage_limit": "0",
+                        "rollup": "txr1V16e1hXyVKndP4aE8cujRfryoHTiHK9fG",
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1MDU45gNc9Ko1Q9obcz6hQkKSMiQRib6GZ",
+                                    "change": "-574",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "574",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "3172",
+                                "consumed_milligas": "3171232",
+                                "level": 6
+                            }
+                        }
                     }
                 ],
                 "signature": "sigTSYQbSJcgYpDJ7HXCmVSvvNeLAfhS7GrVKK6LKNmAhLJBxHfnkSVRm4uhXowCVucFnBTxmdY6LSVwbbZSMrpiJWMjndyM"

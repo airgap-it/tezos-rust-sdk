@@ -235,12 +235,14 @@ mod tests {
         });
         let client = TezosRpc::new(rpc_url);
 
-        client
+        let block = client
             .get_block()
             .block_id(&block_id)
             .metadata(super::MetadataArg::Always)
             .send()
             .await?;
+
+        assert_eq!(block.operations[3].len(), 9);
 
         Ok(())
     }
