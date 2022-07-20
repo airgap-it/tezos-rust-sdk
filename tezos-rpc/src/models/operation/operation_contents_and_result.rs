@@ -21,3 +21,4 @@ pub mod tx_rollup_rejection;
 pub mod tx_rollup_remove_commitment;
 pub mod tx_rollup_return_bond;
 pub mod tx_rollup_submit_batch;
+pub mod transfer_ticket;

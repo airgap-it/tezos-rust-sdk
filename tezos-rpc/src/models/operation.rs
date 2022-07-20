@@ -28,6 +28,7 @@ use {
         operation_contents_and_result::tx_rollup_remove_commitment::TxRollupRemoveCommitment,
         operation_contents_and_result::tx_rollup_return_bond::TxRollupReturnBond,
         operation_contents_and_result::tx_rollup_submit_batch::TxRollupSubmitBatch,
+        operation_contents_and_result::transfer_ticket::TransferTicket,
     },
     serde::{Deserialize, Serialize},
     tezos_core::types::encoded::{BlockHash, ChainId, OperationHash, ProtocolHash, Signature},
@@ -76,6 +77,7 @@ pub enum OperationContent {
     TxRollupFinalizeCommitment(TxRollupFinalizeCommitment),
     TxRollupRemoveCommitment(TxRollupRemoveCommitment),
     TxRollupRejection(TxRollupRejection),
+    TransferTicket(TransferTicket),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

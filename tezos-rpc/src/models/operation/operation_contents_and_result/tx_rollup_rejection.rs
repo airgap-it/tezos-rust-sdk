@@ -79,12 +79,12 @@ pub struct TxRollupRejectionProof {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ValueContext {
-    value: ContextHash,
+    pub value: ContextHash,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NodeContext {
-    node: ContextHash,
+    pub node: ContextHash,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
