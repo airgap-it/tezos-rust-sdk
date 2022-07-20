@@ -4,14 +4,15 @@ pub mod register_global_constant;
 pub mod reveal;
 pub mod set_deposits_limit;
 pub mod transaction;
+pub mod transfer_ticket;
 pub mod tx_rollup_commit;
+pub mod tx_rollup_dispatch_tickets;
 pub mod tx_rollup_finalize_commitment;
 pub mod tx_rollup_origination;
 pub mod tx_rollup_rejection;
 pub mod tx_rollup_remove_commitment;
 pub mod tx_rollup_return_bond;
 pub mod tx_rollup_submit_batch;
-pub mod transfer_ticket;
 
 use {
     self::delegation::{

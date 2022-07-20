@@ -4,11 +4,11 @@ use {
         operation::operation_result::operations::transfer_ticket::TransferTicketOperationResult,
     },
     serde::{Deserialize, Serialize},
-    tezos_michelson::micheline::Micheline,
     tezos_core::types::{
-        encoded::{ImplicitAddress, ContractAddress},
+        encoded::{ContractAddress, ImplicitAddress},
         mutez::Mutez,
     },
+    tezos_michelson::micheline::Micheline,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

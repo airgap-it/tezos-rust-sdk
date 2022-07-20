@@ -242,7 +242,7 @@ mod tests {
             .send()
             .await?;
 
-        assert_eq!(block.operations[3].len(), 9);
+        assert_eq!(block.operations[3].last().unwrap().contents.len(), 6);
 
         Ok(())
     }
