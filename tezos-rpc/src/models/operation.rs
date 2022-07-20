@@ -24,6 +24,7 @@ use {
         operation_contents_and_result::tx_rollup_commit::TxRollupCommit,
         operation_contents_and_result::tx_rollup_finalize_commitment::TxRollupFinalizeCommitment,
         operation_contents_and_result::tx_rollup_origination::TxRollupOrigination,
+        operation_contents_and_result::tx_rollup_rejection::TxRollupRejection,
         operation_contents_and_result::tx_rollup_remove_commitment::TxRollupRemoveCommitment,
         operation_contents_and_result::tx_rollup_return_bond::TxRollupReturnBond,
         operation_contents_and_result::tx_rollup_submit_batch::TxRollupSubmitBatch,
@@ -74,6 +75,7 @@ pub enum OperationContent {
     TxRollupReturnBond(TxRollupReturnBond),
     TxRollupFinalizeCommitment(TxRollupFinalizeCommitment),
     TxRollupRemoveCommitment(TxRollupRemoveCommitment),
+    TxRollupRejection(TxRollupRejection),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

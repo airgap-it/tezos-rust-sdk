@@ -684,6 +684,19 @@ make_encoded_structs!(
         use {
             internal::coder::EncodedBytesCoder,
         }
+        struct message_result_list_hash::MessageResultListHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txM",
+            base58_length: 53,
+            bytes_prefix: [79, 146, 82,],
+            bytes_length: 32,
+        }
+    },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
         struct commitment_hash::CommitmentHash;
         coder: EncodedBytesCoder;
         meta {
@@ -703,6 +716,32 @@ make_encoded_structs!(
             base58_prefix: "txi",
             base58_length: 53,
             bytes_prefix: [79, 148, 196,],
+            bytes_length: 32,
+        }
+    },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct tx_rollup_l2_address::TxRollupL2Address;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "tz4",
+            base58_length: 36,
+            bytes_prefix: [6, 161, 166,],
+            bytes_length: 20,
+        }
+    },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct withdraw_list_hash::WithdrawListHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "txw",
+            base58_length: 53,
+            bytes_prefix: [79, 150, 72,],
             bytes_length: 32,
         }
     },
