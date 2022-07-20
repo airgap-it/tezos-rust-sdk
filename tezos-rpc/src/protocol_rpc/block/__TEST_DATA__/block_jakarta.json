@@ -17298,6 +17298,273 @@
                     }
                 ],
                 "signature": "sigbeidj93rP8ADPRRoPrbUQm33dfi7h5oRYbERbC2z2gBMGWtUDHQZ2V94Sq3t2Jj8CthGqb1UzWX8tyVMBvS6CSWGNZ14R"
+            },
+            {
+                "protocol": "PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY",
+                "chain_id": "NetXLH1uAxK7CCh",
+                "hash": "onicc5jVkhpvsPemDLUYKyuCWHRAgnELPXdf4HXSQoy5RQCpKv3",
+                "branch": "BLUG475DXvQUX2kaphGbaWNAvSPgVQpEiPqPXaZtNWrVo2fXm1B",
+                "contents": [
+                    {
+                        "kind": "tx_rollup_origination",
+                        "source": "tz2TzRp5uNPXteNqbRWNi7LKxQ7gytyD3mCE",
+                        "fee": "446",
+                        "counter": "546394",
+                        "gas_limit": "1521",
+                        "storage_limit": "4000",
+                        "tx_rollup_origination": {},
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz2TzRp5uNPXteNqbRWNi7LKxQ7gytyD3mCE",
+                                    "change": "-446",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "446",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [
+                                    {
+                                        "kind": "contract",
+                                        "contract": "tz2TzRp5uNPXteNqbRWNi7LKxQ7gytyD3mCE",
+                                        "change": "-1000000",
+                                        "origin": "block"
+                                    },
+                                    {
+                                        "kind": "burned",
+                                        "category": "storage fees",
+                                        "change": "1000000",
+                                        "origin": "block"
+                                    }
+                                ],
+                                "consumed_gas": "1421",
+                                "consumed_milligas": "1420108",
+                                "originated_rollup": "txr1WR121Vr5T2ywdFdm7fsYGxwiCsuXSrGbY"
+                            }
+                        }
+                    },
+                    {
+                        "kind": "tx_rollup_submit_batch",
+                        "source": "tz2ACitGGkU7w61nczuhMs2tmwPiRYcUQfLU",
+                        "fee": "595",
+                        "counter": "566348",
+                        "gas_limit": "2869",
+                        "storage_limit": "40",
+                        "rollup": "txr1YTdi9BktRmybwhgkhRK7WPrutEWVGJT7w",
+                        "content": "626c6f62",
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz2ACitGGkU7w61nczuhMs2tmwPiRYcUQfLU",
+                                    "change": "-595",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "595",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [
+                                    {
+                                        "kind": "contract",
+                                        "contract": "tz2ACitGGkU7w61nczuhMs2tmwPiRYcUQfLU",
+                                        "change": "-10000",
+                                        "origin": "block"
+                                    },
+                                    {
+                                        "kind": "burned",
+                                        "category": "storage fees",
+                                        "change": "10000",
+                                        "origin": "block"
+                                    }
+                                ],
+                                "consumed_gas": "2769",
+                                "consumed_milligas": "2768534",
+                                "paid_storage_size_diff": "40"
+                            }
+                        }
+                    },
+                    {
+                        "kind": "tx_rollup_commit",
+                        "source": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                        "fee": "735",
+                        "counter": "252482",
+                        "gas_limit": "3838",
+                        "storage_limit": "0",
+                        "rollup": "txr1YMZxstAHqQ9V313sYjLBCHBXsvSmDZuTs",
+                        "commitment": {
+                            "level": 154,
+                            "messages": [
+                                "txmr3FHSit5k6Ldo8uznva32RHPbwtEsc97uKEugmCzZPsHGdjVAV3"
+                            ],
+                            "predecessor": "txc2gtmSU4eo6eXmwGZk5fakgWZgk2ikN8U2FHxvqwDE4MM4HLSZP",
+                            "inbox_merkle_root": "txi2UiqcaYpuRyPHs9VvYHe836b4FBzxqXzRuPhPYBJGFDxnYFPsp"
+                        },
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                                    "change": "-735",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "735",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "3738",
+                                "consumed_milligas": "3737940"
+                            }
+                        }
+                    },
+                    {
+                        "kind": "tx_rollup_finalize_commitment",
+                        "source": "tz1M1PXyMAhAsXroc6DtuWUUeHvb79ZzCnCp",
+                        "fee": "507",
+                        "counter": "252505",
+                        "gas_limit": "2603",
+                        "storage_limit": "0",
+                        "rollup": "txr1YMZxstAHqQ9V313sYjLBCHBXsvSmDZuTs",
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1M1PXyMAhAsXroc6DtuWUUeHvb79ZzCnCp",
+                                    "change": "-507",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "507",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "2503",
+                                "consumed_milligas": "2502004",
+                                "level": 151
+                            }
+                        }
+                    },
+                    {
+                        "kind": "tx_rollup_remove_commitment",
+                        "source": "tz1MDU45gNc9Ko1Q9obcz6hQkKSMiQRib6GZ",
+                        "fee": "574",
+                        "counter": "266510",
+                        "gas_limit": "3272",
+                        "storage_limit": "0",
+                        "rollup": "txr1V16e1hXyVKndP4aE8cujRfryoHTiHK9fG",
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1MDU45gNc9Ko1Q9obcz6hQkKSMiQRib6GZ",
+                                    "change": "-574",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "574",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "3172",
+                                "consumed_milligas": "3171232",
+                                "level": 6
+                            }
+                        }
+                    },
+                    {
+                        "kind": "tx_rollup_dispatch_tickets",
+                        "source": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                        "fee": "835",
+                        "counter": "252405",
+                        "gas_limit": "4354",
+                        "storage_limit": "86",
+                        "tx_rollup": "txr1YMZxstAHqQ9V313sYjLBCHBXsvSmDZuTs",
+                        "level": 4,
+                        "context_hash": "CoV7iqRirVx7sZa5TAK9ymoEJBrW6z4hwwrzMhz6YLeHYXrQwRWG",
+                        "message_index": 0,
+                        "message_result_path": [
+                            "txM2eYt63gJ98tv3z4nj3aWPMzpjLnW9xpUdmz4ftMnbvNG34Y4wB"
+                        ],
+                        "tickets_info": [
+                            {
+                                "contents": {
+                                    "string": "third-deposit"
+                                },
+                                "ty": {
+                                    "prim": "string"
+                                },
+                                "ticketer": "KT1EMQxfYVvhTJTqMiVs2ho2dqjbYfYKk6BY",
+                                "amount": "2",
+                                "claimer": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM"
+                            }
+                        ],
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                                    "change": "-835",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "835",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [
+                                    {
+                                        "kind": "contract",
+                                        "contract": "tz1inuxjXxKhd9e4b97N1Wgz7DwmZSxFcDpM",
+                                        "change": "-16500",
+                                        "origin": "block"
+                                    },
+                                    {
+                                        "kind": "burned",
+                                        "category": "storage fees",
+                                        "change": "16500",
+                                        "origin": "block"
+                                    }
+                                ],
+                                "consumed_gas": "4254",
+                                "consumed_milligas": "4253558",
+                                "paid_storage_size_diff": "66"
+                            }
+                        }
+                    }
+                ],
+                "signature": "sigTSYQbSJcgYpDJ7HXCmVSvvNeLAfhS7GrVKK6LKNmAhLJBxHfnkSVRm4uhXowCVucFnBTxmdY6LSVwbbZSMrpiJWMjndyM"
             }
         ]
     ]

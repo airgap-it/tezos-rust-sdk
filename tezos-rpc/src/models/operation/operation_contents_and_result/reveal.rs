@@ -1,14 +1,13 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress, PublicKey},
-    mutez::Mutez,
-};
-
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
         models::operation::operation_result::operations::reveal::RevealOperationResult,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::{
+        encoded::{ImplicitAddress, PublicKey},
+        mutez::Mutez,
+    },
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -29,24 +28,9 @@ pub struct Reveal {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RevealMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
     pub operation_result: RevealOperationResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<Vec<InternalRevealOperationResult>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalRevealOperationResult {
-    /// [OperationKind::Reveal]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    /// Public key (Base58Check-encoded)
-    pub public_key: PublicKey,
-    pub result: RevealOperationResult,
+    #[serde(default)]
+    pub balance_updates: Vec<BalanceUpdate>,
 }
 
 #[cfg(test)]
