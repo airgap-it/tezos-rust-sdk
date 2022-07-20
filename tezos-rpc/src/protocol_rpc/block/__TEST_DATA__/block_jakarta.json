@@ -17434,6 +17434,38 @@
                                 "consumed_milligas": "3737940"
                             }
                         }
+                    },
+                    {
+                        "kind": "tx_rollup_finalize_commitment",
+                        "source": "tz1M1PXyMAhAsXroc6DtuWUUeHvb79ZzCnCp",
+                        "fee": "507",
+                        "counter": "252505",
+                        "gas_limit": "2603",
+                        "storage_limit": "0",
+                        "rollup": "txr1YMZxstAHqQ9V313sYjLBCHBXsvSmDZuTs",
+                        "metadata": {
+                            "balance_updates": [
+                                {
+                                    "kind": "contract",
+                                    "contract": "tz1M1PXyMAhAsXroc6DtuWUUeHvb79ZzCnCp",
+                                    "change": "-507",
+                                    "origin": "block"
+                                },
+                                {
+                                    "kind": "accumulator",
+                                    "category": "block fees",
+                                    "change": "507",
+                                    "origin": "block"
+                                }
+                            ],
+                            "operation_result": {
+                                "status": "applied",
+                                "balance_updates": [],
+                                "consumed_gas": "2503",
+                                "consumed_milligas": "2502004",
+                                "level": 151
+                            }
+                        }
                     }
                 ],
                 "signature": "sigTSYQbSJcgYpDJ7HXCmVSvvNeLAfhS7GrVKK6LKNmAhLJBxHfnkSVRm4uhXowCVucFnBTxmdY6LSVwbbZSMrpiJWMjndyM"

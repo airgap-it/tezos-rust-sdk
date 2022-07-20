@@ -5,6 +5,7 @@ pub mod reveal;
 pub mod set_deposits_limit;
 pub mod transaction;
 pub mod tx_rollup_commit;
+pub mod tx_rollup_finalize_commitment;
 pub mod tx_rollup_origination;
 pub mod tx_rollup_return_bond;
 pub mod tx_rollup_submit_batch;

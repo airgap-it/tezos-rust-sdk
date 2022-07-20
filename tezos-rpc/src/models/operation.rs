@@ -22,6 +22,7 @@ use {
         operation_contents_and_result::set_deposits_limit::SetDepositsLimit,
         operation_contents_and_result::transaction::Transaction,
         operation_contents_and_result::tx_rollup_commit::TxRollupCommit,
+        operation_contents_and_result::tx_rollup_finalize_commitment::TxRollupFinalizeCommitment,
         operation_contents_and_result::tx_rollup_origination::TxRollupOrigination,
         operation_contents_and_result::tx_rollup_return_bond::TxRollupReturnBond,
         operation_contents_and_result::tx_rollup_submit_batch::TxRollupSubmitBatch,
@@ -70,6 +71,7 @@ pub enum OperationContent {
     TxRollupSubmitBatch(TxRollupSubmitBatch),
     TxRollupCommit(TxRollupCommit),
     TxRollupReturnBond(TxRollupReturnBond),
+    TxRollupFinalizeCommitment(TxRollupFinalizeCommitment),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
