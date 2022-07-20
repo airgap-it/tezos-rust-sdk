@@ -22,6 +22,30 @@ pub struct Preendorsement {
     pub metadata: Option<PreendorsementMetadata>,
 }
 
+impl From<tezos_operation::operations::Preendorsement> for Preendorsement {
+    fn from(value: tezos_operation::operations::Preendorsement) -> Self {
+        Self {
+            kind: OperationKind::Preendorsement,
+            level: value.level,
+            slot: value.slot,
+            round: value.round,
+            block_payload_hash: value.block_payload_hash,
+            metadata: None,
+        }
+    }
+}
+
+impl From<Preendorsement> for tezos_operation::operations::Preendorsement {
+    fn from(value: Preendorsement) -> Self {
+        Self {
+            slot: value.slot,
+            level: value.level,
+            round: value.round,
+            block_payload_hash: value.block_payload_hash,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct PreendorsementMetadata {
     /// Public key hash (Base58Check-encoded)

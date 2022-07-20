@@ -20,4 +20,8 @@ pub enum Error {
     },
     RpcErrorPlain(String),
     RpcErrors(Vec<RpcError>),
+    InvalidConversion,
+    OperationNotSupported,
 }
+
+pub type Result<T> = std::result::Result<T, Error>;

@@ -294,6 +294,12 @@ impl TryFrom<&Mutez> for Vec<u8> {
     }
 }
 
+impl Default for Mutez {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

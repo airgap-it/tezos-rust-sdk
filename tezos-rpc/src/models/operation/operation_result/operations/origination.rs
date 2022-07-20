@@ -4,10 +4,10 @@ use {
         contract::ContractScript,
         error::RpcError,
         operation::kind::OperationKind,
-        operation::operation_result::OperationResultStatus,
         operation::operation_result::{
             big_map_diff::BigMapDiff, lazy_storage_diff::LazyStorageDiff,
         },
+        operation::operation_result::{OperationResult, OperationResultStatus},
     },
     serde::{Deserialize, Serialize},
     tezos_core::types::encoded::{Address, ContractAddress, ImplicitAddress},
@@ -31,9 +31,49 @@ pub struct OriginationOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub paid_storage_size_diff: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lazy_storage_diff: Option<LazyStorageDiff>,
+    pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
+}
+
+impl OperationResult for OriginationOperationResult {
+    fn status(&self) -> OperationResultStatus {
+        self.status
+    }
+
+    fn originated_contracts(&self) -> Option<&Vec<ContractAddress>> {
+        self.originated_contracts.as_ref()
+    }
+
+    fn consumed_gas(&self) -> num_bigint::BigUint {
+        self.consumed_gas
+            .as_ref()
+            .map_or(0u8.into(), |consumed_gas| {
+                consumed_gas.parse().unwrap_or(0u8.into())
+            })
+    }
+
+    fn consumed_milligas(&self) -> num_bigint::BigUint {
+        self.consumed_milligas
+            .as_ref()
+            .map_or(0u8.into(), |consumed_gas| {
+                consumed_gas.parse().unwrap_or(0u8.into())
+            })
+    }
+
+    fn paid_storage_size_diff(&self) -> Option<num_bigint::BigUint> {
+        self.paid_storage_size_diff
+            .as_ref()
+            .map(|consumed_gas| consumed_gas.parse().unwrap_or(0u8.into()))
+    }
+
+    fn allocated_destination_contract(&self) -> Option<bool> {
+        None
+    }
+
+    fn lazy_storage_diff(&self) -> Option<&Vec<LazyStorageDiff>> {
+        self.lazy_storage_diff.as_ref()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

@@ -8,29 +8,13 @@ use crate::{Error, Result};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ballot {
-    source: ImplicitAddress,
-    period: i32,
-    proposal: ProtocolHash,
-    ballot: Type,
+    pub source: ImplicitAddress,
+    pub period: i32,
+    pub proposal: ProtocolHash,
+    pub ballot: Type,
 }
 
 impl Ballot {
-    pub fn source(&self) -> &ImplicitAddress {
-        &self.source
-    }
-
-    pub fn period(&self) -> i32 {
-        self.period
-    }
-
-    pub fn proposal(&self) -> &ProtocolHash {
-        &self.proposal
-    }
-
-    pub fn ballot(&self) -> Type {
-        self.ballot
-    }
-
     pub fn new(source: ImplicitAddress, period: i32, proposal: ProtocolHash, ballot: Type) -> Self {
         Self {
             source,

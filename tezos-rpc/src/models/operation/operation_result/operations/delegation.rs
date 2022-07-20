@@ -1,10 +1,13 @@
 use {
     crate::{
-        models::error::RpcError, models::operation::kind::OperationKind,
-        models::operation::operation_result::OperationResultStatus,
+        models::error::RpcError,
+        models::operation::kind::OperationKind,
+        models::operation::operation_result::{
+            LazyStorageDiff, OperationResult, OperationResultStatus,
+        },
     },
     serde::{Deserialize, Serialize},
-    tezos_core::types::encoded::{Address, ImplicitAddress},
+    tezos_core::types::encoded::{Address, ContractAddress, ImplicitAddress},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -16,6 +19,44 @@ pub struct DelegationOperationResult {
     pub consumed_milligas: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
+}
+
+impl OperationResult for DelegationOperationResult {
+    fn status(&self) -> OperationResultStatus {
+        self.status
+    }
+
+    fn originated_contracts(&self) -> Option<&Vec<ContractAddress>> {
+        None
+    }
+
+    fn consumed_gas(&self) -> num_bigint::BigUint {
+        self.consumed_gas
+            .as_ref()
+            .map_or(0u8.into(), |consumed_gas| {
+                consumed_gas.parse().unwrap_or(0u8.into())
+            })
+    }
+
+    fn consumed_milligas(&self) -> num_bigint::BigUint {
+        self.consumed_milligas
+            .as_ref()
+            .map_or(0u8.into(), |consumed_gas| {
+                consumed_gas.parse().unwrap_or(0u8.into())
+            })
+    }
+
+    fn paid_storage_size_diff(&self) -> Option<num_bigint::BigUint> {
+        None
+    }
+
+    fn allocated_destination_contract(&self) -> Option<bool> {
+        None
+    }
+
+    fn lazy_storage_diff(&self) -> Option<&Vec<LazyStorageDiff>> {
+        None
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
