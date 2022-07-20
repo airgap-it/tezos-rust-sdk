@@ -1,5 +1,3 @@
-use tezos_core::types::encoded::{BlockHash, ChainId, OperationHash, ProtocolHash, Signature};
-
 pub mod kind;
 pub mod metadata;
 pub mod operation_contents_and_result;
@@ -23,8 +21,18 @@ use {
         operation_contents_and_result::seed_nonce_revelation::SeedNonceRevelation,
         operation_contents_and_result::set_deposits_limit::SetDepositsLimit,
         operation_contents_and_result::transaction::Transaction,
+        operation_contents_and_result::transfer_ticket::TransferTicket,
+        operation_contents_and_result::tx_rollup_commit::TxRollupCommit,
+        operation_contents_and_result::tx_rollup_dispatch_tickets::TxRollupDispatchTickets,
+        operation_contents_and_result::tx_rollup_finalize_commitment::TxRollupFinalizeCommitment,
+        operation_contents_and_result::tx_rollup_origination::TxRollupOrigination,
+        operation_contents_and_result::tx_rollup_rejection::TxRollupRejection,
+        operation_contents_and_result::tx_rollup_remove_commitment::TxRollupRemoveCommitment,
+        operation_contents_and_result::tx_rollup_return_bond::TxRollupReturnBond,
+        operation_contents_and_result::tx_rollup_submit_batch::TxRollupSubmitBatch,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::encoded::{BlockHash, ChainId, OperationHash, ProtocolHash, Signature},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,6 +70,16 @@ pub enum OperationContent {
     FailingNoop(FailingNoop),
     // Removed in hangzhou protocol (https://tezos.gitlab.io/protocols/tenderbake.html)
     DoubleBakingEvidence(DoubleBakingEvidence),
+    // Added in Jakarta
+    TxRollupOrigination(TxRollupOrigination),
+    TxRollupSubmitBatch(TxRollupSubmitBatch),
+    TxRollupCommit(TxRollupCommit),
+    TxRollupReturnBond(TxRollupReturnBond),
+    TxRollupFinalizeCommitment(TxRollupFinalizeCommitment),
+    TxRollupRemoveCommitment(TxRollupRemoveCommitment),
+    TxRollupRejection(TxRollupRejection),
+    TransferTicket(TransferTicket),
+    TxRollupDispatchTickets(TxRollupDispatchTickets),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
