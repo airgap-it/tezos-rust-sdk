@@ -1,11 +1,14 @@
-use crate::models::operation::{
-    operation_contents_and_result::register_global_constant::RegisterGlobalConstantMetadata,
-    operation_result::{
-        operations::{
-            register_global_constant::RegisterGlobalConstantOperationResult,
-            InternalOperationResult,
+use crate::models::{
+    error::RpcError,
+    operation::{
+        operation_contents_and_result::register_global_constant::RegisterGlobalConstantMetadata,
+        operation_result::{
+            operations::{
+                register_global_constant::RegisterGlobalConstantOperationResult,
+                InternalOperationResult,
+            },
+            OperationResultStatus,
         },
-        OperationResultStatus,
     },
 };
 
@@ -42,6 +45,10 @@ impl RpcOperationResult for RegisterGlobalConstantOperationResult {
 
     fn allocated_destination_contract(&self) -> Option<bool> {
         None
+    }
+
+    fn errors(&self) -> Option<&Vec<RpcError>> {
+        self.errors.as_ref()
     }
 }
 

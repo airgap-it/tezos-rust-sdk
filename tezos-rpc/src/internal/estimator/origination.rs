@@ -1,8 +1,11 @@
-use crate::models::operation::{
-    operation_contents_and_result::origination::OriginationMetadata,
-    operation_result::{
-        operations::{origination::OriginationOperationResult, InternalOperationResult},
-        OperationResultStatus,
+use crate::models::{
+    error::RpcError,
+    operation::{
+        operation_contents_and_result::origination::OriginationMetadata,
+        operation_result::{
+            operations::{origination::OriginationOperationResult, InternalOperationResult},
+            OperationResultStatus,
+        },
     },
 };
 
@@ -43,6 +46,10 @@ impl RpcOperationResult for OriginationOperationResult {
 
     fn allocated_destination_contract(&self) -> Option<bool> {
         None
+    }
+
+    fn errors(&self) -> Option<&Vec<RpcError>> {
+        self.errors.as_ref()
     }
 }
 

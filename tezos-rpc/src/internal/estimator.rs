@@ -14,16 +14,17 @@ use crate::{
     client::TezosRpc,
     http::Http,
     models::{
+        error::RpcError,
         limits::{
             Limits, OperationLimits, BASE_FEE, FEE_PER_GAS_UNIT, FEE_PER_STORAGE_BYTE,
-            FEE_SAFTY_MARGIN, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN, NANO_TEZ_PER_MUTEZ,
+            FEE_SAFTY_MARGIN, GAS_SAFETY_MARGIN, NANO_TEZ_PER_MUTEZ, STORAGE_SAFETY_MARGIN,
         },
         operation::{
             operation_result::{operations::InternalOperationResult, OperationResultStatus},
-            OperationContent, Operation,
+            Operation, OperationContent,
         },
     },
-    Result,
+    Error, Result,
 };
 
 #[async_trait]
@@ -265,7 +266,7 @@ impl TryUpdateWith<OperationContent> for tezos_operation::operations::OperationC
             return Ok(self);
         }
 
-        if let Some(metadata_limits) = rpc_operation_content.metadata_limits() {
+        if let Some(metadata_limits) = rpc_operation_content.metadata_limits()? {
             let forged = (&self).to_forged_bytes()?;
             let size = forged.len() + 32 + 64; // content size + forged branch size + forged signature size
             let fee = fee(size, &metadata_limits)?;
@@ -278,7 +279,8 @@ impl TryUpdateWith<OperationContent> for tezos_operation::operations::OperationC
 
 fn fee(operation_size: usize, limits: &OperationLimits) -> Result<Mutez> {
     let gas_fee: Mutez = nanotez_to_mutez(BigUint::from(FEE_PER_GAS_UNIT) * limits.gas.clone())?;
-    let storage_fee: Mutez = nanotez_to_mutez(BigUint::from(FEE_PER_STORAGE_BYTE) * BigUint::from(operation_size))?;
+    let storage_fee: Mutez =
+        nanotez_to_mutez(BigUint::from(FEE_PER_STORAGE_BYTE) * BigUint::from(operation_size))?;
     let base: Mutez = BASE_FEE.into();
     let safty_margin: Mutez = FEE_SAFTY_MARGIN.into();
 
@@ -324,19 +326,39 @@ fn operation_content_matches(
 }
 
 impl OperationContent {
-    fn metadata_limits(&self) -> Option<OperationLimits> {
+    fn metadata_limits(&self) -> Result<Option<OperationLimits>> {
         match self {
-            Self::Reveal(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
-            Self::Transaction(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
-            Self::Origination(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
-            Self::Delegation(value) => value.metadata.as_ref().map(|metadata| metadata.limits()),
-            Self::RegisterGlobalConstant(value) => {
-                value.metadata.as_ref().map(|metadata| metadata.limits())
-            }
-            Self::SetDepositsLimit(value) => {
-                value.metadata.as_ref().map(|metadata| metadata.limits())
-            }
-            _ => None,
+            Self::Reveal(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            Self::Transaction(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            Self::Origination(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            Self::Delegation(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            Self::RegisterGlobalConstant(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            Self::SetDepositsLimit(value) => value
+                .metadata
+                .as_ref()
+                .map(|metadata| metadata.limits())
+                .map_or(Ok(None), |r| r.map(Some)),
+            _ => Ok(None),
         }
     }
 }
@@ -345,19 +367,19 @@ trait RpcMetadata<OperationResult: RpcOperationResult> {
     fn operation_result(&self) -> &OperationResult;
     fn internal_operation_results(&self) -> Option<&Vec<InternalOperationResult>>;
 
-    fn limits(&self) -> OperationLimits {
+    fn limits(&self) -> Result<OperationLimits> {
         if let Some(results) = self.internal_operation_results() {
-            let operation_result_limits = self.operation_result().limits();
+            let operation_result_limits = self.operation_result().limits()?;
 
             results
                 .into_iter()
-                .fold(operation_result_limits, |acc, result| {
-                    let limits = result.limits();
+                .try_fold(operation_result_limits, |acc, result| {
+                    let limits = result.limits()?;
 
-                    OperationLimits {
+                    Ok(OperationLimits {
                         gas: acc.gas + limits.gas,
                         storage: acc.storage + limits.storage,
-                    }
+                    })
                 })
         } else {
             self.operation_result().limits()
@@ -366,12 +388,12 @@ trait RpcMetadata<OperationResult: RpcOperationResult> {
 }
 
 impl InternalOperationResult {
-    fn limits(&self) -> OperationLimits {
+    fn limits(&self) -> Result<OperationLimits> {
         match self {
             Self::Transaction(value) => value
                 .result
                 .as_ref()
-                .map_or(OperationLimits::zero(), |result| result.limits()),
+                .map_or(Ok(OperationLimits::zero()), |result| result.limits()),
             Self::Origination(value) => value.result.limits(),
             Self::Delegation(value) => value.result.limits(),
         }
@@ -385,14 +407,23 @@ trait RpcOperationResult {
     fn consumed_milligas(&self) -> BigUint;
     fn paid_storage_size_diff(&self) -> Option<BigUint>;
     fn allocated_destination_contract(&self) -> Option<bool>;
+    fn errors(&self) -> Option<&Vec<RpcError>>;
 
-    fn limits(&self) -> OperationLimits {
-        OperationLimits {
+    fn limits(&self) -> Result<OperationLimits> {
+        if self.status() != OperationResultStatus::Applied {
+            let error = if let Some(errors) = self.errors() {
+                Error::RpcErrors(errors.clone())
+            } else {
+                Error::RpcErrorPlain("Operation not applied".into())
+            };
+            return Err(error);
+        }
+        Ok(OperationLimits {
             gas: self.consumed_gas() + GAS_SAFETY_MARGIN,
             storage: self.paid_storage_size_diff().unwrap_or(0u8.into())
-                + self.burn_fee()
-                + STORAGE_SAFETY_MARGIN,
-        }
+                + STORAGE_SAFETY_MARGIN
+                + self.burn_fee(),
+        })
     }
 
     fn burn_fee(&self) -> BigUint {
@@ -416,10 +447,15 @@ mod test {
     use tezos_operation::operations::Transaction;
 
     use crate::models::{
+        balance_update::{BalanceUpdate, Contract, Kind, Origin},
         operation::{
-            operation_contents_and_result::transaction::{Transaction as RpcTransaction, TransactionMetadata},
-            OperationWithMetadata, kind::OperationKind, operation_result::operations::transaction::TransactionOperationResult,
-        }, balance_update::{BalanceUpdate, Contract, Kind, Origin},
+            kind::OperationKind,
+            operation_contents_and_result::transaction::{
+                Transaction as RpcTransaction, TransactionMetadata,
+            },
+            operation_result::operations::transaction::TransactionOperationResult,
+            OperationWithMetadata,
+        },
     };
 
     use super::*;
@@ -447,46 +483,46 @@ mod test {
 
         let response = serde_json::to_string(&OperationWithMetadata {
             contents: vec![
-                OperationContent::Transaction(RpcTransaction { 
-                    kind: OperationKind::Transaction, 
-                    source: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?, 
-                    fee: 0u8.into(), 
-                    counter: "727".into(), 
-                    gas_limit: "1040000".into(), 
-                    storage_limit: "60000".into(), 
-                    amount: 1000u32.into(), 
-                    destination: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?, 
-                    parameters: None, 
-                    metadata: Some(TransactionMetadata { 
-                        operation_result: TransactionOperationResult { 
-                            status: OperationResultStatus::Applied, 
-                            storage: None, 
-                            big_map_diff: None, 
+                OperationContent::Transaction(RpcTransaction {
+                    kind: OperationKind::Transaction,
+                    source: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
+                    fee: 0u8.into(),
+                    counter: "727".into(),
+                    gas_limit: "1040000".into(),
+                    storage_limit: "60000".into(),
+                    amount: 1000u32.into(),
+                    destination: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
+                    parameters: None,
+                    metadata: Some(TransactionMetadata {
+                        operation_result: TransactionOperationResult {
+                            status: OperationResultStatus::Applied,
+                            storage: None,
+                            big_map_diff: None,
                             balance_updates: Some(vec![
-                                BalanceUpdate::Contract(Contract { 
-                                    kind: Kind::Contract, 
-                                    change: "-1000".into(), 
-                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(), 
-                                    origin: Some(Origin::Block) 
+                                BalanceUpdate::Contract(Contract {
+                                    kind: Kind::Contract,
+                                    change: "-1000".into(),
+                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(),
+                                    origin: Some(Origin::Block)
                                 }),
-                                BalanceUpdate::Contract(Contract { 
-                                    kind: Kind::Contract, 
-                                    change: "1000".into(), 
-                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(), 
-                                    origin: Some(Origin::Block) 
+                                BalanceUpdate::Contract(Contract {
+                                    kind: Kind::Contract,
+                                    change: "1000".into(),
+                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(),
+                                    origin: Some(Origin::Block)
                                 }),
-                            ]), 
-                            originated_contracts: None, 
-                            consumed_gas: Some("1421".into()), 
-                            consumed_milligas: Some("1420040".into()), 
-                            storage_size: None, 
-                            paid_storage_size_diff: None, 
-                            allocated_destination_contract: None, 
-                            lazy_storage_diff: None, 
-                            errors: None 
-                        }, 
-                        balance_updates: vec![], 
-                        internal_operation_results: vec![], 
+                            ]),
+                            originated_contracts: None,
+                            consumed_gas: Some("1421".into()),
+                            consumed_milligas: Some("1420040".into()),
+                            storage_size: None,
+                            paid_storage_size_diff: None,
+                            allocated_destination_contract: None,
+                            lazy_storage_diff: None,
+                            errors: None
+                        },
+                        balance_updates: vec![],
+                        internal_operation_results: vec![],
                     }),
                 })
             ],

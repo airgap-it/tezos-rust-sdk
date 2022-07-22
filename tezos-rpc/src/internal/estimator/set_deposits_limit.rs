@@ -1,10 +1,13 @@
-use crate::models::operation::{
-    operation_contents_and_result::set_deposits_limit::SetDepositsLimitMetadata,
-    operation_result::{
-        operations::{
-            set_deposits_limit::SetDepositsLimitOperationResult, InternalOperationResult,
+use crate::models::{
+    error::RpcError,
+    operation::{
+        operation_contents_and_result::set_deposits_limit::SetDepositsLimitMetadata,
+        operation_result::{
+            operations::{
+                set_deposits_limit::SetDepositsLimitOperationResult, InternalOperationResult,
+            },
+            OperationResultStatus,
         },
-        OperationResultStatus,
     },
 };
 
@@ -41,6 +44,10 @@ impl RpcOperationResult for SetDepositsLimitOperationResult {
 
     fn allocated_destination_contract(&self) -> Option<bool> {
         None
+    }
+
+    fn errors(&self) -> Option<&Vec<RpcError>> {
+        self.errors.as_ref()
     }
 }
 
