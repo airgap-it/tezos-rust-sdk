@@ -2,19 +2,11 @@ use super::{InlinedPreendrosement, OperationContentTag, TraitOperationContent};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DoublePreendorsementEvidence {
-    op1: InlinedPreendrosement,
-    op2: InlinedPreendrosement,
+    pub op1: InlinedPreendrosement,
+    pub op2: InlinedPreendrosement,
 }
 
 impl DoublePreendorsementEvidence {
-    pub fn op1(&self) -> &InlinedPreendrosement {
-        &self.op1
-    }
-
-    pub fn op2(&self) -> &InlinedPreendrosement {
-        &self.op2
-    }
-
     pub fn new(op1: InlinedPreendrosement, op2: InlinedPreendrosement) -> Self {
         Self { op1, op2 }
     }

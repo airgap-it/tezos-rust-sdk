@@ -66,7 +66,7 @@ impl OperationSigner {
     where
         F: FnOnce(&[u8], &[u8], &[u8]) -> Result<bool>,
     {
-        let signature = operation.signature().to_bytes()?;
+        let signature = operation.signature.to_bytes()?;
         self.hash(operation)
             .map_or(Ok(false), |message| verifier(&message, &signature, key))
     }
@@ -189,7 +189,7 @@ mod test {
             for (operation, signature) in operations {
                 let signed = operation.into_signed_operation(&key)?;
 
-                assert_eq!(&signature, signed.signature());
+                assert_eq!(&signature, &signed.signature);
             }
         }
 

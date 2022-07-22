@@ -14,6 +14,24 @@ pub struct ContractScript {
     pub storage: Micheline,
 }
 
+impl From<tezos_operation::operations::Script> for ContractScript {
+    fn from(value: tezos_operation::operations::Script) -> Self {
+        Self {
+            code: value.code,
+            storage: value.storage,
+        }
+    }
+}
+
+impl From<ContractScript> for tezos_operation::operations::Script {
+    fn from(value: ContractScript) -> Self {
+        Self {
+            code: value.code,
+            storage: value.storage,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ContractInfo {
     #[serde(deserialize_with = "serde_utils::number_of_string")]

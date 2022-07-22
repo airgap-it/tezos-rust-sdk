@@ -4,24 +4,12 @@ use super::{OperationContentTag, TraitOperationContent};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Proposals {
-    source: ImplicitAddress,
-    period: i32,
-    proposals: Vec<ProtocolHash>,
+    pub source: ImplicitAddress,
+    pub period: i32,
+    pub proposals: Vec<ProtocolHash>,
 }
 
 impl Proposals {
-    pub fn source(&self) -> &ImplicitAddress {
-        &self.source
-    }
-
-    pub fn period(&self) -> i32 {
-        self.period
-    }
-
-    pub fn proposals(&self) -> &[ProtocolHash] {
-        &self.proposals
-    }
-
     pub fn new(source: ImplicitAddress, period: i32, proposals: Vec<ProtocolHash>) -> Self {
         Self {
             source,

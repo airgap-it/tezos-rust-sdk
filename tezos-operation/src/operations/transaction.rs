@@ -10,29 +10,17 @@ use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerCon
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
-    source: ImplicitAddress,
-    fee: Mutez,
-    counter: Nat,
-    gas_limit: Nat,
-    storage_limit: Nat,
-    amount: Mutez,
-    destination: Address,
-    parameters: Option<Parameters>,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
+    pub counter: Nat,
+    pub gas_limit: Nat,
+    pub storage_limit: Nat,
+    pub amount: Mutez,
+    pub destination: Address,
+    pub parameters: Option<Parameters>,
 }
 
 impl Transaction {
-    pub fn amount(&self) -> Mutez {
-        self.amount
-    }
-
-    pub fn destination(&self) -> &Address {
-        &self.destination
-    }
-
-    pub fn parameters(&self) -> Option<&Parameters> {
-        self.parameters.as_ref()
-    }
-
     pub fn new(
         source: ImplicitAddress,
         fee: Mutez,
@@ -86,19 +74,11 @@ impl TraitOperationManagerContent for Transaction {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Parameters {
-    entrypoint: Entrypoint,
-    value: Micheline,
+    pub entrypoint: Entrypoint,
+    pub value: Micheline,
 }
 
 impl Parameters {
-    pub fn entrypoint(&self) -> &Entrypoint {
-        &self.entrypoint
-    }
-
-    pub fn value(&self) -> &Micheline {
-        &self.value
-    }
-
     pub fn new(entrypoint: Entrypoint, value: Micheline) -> Self {
         Self { entrypoint, value }
     }
@@ -144,10 +124,6 @@ impl Entrypoint {
 
     pub fn remove_delegate() -> Self {
         Self::Primitive(PrimitiveEntrypoint::RemoveDelegate)
-    }
-
-    pub fn named(name: String) -> Self {
-        Self::Named(name)
     }
 }
 

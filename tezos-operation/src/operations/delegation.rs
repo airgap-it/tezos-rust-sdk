@@ -4,19 +4,15 @@ use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerCon
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Delegation {
-    source: ImplicitAddress,
-    fee: Mutez,
-    counter: Nat,
-    gas_limit: Nat,
-    storage_limit: Nat,
-    delegate: Option<ImplicitAddress>,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
+    pub counter: Nat,
+    pub gas_limit: Nat,
+    pub storage_limit: Nat,
+    pub delegate: Option<ImplicitAddress>,
 }
 
 impl Delegation {
-    pub fn delegate(&self) -> Option<&ImplicitAddress> {
-        self.delegate.as_ref()
-    }
-
     pub fn new(
         source: ImplicitAddress,
         fee: Mutez,

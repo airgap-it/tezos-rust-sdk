@@ -4,19 +4,11 @@ use super::{OperationContentTag, TraitOperationContent};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActivateAccount {
-    pkh: Ed25519PublicKeyHash,
-    secret: HexString,
+    pub pkh: Ed25519PublicKeyHash,
+    pub secret: HexString,
 }
 
 impl ActivateAccount {
-    pub fn pkh(&self) -> &Ed25519PublicKeyHash {
-        &self.pkh
-    }
-
-    pub fn secret(&self) -> &HexString {
-        &self.secret
-    }
-
     pub fn new(pkh: Ed25519PublicKeyHash, secret: HexString) -> Self {
         Self { pkh, secret }
     }

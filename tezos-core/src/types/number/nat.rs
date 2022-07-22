@@ -129,6 +129,12 @@ impl From<&Mutez> for Nat {
     }
 }
 
+impl From<Nat> for String {
+    fn from(value: Nat) -> Self {
+        value.0
+    }
+}
+
 impl TryFrom<String> for Nat {
     type Error = Error;
 
@@ -158,6 +164,12 @@ impl TryFrom<&Nat> for Vec<u8> {
 
     fn try_from(value: &Nat) -> Result<Self> {
         value.to_bytes()
+    }
+}
+
+impl From<Nat> for BigUint {
+    fn from(value: Nat) -> Self {
+        value.to_biguint().unwrap()
     }
 }
 

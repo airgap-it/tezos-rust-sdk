@@ -31,7 +31,7 @@ pub struct OriginationOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub paid_storage_size_diff: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lazy_storage_diff: Option<LazyStorageDiff>,
+    pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
 }

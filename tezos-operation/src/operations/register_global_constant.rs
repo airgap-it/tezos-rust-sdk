@@ -5,19 +5,15 @@ use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerCon
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RegisterGlobalConstant {
-    source: ImplicitAddress,
-    fee: Mutez,
-    counter: Nat,
-    gas_limit: Nat,
-    storage_limit: Nat,
-    value: Micheline,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
+    pub counter: Nat,
+    pub gas_limit: Nat,
+    pub storage_limit: Nat,
+    pub value: Micheline,
 }
 
 impl RegisterGlobalConstant {
-    pub fn value(&self) -> &Micheline {
-        &self.value
-    }
-
     pub fn new(
         source: ImplicitAddress,
         fee: Mutez,

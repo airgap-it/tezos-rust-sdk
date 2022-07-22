@@ -1,8 +1,14 @@
 use tezos_core::types::encoded::{Address, BlockHash, ChainId, Encoded, ScriptExprHash};
+use tezos_operation::operations::UnsignedOperation;
 
 #[cfg(feature = "http")]
 use crate::http::default::HttpClient;
-use crate::http::Http;
+use crate::{
+    http::Http,
+    internal::estimator::{FeeEstimator, OperationFeeEstimator},
+    models::limits::Limits,
+    Result,
+};
 
 use {
     crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
@@ -105,6 +111,18 @@ impl TezosRpc<HttpClient> {
     /// ```
     pub fn new_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self::new_rpc_with_chain_id(rpc_endpoint, chain_id)
+    }
+
+    /// Estimates the minimum fee for the given `operation`. The returned operation has the fee, gas_limit and storage_limit values set accordingly.
+    pub async fn min_fee(
+        &self,
+        operation: UnsignedOperation,
+        limits: Option<&Limits>,
+    ) -> Result<UnsignedOperation> {
+        let estimator = OperationFeeEstimator::new(self);
+        estimator
+            .min_fee(operation, limits.unwrap_or(&Default::default()))
+            .await
     }
 }
 
