@@ -50,6 +50,15 @@ impl Encoded for Address {
     }
 }
 
+impl From<Address> for String {
+    fn from(value: Address) -> Self {
+        match value {
+            Address::Implicit(value) => value.into(),
+            Address::Originated(_) => value.into(),
+        }
+    }
+}
+
 impl TryFrom<&Vec<u8>> for Address {
     type Error = Error;
 
@@ -150,6 +159,16 @@ impl Encoded for ImplicitAddress {
             return Ok(Self::TZ3(P256PublicKeyHash::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData { description: value })
+    }
+}
+
+impl From<ImplicitAddress> for String {
+    fn from(value: ImplicitAddress) -> Self {
+        match value {
+            ImplicitAddress::TZ1(value) => value.into(),
+            ImplicitAddress::TZ2(value) => value.into(),
+            ImplicitAddress::TZ3(value) => value.into(),
+        }
     }
 }
 
@@ -299,6 +318,12 @@ impl Encoded for ContractAddress {
 impl TraitMetaEncoded for ContractAddress {
     fn meta_value() -> &'static MetaEncoded {
         ContractHash::meta_value()
+    }
+}
+
+impl From<ContractAddress> for String {
+    fn from(value: ContractAddress) -> Self {
+        value.0
     }
 }
 
