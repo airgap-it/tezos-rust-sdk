@@ -1,11 +1,10 @@
-use tezos_core::types::encoded::ScriptExprHash;
-
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::error::RpcError,
         models::operation::operation_result::OperationResultStatus,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::encoded::ScriptExprHash,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]

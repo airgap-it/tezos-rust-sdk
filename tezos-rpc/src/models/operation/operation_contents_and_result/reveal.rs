@@ -3,6 +3,7 @@ use {
         models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
         models::operation::operation_result::operations::reveal::RevealOperationResult,
     },
+    crate::{Error, Result},
     serde::{Deserialize, Serialize},
     tezos_core::types::{
         encoded::{ImplicitAddress, PublicKey},
@@ -24,6 +25,36 @@ pub struct Reveal {
     pub public_key: PublicKey,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<RevealMetadata>,
+}
+
+impl From<tezos_operation::operations::Reveal> for Reveal {
+    fn from(value: tezos_operation::operations::Reveal) -> Self {
+        Self {
+            kind: OperationKind::Reveal,
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.into(),
+            gas_limit: value.gas_limit.into(),
+            storage_limit: value.storage_limit.into(),
+            public_key: value.public_key,
+            metadata: None,
+        }
+    }
+}
+
+impl TryFrom<Reveal> for tezos_operation::operations::Reveal {
+    type Error = Error;
+
+    fn try_from(value: Reveal) -> Result<Self> {
+        Ok(Self {
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.try_into()?,
+            gas_limit: value.gas_limit.try_into()?,
+            storage_limit: value.storage_limit.try_into()?,
+            public_key: value.public_key,
+        })
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -5,6 +5,9 @@ pub enum Error {
     Core {
         source: tezos_core::Error,
     },
+    Operation {
+        source: tezos_operation::Error,
+    },
     #[cfg(feature = "http")]
     HttpError {
         source: reqwest::Error,
@@ -20,4 +23,8 @@ pub enum Error {
     },
     RpcErrorPlain(String),
     RpcErrors(Vec<RpcError>),
+    InvalidConversion,
+    OperationNotSupported,
 }
+
+pub type Result<T> = std::result::Result<T, Error>;

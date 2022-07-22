@@ -138,6 +138,12 @@ impl From<Nat> for Int {
     }
 }
 
+impl From<Int> for String {
+    fn from(value: Int) -> Self {
+        value.0
+    }
+}
+
 impl TryFrom<String> for Int {
     type Error = Error;
 

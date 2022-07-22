@@ -3,6 +3,8 @@ use tezos_core::types::encoded::{
     OperationListListHash, ProtocolHash, Signature,
 };
 
+use crate::{Error, Result};
+
 use {
     super::{
         balance_update::BalanceUpdate,
@@ -49,6 +51,60 @@ pub struct Header {
     pub liquidity_baking_escape_vote: bool,
     pub signature: Option<Signature>,
 }
+
+impl From<tezos_operation::block_header::BlockHeader> for Header {
+    fn from(value: tezos_operation::block_header::BlockHeader) -> Self {
+        Self {
+            level: value.level,
+            proto: value.proto,
+            predecessor: value.predecessor,
+            timestamp: value.timestamp,
+            validation_pass: value.validation_pass,
+            operations_hash: value.operations_hash,
+            fitness: value
+                .fitness
+                .into_iter()
+                .map(|fitness| fitness.into())
+                .collect(),
+            context: value.context,
+            payload_hash: Some(value.payload_hash),
+            payload_round: value.payload_round,
+            priority: 0,
+            proof_of_work_nonce: value.proof_of_work_nonce.into(),
+            seed_nonce_hash: value.seed_nonce_hash,
+            liquidity_baking_escape_vote: value.liquidity_baking_escape_vote,
+            signature: Some(value.signature),
+        }
+    }
+}
+
+impl TryFrom<Header> for tezos_operation::block_header::BlockHeader {
+    type Error = Error;
+
+    fn try_from(value: Header) -> Result<Self> {
+        Ok(Self {
+            level: value.level,
+            proto: value.proto,
+            predecessor: value.predecessor,
+            timestamp: value.timestamp,
+            validation_pass: value.validation_pass,
+            operations_hash: value.operations_hash,
+            fitness: value
+                .fitness
+                .into_iter()
+                .map(|fitness| Ok(fitness.try_into()?))
+                .collect::<Result<Vec<_>>>()?,
+            context: value.context,
+            payload_hash: value.payload_hash.ok_or(Error::InvalidConversion)?,
+            payload_round: value.payload_round,
+            proof_of_work_nonce: value.proof_of_work_nonce.try_into()?,
+            seed_nonce_hash: value.seed_nonce_hash,
+            liquidity_baking_escape_vote: value.liquidity_baking_escape_vote,
+            signature: value.signature.ok_or(Error::InvalidConversion)?,
+        })
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FullHeader {
     pub protocol: ProtocolHash,

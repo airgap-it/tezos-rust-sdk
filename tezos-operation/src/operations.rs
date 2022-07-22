@@ -18,7 +18,10 @@ mod transaction;
 use num_derive::FromPrimitive;
 use tezos_core::{
     internal::coder::{Decoder, Encoder},
-    types::encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
+    types::{
+        encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
+        mutez::Mutez,
+    },
     Tezos,
 };
 
@@ -71,8 +74,8 @@ pub trait Operation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnsignedOperation {
-    branch: BlockHash,
-    contents: Vec<OperationContent>,
+    pub branch: BlockHash,
+    pub contents: Vec<OperationContent>,
 }
 
 impl UnsignedOperation {
@@ -122,16 +125,12 @@ impl From<SignedOperation> for UnsignedOperation {
 
 #[derive(Debug, Clone)]
 pub struct SignedOperation {
-    branch: BlockHash,
-    contents: Vec<OperationContent>,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub contents: Vec<OperationContent>,
+    pub signature: Signature,
 }
 
 impl SignedOperation {
-    pub fn signature(&self) -> &Signature {
-        &self.signature
-    }
-
     pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
         let signer = OperationSigner::new(tezos.get_crypto());
         signer.verify(self, key)
@@ -145,7 +144,7 @@ impl SignedOperation {
 
     pub fn to_injectable_string(&self) -> Result<String> {
         let forged_bytes = self.to_forged_bytes()?;
-        let signature_bytes = self.signature().to_bytes()?;
+        let signature_bytes = self.signature.to_bytes()?;
         Ok(hex::encode([forged_bytes, signature_bytes].concat()))
     }
 
@@ -199,6 +198,22 @@ impl OperationContent {
 
     pub fn from_forged_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self> {
         OperationContentBytesCoder::decode(bytes.as_ref())
+    }
+
+    pub fn fee(&self) -> Mutez {
+        match self {
+            Self::Reveal(value) => value.fee,
+            Self::Transaction(value) => value.fee,
+            Self::Origination(value) => value.fee,
+            Self::Delegation(value) => value.fee,
+            Self::RegisterGlobalConstant(value) => value.fee,
+            Self::SetDepositsLimit(value) => value.fee,
+            _ => 0u8.into(),
+        }
+    }
+
+    pub fn has_fee(&self) -> bool {
+        self.fee() != 0u8.into()
     }
 }
 
@@ -327,24 +342,12 @@ impl OperationContentTag {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InlinedEndorsement {
-    branch: BlockHash,
-    operations: Endorsement,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub operations: Endorsement,
+    pub signature: Signature,
 }
 
 impl InlinedEndorsement {
-    pub fn branch(&self) -> &BlockHash {
-        &self.branch
-    }
-
-    pub fn operations(&self) -> &Endorsement {
-        &self.operations
-    }
-
-    pub fn signature(&self) -> &Signature {
-        &self.signature
-    }
-
     pub fn new(branch: BlockHash, operations: Endorsement, signature: Signature) -> Self {
         Self {
             branch,
@@ -356,24 +359,12 @@ impl InlinedEndorsement {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InlinedPreendrosement {
-    branch: BlockHash,
-    operations: Preendorsement,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub operations: Preendorsement,
+    pub signature: Signature,
 }
 
 impl InlinedPreendrosement {
-    pub fn branch(&self) -> &BlockHash {
-        &self.branch
-    }
-
-    pub fn operations(&self) -> &Preendorsement {
-        &self.operations
-    }
-
-    pub fn signature(&self) -> &Signature {
-        &self.signature
-    }
-
     pub fn new(branch: BlockHash, operations: Preendorsement, signature: Signature) -> Self {
         Self {
             branch,
@@ -676,7 +667,7 @@ mod test {
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff04000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::named("named".into()), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::Named("named".into()), vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ffff056e616d6564000000050200000000"),
             ),
             (
