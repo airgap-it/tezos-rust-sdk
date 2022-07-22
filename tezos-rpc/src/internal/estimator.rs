@@ -16,11 +16,11 @@ use crate::{
     models::{
         limits::{
             Limits, OperationLimits, BASE_FEE, FEE_PER_GAS_UNIT, FEE_PER_STORAGE_BYTE,
-            FEE_SAFTY_MARGIN, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN,
+            FEE_SAFTY_MARGIN, GAS_SAFETY_MARGIN, STORAGE_SAFETY_MARGIN, NANO_TEZ_PER_MUTEZ,
         },
         operation::{
             operation_result::{operations::InternalOperationResult, OperationResultStatus},
-            OperationContent,
+            OperationContent, Operation,
         },
     },
     Result,
@@ -35,29 +35,32 @@ pub trait FeeEstimator {
     ) -> Result<UnsignedOperation>;
 }
 
-pub struct OperationFeeEstimator<HttpClient: Http> {
-    rpc: TezosRpc<HttpClient>,
+pub struct OperationFeeEstimator<'a, HttpClient: Http> {
+    rpc: &'a TezosRpc<HttpClient>,
 }
 
-impl<HttpClient: Http> OperationFeeEstimator<HttpClient> {
-    pub fn new(rpc: TezosRpc<HttpClient>) -> Self {
+impl<'a, HttpClient: Http> OperationFeeEstimator<'a, HttpClient> {
+    pub fn new(rpc: &'a TezosRpc<HttpClient>) -> Self {
         Self { rpc }
     }
 }
 
+const PLACEHOLDER_SIGNATURE: &'static str = "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q";
+
 #[async_trait]
-impl<HttpClient: Http + Send + Sync> FeeEstimator for OperationFeeEstimator<HttpClient> {
-    async fn min_fee<'a>(
+impl<'a, HttpClient: Http + Send + Sync> FeeEstimator for OperationFeeEstimator<'a, HttpClient> {
+    async fn min_fee<'b>(
         &self,
         operation: UnsignedOperation,
-        limits: &'a Limits,
+        limits: &'b Limits,
     ) -> Result<UnsignedOperation> {
         let operation_with_limits = operation.apply(limits);
         let operation_contents = operation_with_limits.contents.clone();
-        let operation = operation_with_limits.into();
+        let mut operation: Operation = operation_with_limits.into();
+        operation.signature = Some(PLACEHOLDER_SIGNATURE.try_into().unwrap());
         let run_operation_result = self.rpc.run_operation(&operation).send().await?;
         let unsigned_operation = UnsignedOperation::new(operation.branch, operation_contents);
-        unsigned_operation.update_with(run_operation_result.contents)
+        unsigned_operation.try_update_with(run_operation_result.contents)
     }
 }
 
@@ -236,28 +239,28 @@ fn operation_content_limits(
     }
 }
 
-trait UpdateWith<T> {
-    fn update_with(self, value: T) -> Result<Self>
+trait TryUpdateWith<T> {
+    fn try_update_with(self, value: T) -> Result<Self>
     where
         Self: Sized;
 }
 
-impl UpdateWith<Vec<OperationContent>> for UnsignedOperation {
-    fn update_with(self, value: Vec<OperationContent>) -> Result<Self> {
+impl TryUpdateWith<Vec<OperationContent>> for UnsignedOperation {
+    fn try_update_with(self, value: Vec<OperationContent>) -> Result<Self> {
         Ok(Self {
             branch: self.branch,
             contents: self
                 .contents
                 .into_iter()
                 .zip(value)
-                .map(|(content, rpc_content)| content.update_with(rpc_content))
+                .map(|(content, rpc_content)| content.try_update_with(rpc_content))
                 .collect::<Result<Vec<_>>>()?,
         })
     }
 }
 
-impl UpdateWith<OperationContent> for tezos_operation::operations::OperationContent {
-    fn update_with(self, rpc_operation_content: OperationContent) -> Result<Self> {
+impl TryUpdateWith<OperationContent> for tezos_operation::operations::OperationContent {
+    fn try_update_with(self, rpc_operation_content: OperationContent) -> Result<Self> {
         if !operation_content_matches(&self, &rpc_operation_content) {
             return Ok(self);
         }
@@ -274,13 +277,20 @@ impl UpdateWith<OperationContent> for tezos_operation::operations::OperationCont
 }
 
 fn fee(operation_size: usize, limits: &OperationLimits) -> Result<Mutez> {
-    let gas_fee: Mutez = (BigUint::from(FEE_PER_GAS_UNIT) * limits.gas.clone()).try_into()?;
-    let storage_fee: Mutez =
-        (BigUint::from(FEE_PER_STORAGE_BYTE) * BigUint::from(operation_size)).try_into()?;
+    let gas_fee: Mutez = nanotez_to_mutez(BigUint::from(FEE_PER_GAS_UNIT) * limits.gas.clone())?;
+    let storage_fee: Mutez = nanotez_to_mutez(BigUint::from(FEE_PER_STORAGE_BYTE) * BigUint::from(operation_size))?;
     let base: Mutez = BASE_FEE.into();
     let safty_margin: Mutez = FEE_SAFTY_MARGIN.into();
 
     Ok(base + gas_fee + storage_fee + safty_margin)
+}
+
+fn nanotez_to_mutez(value: BigUint) -> Result<Mutez> {
+    if value.clone() % NANO_TEZ_PER_MUTEZ == 0u8.into() {
+        return Ok((value / NANO_TEZ_PER_MUTEZ).try_into()?);
+    }
+
+    Ok(((value / NANO_TEZ_PER_MUTEZ) + 1u8).try_into()?)
 }
 
 fn operation_content_matches(
@@ -396,5 +406,106 @@ trait RpcOperationResult {
         sum += (self.number_of_originated_contracts() as u64) * 257;
 
         return sum;
+    }
+}
+
+#[cfg(all(test, feature = "http"))]
+mod test {
+    use httpmock::prelude::*;
+    use tezos_core::types::encoded::BlockHash;
+    use tezos_operation::operations::Transaction;
+
+    use crate::models::{
+        operation::{
+            operation_contents_and_result::transaction::{Transaction as RpcTransaction, TransactionMetadata},
+            OperationWithMetadata, kind::OperationKind, operation_result::operations::transaction::TransactionOperationResult,
+        }, balance_update::{BalanceUpdate, Contract, Kind, Origin},
+    };
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_fee_estimate() -> Result<()> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+        let block_hash: BlockHash =
+            "BKuka2aVwcjNkZrDzFHJMvdCz43RoMt1kFfjKnipNnGsERSAUEn".try_into()?;
+        let operation = UnsignedOperation::new(
+            block_hash,
+            vec![Transaction::new(
+                "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
+                0u8.into(),
+                727u32.into(),
+                1030000u32.into(),
+                50000u32.into(),
+                1000u32.into(),
+                "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
+                None,
+            )
+            .into()],
+        );
+
+        let response = serde_json::to_string(&OperationWithMetadata {
+            contents: vec![
+                OperationContent::Transaction(RpcTransaction { 
+                    kind: OperationKind::Transaction, 
+                    source: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?, 
+                    fee: 0u8.into(), 
+                    counter: "727".into(), 
+                    gas_limit: "1040000".into(), 
+                    storage_limit: "60000".into(), 
+                    amount: 1000u32.into(), 
+                    destination: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?, 
+                    parameters: None, 
+                    metadata: Some(TransactionMetadata { 
+                        operation_result: TransactionOperationResult { 
+                            status: OperationResultStatus::Applied, 
+                            storage: None, 
+                            big_map_diff: None, 
+                            balance_updates: Some(vec![
+                                BalanceUpdate::Contract(Contract { 
+                                    kind: Kind::Contract, 
+                                    change: "-1000".into(), 
+                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(), 
+                                    origin: Some(Origin::Block) 
+                                }),
+                                BalanceUpdate::Contract(Contract { 
+                                    kind: Kind::Contract, 
+                                    change: "1000".into(), 
+                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(), 
+                                    origin: Some(Origin::Block) 
+                                }),
+                            ]), 
+                            originated_contracts: None, 
+                            consumed_gas: Some("1421".into()), 
+                            consumed_milligas: Some("1420040".into()), 
+                            storage_size: None, 
+                            paid_storage_size_diff: None, 
+                            allocated_destination_contract: None, 
+                            lazy_storage_diff: None, 
+                            errors: None 
+                        }, 
+                        balance_updates: vec![], 
+                        internal_operation_results: vec![], 
+                    }),
+                })
+            ],
+            signature: Some("sigVBPQhHL3begDeF25s73Drqo381HvC6AVW1nAa5bZYGhBRjHduQtdLa11uFJoQRS8ccYGYZxPYFBdGzFxiRszzS9uV9qbk".try_into()?),
+        })?;
+
+        server.mock(|when, then| {
+            when.method(POST)
+                .path("/chains/main/blocks/head/helpers/scripts/run_operation");
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(response);
+        });
+        let client = TezosRpc::new(rpc_url);
+
+        let result = client.min_fee(operation, None).await?;
+
+        assert_eq!(Mutez::from(503u32), result.contents[0].fee());
+
+        Ok(())
     }
 }

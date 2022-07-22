@@ -19,6 +19,15 @@ pub struct Limits {
     pub block: BlockLimits,
 }
 
+impl Default for Limits {
+    fn default() -> Self {
+        Self {
+            operation: Default::default(),
+            block: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct OperationLimits {
     pub gas: BigUint,
