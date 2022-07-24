@@ -303,15 +303,15 @@ impl MichelinePacker {
     }
 
     fn pre_pack_pair(value: Micheline, schema: &PrimitiveApplication) -> Result<Micheline> {
-        if value.is_micheline_sequence() {
-            let args = value.into_micheline_sequence().unwrap().into_values();
+        if value.is_sequence() {
+            let args = value.into_sequence().unwrap().into_values();
             let pair = primitive_application(DataPrimitive::Pair)
                 .with_args(args)
                 .normalized();
             return Self::pre_pack_pair(pair.into(), schema);
         }
         let value = value
-            .into_micheline_primitive_application()
+            .into_primitive_application()
             .ok_or(Error::MichelineValueSchemaMismatch)?;
         let primitive = value.prim().parse::<DataPrimitive>()?;
         if let DataPrimitive::Pair = primitive {
@@ -331,7 +331,7 @@ impl MichelinePacker {
 
     fn post_unpack_pair(value: Micheline, schema: &PrimitiveApplication) -> Result<Micheline> {
         let value = value
-            .into_micheline_primitive_application()
+            .into_primitive_application()
             .ok_or(Error::MichelineValueSchemaMismatch)?;
         let primitive = value.prim().parse::<DataPrimitive>()?;
         if let DataPrimitive::Pair = primitive {
@@ -630,7 +630,7 @@ impl MichelinePacker {
             .into_iter()
             .map(|value| {
                 let value = value
-                    .into_micheline_primitive_application()
+                    .into_primitive_application()
                     .ok_or(Error::MichelineValueSchemaMismatch)?;
                 if value.args_count() != schema.args_count() {
                     return Err(Error::MichelineValueSchemaMismatch);
@@ -661,7 +661,7 @@ impl MichelinePacker {
             .into_iter()
             .map(|value| {
                 let value = value
-                    .into_micheline_primitive_application()
+                    .into_primitive_application()
                     .ok_or(Error::MichelineValueSchemaMismatch)?;
                 if value.args_count() != schema.args_count() {
                     return Err(Error::MichelineValueSchemaMismatch);

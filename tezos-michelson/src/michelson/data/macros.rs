@@ -105,7 +105,7 @@ macro_rules! make_all_data {
             type Error = Error;
 
             fn try_from(value: Micheline) -> Result<Self> {
-                if value.is_micheline_sequence() {
+                if value.is_sequence() {
                     return Ok(Data::Sequence(value.try_into()?));
                 }
                 let primitive_application: PrimitiveApplication = value.try_into()?;

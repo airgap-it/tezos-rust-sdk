@@ -136,7 +136,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(big_map.is_micheline_sequence());
+        assert!(big_map.is_sequence());
 
         Ok(())
     }

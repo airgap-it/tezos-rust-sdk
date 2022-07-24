@@ -3,14 +3,19 @@ use async_trait::async_trait;
 use tezos_core::types::{
     encoded::{Address, ContractHash, ImplicitAddress},
     mutez::Mutez,
-    number::Nat,
+    number::{Int, Nat},
 };
 use tezos_michelson::{
-    micheline::Micheline,
+    micheline::{primitive_application::PrimitiveApplication, Micheline},
     michelson::{
-        data::Data,
-        types::{Parameter, Type},
+        data::{
+            Bytes, Data, Instruction, Left, Map, Pair, Right, Sequence as DataSequence,
+            Some as DataSome, String as MichelsonString,
+        },
+        types::{ComparableType, Parameter, Type},
+        DataPrimitive, Primitive,
     },
+    MichelinePacker,
 };
 use tezos_operation::operations::{Entrypoint, Parameters, Transaction};
 use tezos_rpc::{
@@ -22,6 +27,7 @@ use tezos_rpc::{
 use crate::{
     entrypoints::{EntrypointPath, MappedEntrypoints},
     storage::Storage,
+    utils::AnyAnnotationValue,
     Error, Result,
 };
 
@@ -135,7 +141,270 @@ trait ParametersValueConstructor {
 
 impl ParametersValueConstructor for Type {
     fn construct_parameter_value(&self, arguments: &mut Vec<(&str, Data)>) -> Result<Micheline> {
-        todo!()
+        if let Some(key) = self.metadata().any_annotation_value() {
+            if let Some(matching_arg_index) = arguments.iter().position(|arg| arg.0.eq(key)) {
+                let value = arguments.remove(matching_arg_index).1;
+                if value.is_compatible_with(self) {
+                    let schema: Micheline = self.into();
+                    return Ok(MichelinePacker::pre_pack(value.into(), &schema)?);
+                } else {
+                    return Err(Error::IncompatibleValue {
+                        description: format!("{:?} is incompative for type: {:?}", value, self),
+                    });
+                }
+            }
+        }
+        if let Some(first) = arguments.first().cloned() {
+            if first.0.is_empty() && first.1.is_compatible_with(self) {
+                arguments.remove(0);
+                let schema: Micheline = self.into();
+                return Ok(MichelinePacker::pre_pack(first.1.into(), &schema)?);
+            }
+        }
+        match self {
+            Self::Pair(pair) => {
+                let args = (&pair.types)
+                    .iter()
+                    .map(|pair_type| pair_type.construct_parameter_value(arguments))
+                    .collect::<Result<Vec<_>>>()?;
+                return Ok(PrimitiveApplication::new(
+                    Primitive::Data(DataPrimitive::Pair).into(),
+                    Some(args),
+                    None,
+                )
+                .into());
+            }
+            Self::List(list) => {
+                let value = (&list.r#type).construct_parameter_value(arguments)?;
+                Ok(Micheline::Sequence(vec![value].into()))
+            }
+            Self::Set(set) => {
+                let value = (&set.r#type).construct_parameter_value(arguments)?;
+                Ok(Micheline::Sequence(vec![value].into()))
+            }
+            Self::Map(map) => {
+                let key = (&map.key_type).construct_parameter_value(arguments)?;
+                let value = (&map.value_type).construct_parameter_value(arguments)?;
+                Ok(Micheline::Sequence(
+                    vec![PrimitiveApplication::new(
+                        Primitive::Data(DataPrimitive::Elt).into(),
+                        Some(vec![key, value]),
+                        None,
+                    )
+                    .into()]
+                    .into(),
+                ))
+            }
+            Type::BigMap(big_map) => {
+                let key = (&big_map.key_type).construct_parameter_value(arguments)?;
+                let value = (&big_map.value_type).construct_parameter_value(arguments)?;
+                Ok(Micheline::Sequence(
+                    vec![PrimitiveApplication::new(
+                        Primitive::Data(DataPrimitive::Elt).into(),
+                        Some(vec![key, value]),
+                        None,
+                    )
+                    .into()]
+                    .into(),
+                ))
+            }
+            _ => Err(Error::IncompatibleValue {
+                description: format!("Could not construct value type: {:?}", self),
+            }),
+        }
+    }
+}
+
+impl ParametersValueConstructor for ComparableType {
+    fn construct_parameter_value(&self, arguments: &mut Vec<(&str, Data)>) -> Result<Micheline> {
+        let r#type: Type = self.clone().into();
+        r#type.construct_parameter_value(arguments)
+    }
+}
+
+trait CompatibleWith<T> {
+    fn is_compatible_with(&self, value: &T) -> bool;
+}
+
+trait StaticCompatibleWith<T> {
+    fn is_compatible_with(value: &T) -> bool;
+}
+
+impl CompatibleWith<Type> for Data {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match self {
+            Self::Int(_) => Int::is_compatible_with(value),
+            Self::Nat(_) => Nat::is_compatible_with(value),
+            Self::String(_) => MichelsonString::is_compatible_with(value),
+            Self::Bytes(_) => Bytes::is_compatible_with(value),
+            Self::Sequence(sequence) => sequence.is_compatible_with(value),
+            Self::Map(map) => map.is_compatible_with(value),
+            Self::Instruction(instruction) => instruction.is_compatible_with(value),
+            Self::Unit(_) => match value {
+                Type::Comparable(ComparableType::Unit(_)) => true,
+                _ => false,
+            },
+            Self::True(_) | Self::False(_) => match value {
+                Type::Comparable(ComparableType::Bool(_)) => true,
+                _ => false,
+            },
+            Self::Pair(pair) => pair.is_compatible_with(value),
+            Self::Left(left) => left.is_compatible_with(value),
+            Self::Right(right) => right.is_compatible_with(value),
+            Self::Some(some) => some.is_compatible_with(value),
+            Self::None(_) => match value {
+                Type::Option(_) => true,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+}
+
+impl StaticCompatibleWith<Type> for Int {
+    fn is_compatible_with(value: &Type) -> bool {
+        match value {
+            Type::Comparable(ComparableType::Int(_))
+            | Type::Comparable(ComparableType::Timestamp(_)) => true,
+            _ => false,
+        }
+    }
+}
+
+impl StaticCompatibleWith<Type> for Nat {
+    fn is_compatible_with(value: &Type) -> bool {
+        match value {
+            Type::Comparable(ComparableType::Nat(_))
+            | Type::Comparable(ComparableType::Mutez(_)) => true,
+            _ => false,
+        }
+    }
+}
+
+impl StaticCompatibleWith<Type> for MichelsonString {
+    fn is_compatible_with(value: &Type) -> bool {
+        match value {
+            Type::Comparable(value) => match value {
+                ComparableType::String(_)
+                | ComparableType::ChainId(_)
+                | ComparableType::KeyHash(_)
+                | ComparableType::Key(_)
+                | ComparableType::Signature(_)
+                | ComparableType::Timestamp(_)
+                | ComparableType::Address(_) => true,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+}
+
+impl StaticCompatibleWith<Type> for Bytes {
+    fn is_compatible_with(value: &Type) -> bool {
+        match value {
+            Type::Comparable(ComparableType::Bytes(_)) => true,
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for DataSequence {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match value {
+            Type::List(value) => {
+                let element_type = &*value.r#type;
+                self.values()
+                    .iter()
+                    .all(|item| item.is_compatible_with(element_type))
+            }
+            Type::Set(value) => {
+                let element_type = &value.r#type;
+                self.values()
+                    .iter()
+                    .all(|item| item.is_compatible_with(&element_type.clone().into()))
+            }
+            Type::Pair(_) => {
+                let pair: Data = Pair::new(self.clone().into_values()).into();
+                pair.is_compatible_with(value)
+            }
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for Map {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        fn check(map: &Map, key_type: &Type, value_type: &Type) -> bool {
+            map.values().iter().all(|item| {
+                let key = &*item.key;
+                let value = &*item.value;
+
+                return key.is_compatible_with(key_type) && value.is_compatible_with(value_type);
+            })
+        }
+
+        match value {
+            Type::Map(map) => check(self, &*map.key_type, &*map.value_type),
+            Type::BigMap(map) => check(self, &*map.key_type, &*map.value_type),
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for Instruction {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match self {
+            Self::Sequence(_) => match value {
+                Type::Lambda(_) => true,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for Pair {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match value {
+            Type::Pair(pair) => {
+                if pair.types.len() != self.values.len() {
+                    return false;
+                }
+
+                pair.types
+                    .iter()
+                    .zip(self.values.iter())
+                    .all(|(r#type, value)| value.is_compatible_with(r#type))
+            }
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for Left {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match value {
+            Type::Or(or) => self.value.is_compatible_with(&or.lhs),
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for Right {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match value {
+            Type::Or(or) => self.value.is_compatible_with(&or.rhs),
+            _ => false,
+        }
+    }
+}
+
+impl CompatibleWith<Type> for DataSome {
+    fn is_compatible_with(&self, value: &Type) -> bool {
+        match value {
+            Type::Option(option) => self.value.is_compatible_with(&option.r#type),
+            _ => false,
+        }
     }
 }
 
@@ -158,59 +427,3 @@ impl<'a, HttpClient: Http + Sync> ContractFetcher<'a, HttpClient> for TezosRpc<H
         Contract::<'a, HttpClient>::new(address, self, block_id).await
     }
 }
-
-// pub fn construct_value(
-//     &self,
-//     arguments: &mut Vec<(&str, MichelsonV1Expression)>,
-// ) -> Result<MichelsonV1Expression> {
-//     let prim = self.prim().ok_or(Error::InvalidType)?;
-//     let type_ = prim.get_type().ok_or(Error::InvalidType)?;
-//     if let Some(key) = prim.first_annotation(&[AnnotationType::Field, AnnotationType::Type]) {
-//         if let Some(matching_arg_index) = arguments.iter().position(|arg| arg.0.eq(&key)) {
-//             let value = arguments.remove(matching_arg_index).1;
-//             if value.is_compatible_with(self) {
-//                 return Ok(value.pre_pack(self)?);
-//             } else {
-//                 return Err(Error::InvalidType);
-//             }
-//         }
-//     }
-//     if let Some(first) = arguments.first().cloned() {
-//         if first.0.is_empty() && first.1.is_compatible_with(self) {
-//             arguments.remove(0);
-//             return Ok(first.1.pre_pack(self)?);
-//         }
-//     }
-//     match type_ {
-//         Type::Pair => {
-//             if let Some(pair_types) = &prim.args {
-//                 let args = pair_types
-//                     .iter()
-//                     .map(|pair_type| pair_type.construct_value(arguments))
-//                     .collect::<Result<Vec<_>>>()?;
-//                 return Ok(data::prim(Data::Pair, Some(args)));
-//             }
-//             return Err(Error::InvalidType);
-//         }
-//         Type::List | Type::Set => {
-//             if let Some(element_type) = prim.args.as_ref().and_then(|args| args.first()) {
-//                 let value = element_type.construct_value(arguments)?;
-//                 return Ok(seq(vec![value]));
-//             }
-//             return Err(Error::InvalidType);
-//         }
-//         Type::Map | Type::BigMap => {
-//             if let Some(map_types) = &prim.args {
-//                 if let Some(key_type) = map_types.first() {
-//                     if let Some(value_type) = map_types.last() {
-//                         let key = key_type.construct_value(arguments)?;
-//                         let value = value_type.construct_value(arguments)?;
-//                         return Ok(seq(vec![data::prim(Data::Elt, Some(vec![key, value]))]));
-//                     }
-//                 }
-//             }
-//             return Err(Error::InvalidType);
-//         }
-//         _ => Err(Error::InvalidType),
-//     }
-// }

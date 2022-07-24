@@ -154,7 +154,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(script.storage.is_micheline_sequence());
+        assert!(script.storage.is_sequence());
 
         Ok(())
     }
@@ -199,7 +199,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(script.storage.is_micheline_sequence());
+        assert!(script.storage.is_sequence());
 
         Ok(())
     }

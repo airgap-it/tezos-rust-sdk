@@ -142,7 +142,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(entrypoints.is_micheline_primitive_application());
+        assert!(entrypoints.is_primitive_application());
 
         Ok(())
     }

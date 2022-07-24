@@ -132,7 +132,7 @@ mod tests {
             .entrypoints
             .get("mint")
             .unwrap()
-            .is_micheline_primitive_application());
+            .is_primitive_application());
         assert_eq!(entrypoints.entrypoints.keys().len(), 23);
 
         Ok(())

@@ -48,42 +48,42 @@ impl Micheline {
         MichelineBytesCoder::decode(bytes)
     }
 
-    pub fn is_micheline_literal(&self) -> bool {
+    pub fn is_literal(&self) -> bool {
         if let Self::Literal(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn is_micheline_primitive_application(&self) -> bool {
+    pub fn is_primitive_application(&self) -> bool {
         if let Self::PrimitiveApplication(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn is_micheline_sequence(&self) -> bool {
+    pub fn is_sequence(&self) -> bool {
         if let Self::Sequence(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn into_micheline_literal(self) -> Option<Literal> {
+    pub fn into_literal(self) -> Option<Literal> {
         if let Self::Literal(value) = self {
             return Some(value);
         }
         return None;
     }
 
-    pub fn into_micheline_primitive_application(self) -> Option<PrimitiveApplication> {
+    pub fn into_primitive_application(self) -> Option<PrimitiveApplication> {
         if let Self::PrimitiveApplication(value) = self {
             return Some(value);
         }
         return None;
     }
 
-    pub fn into_micheline_sequence(self) -> Option<Sequence> {
+    pub fn into_sequence(self) -> Option<Sequence> {
         if let Self::Sequence(value) = self {
             return Some(value);
         }

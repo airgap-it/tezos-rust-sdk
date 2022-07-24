@@ -159,7 +159,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(big_map.is_micheline_primitive_application());
+        assert!(big_map.is_primitive_application());
 
         Ok(())
     }
@@ -205,7 +205,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(big_map.is_micheline_primitive_application());
+        assert!(big_map.is_primitive_application());
 
         Ok(())
     }
