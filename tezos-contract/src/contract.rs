@@ -1,3 +1,7 @@
+mod big_map;
+mod entrypoints;
+mod storage;
+
 use async_trait::async_trait;
 
 use tezos_core::types::{
@@ -24,11 +28,13 @@ use tezos_rpc::{
     models::{block::BlockId, contract::UnparsingMode},
 };
 
-use crate::{
-    entrypoints::{EntrypointPath, MappedEntrypoints},
+use crate::{utils::AnyAnnotationValue, Error, Result};
+
+use self::entrypoints::MappedEntrypoints;
+pub use self::{
+    big_map::{BigMap, BigMapContainer},
+    entrypoints::EntrypointPath,
     storage::Storage,
-    utils::AnyAnnotationValue,
-    Error, Result,
 };
 
 #[derive(Debug, Clone)]

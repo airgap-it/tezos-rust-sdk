@@ -21,7 +21,7 @@ pub struct BigMap<'a, HttpClient: Http> {
 }
 
 impl<'a, HttpClient: Http> BigMap<'a, HttpClient> {
-    pub fn new(big_map_type: BigMapType, id: u32, client: &'a TezosRpc<HttpClient>) -> Self {
+    pub(crate) fn new(big_map_type: BigMapType, id: u32, client: &'a TezosRpc<HttpClient>) -> Self {
         let name: Option<String> = big_map_type
             .metadata()
             .any_annotation_value()

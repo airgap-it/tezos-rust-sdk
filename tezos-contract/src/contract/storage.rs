@@ -11,11 +11,9 @@ use tezos_michelson::{
 };
 use tezos_rpc::{client::TezosRpc, http::Http, models::contract::ContractScript};
 
-use crate::{
-    big_map::{BigMap, BigMapContainer},
-    utils::AnyAnnotationValue,
-    Error, Result,
-};
+use crate::{utils::AnyAnnotationValue, Error, Result};
+
+use super::big_map::{BigMap, BigMapContainer};
 
 #[derive(Debug, Clone)]
 pub struct Storage<'a, HttpClient: Http> {
