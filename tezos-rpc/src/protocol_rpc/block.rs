@@ -4,13 +4,13 @@ pub mod context;
 pub mod helpers;
 
 use {
-    crate::models::block::BlockID,
+    crate::models::block::BlockId,
     crate::{client::TezosRpcContext, error::Error, models::block::Block},
     derive_more::Display,
     serde::{Deserialize, Serialize},
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId) -> String {
     format!("/chains/{}/blocks/{}", chain_id.as_ref(), block_id.value())
 }
 
@@ -19,7 +19,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     metadata: MetadataArg,
 }
 
@@ -28,20 +28,20 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             metadata: MetadataArg::Always,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -53,7 +53,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// To get the metadata, even if it is needed to recompute them, use [MetadataArg::Always].
     ///
     /// To avoid getting the metadata, use [MetadataArg::Never].
-    pub fn metadata(&mut self, metadata: MetadataArg) -> &mut Self {
+    pub fn metadata(mut self, metadata: MetadataArg) -> Self {
         self.metadata = metadata;
 
         self
@@ -107,7 +107,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Genesis;
+        let block_id = BlockId::Genesis;
 
         server.mock(|when, then| {
             when.method(GET)
@@ -172,7 +172,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
 
         server.mock(|when, then| {
             when.method(GET)
@@ -198,7 +198,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Level(2490368);
+        let block_id = BlockId::Level(2490368);
 
         server.mock(|when, then| {
             when.method(GET)
@@ -224,7 +224,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Level(2504461);
+        let block_id = BlockId::Level(2504461);
 
         server.mock(|when, then| {
             when.method(GET)

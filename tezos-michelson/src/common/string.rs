@@ -74,14 +74,3 @@ impl From<String> for MichelsonData {
         Self::String(value)
     }
 }
-
-impl TryFrom<MichelsonData> for String {
-    type Error = Error;
-
-    fn try_from(value: MichelsonData) -> Result<Self> {
-        if let MichelsonData::String(value) = value {
-            return Ok(value);
-        }
-        Err(Error::InvalidMichelsonData)
-    }
-}

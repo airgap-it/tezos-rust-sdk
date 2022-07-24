@@ -4,10 +4,10 @@ use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::UnparsingMode,
-    crate::protocol_rpc::block::BlockID, serde::Serialize, tezos_michelson::micheline::Micheline,
+    crate::protocol_rpc::block::BlockId, serde::Serialize, tezos_michelson::micheline::Micheline,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: u32, key: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, big_map_id: u32, key: S) -> String {
     format!(
         "{}/{}",
         super::path(chain_id, block_id, big_map_id),
@@ -25,7 +25,7 @@ struct NormalizedPayload {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     big_map_id: u32,
     script_expr: &'a ScriptExprHash,
     unparsing_mode: Option<UnparsingMode>,
@@ -40,7 +40,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             big_map_id,
             script_expr,
             unparsing_mode: None,
@@ -48,14 +48,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -68,7 +68,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// * [UnparsingMode::Readable]
     /// * [UnparsingMode::Optimized]
     /// * [UnparsingMode::Optimized_legacy]
-    pub fn unparsing_mode(&mut self, parsing_mode: UnparsingMode) -> &mut Self {
+    pub fn unparsing_mode(mut self, parsing_mode: UnparsingMode) -> Self {
         self.unparsing_mode = Some(parsing_mode);
 
         self
@@ -124,7 +124,7 @@ mod tests {
     use crate::{client::TezosRpcChainId, models::contract::UnparsingMode};
 
     use {
-        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockId},
         httpmock::prelude::*,
     };
 
@@ -138,7 +138,7 @@ mod tests {
         let big_map_key: ScriptExprHash = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E"
             .try_into()
             .unwrap();
-        let block_id = BlockID::Level(100);
+        let block_id = BlockId::Level(100);
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
@@ -174,7 +174,7 @@ mod tests {
         let big_map_key: ScriptExprHash = "expru3MJA26WX3kQ9WCPBPhCqsXE33BBtXnTQpYmQwtbJyHSu3ME9E"
             .try_into()
             .unwrap();
-        let block_id = BlockID::Level(100);
+        let block_id = BlockId::Level(100);
 
         let body = serde_json::to_string(&super::NormalizedPayload {
             unparsing_mode: UnparsingMode::Optimized,

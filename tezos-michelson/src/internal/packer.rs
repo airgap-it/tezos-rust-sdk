@@ -29,7 +29,7 @@ pub trait Packer<T> {
 pub struct MichelinePacker;
 
 impl MichelinePacker {
-    fn pre_pack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
+    pub fn pre_pack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
         match schema {
             Micheline::PrimitiveApplication(primitive_application) => {
                 Self::pre_pack_primitive_application(value, primitive_application)
@@ -41,7 +41,7 @@ impl MichelinePacker {
         }
     }
 
-    fn post_unpack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
+    pub fn post_unpack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
         match schema {
             Micheline::PrimitiveApplication(primitive_application) => {
                 Self::post_unpack_primitive_application(value, primitive_application)

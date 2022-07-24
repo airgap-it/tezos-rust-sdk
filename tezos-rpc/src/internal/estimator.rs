@@ -412,9 +412,11 @@ trait RpcOperationResult {
     fn limits(&self) -> Result<OperationLimits> {
         if self.status() != OperationResultStatus::Applied {
             let error = if let Some(errors) = self.errors() {
-                Error::RpcErrors(errors.clone())
+                Error::RpcErrors(errors.clone().into())
             } else {
-                Error::RpcErrorPlain("Operation not applied".into())
+                Error::RpcErrorPlain {
+                    description: "Operation not applied".into(),
+                }
             };
             return Err(error);
         }

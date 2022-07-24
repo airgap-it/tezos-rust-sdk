@@ -58,6 +58,17 @@ impl From<Sequence> for Micheline {
     }
 }
 
+impl From<&Sequence> for Micheline {
+    fn from(value: &Sequence) -> Self {
+        value
+            .0
+            .iter()
+            .map(|value| value.into())
+            .collect::<Vec<Micheline>>()
+            .into()
+    }
+}
+
 impl From<Sequence> for Michelson {
     fn from(value: Sequence) -> Self {
         let instruction: Instruction = value.into();

@@ -11,10 +11,10 @@ pub mod script;
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::ContractInfo,
-    crate::protocol_rpc::block::BlockID,
+    crate::protocol_rpc::block::BlockId,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S) -> String {
     format!(
         "{}/contracts/{}",
         super::path(chain_id, block_id),
@@ -27,7 +27,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     contract: &'a Address,
     normalize_types: Option<bool>,
 }
@@ -37,28 +37,28 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             contract,
             normalize_types: None,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
     }
 
     /// Whether types should be normalized (annotations removed, combs flattened) or kept as they appeared in the original script.
-    pub fn normalize_types(&mut self, normalize_types: bool) -> &mut Self {
+    pub fn normalize_types(mut self, normalize_types: bool) -> Self {
         self.normalize_types = Some(normalize_types);
 
         self
@@ -103,7 +103,7 @@ mod tests {
     use crate::client::TezosRpcChainId;
 
     use {
-        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockId},
         httpmock::prelude::*,
         num_bigint::BigInt,
     };
@@ -113,7 +113,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
         let contract_address: Address = "KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA".try_into().unwrap();
         let normalize_types = true;
 
@@ -140,10 +140,9 @@ mod tests {
 
         assert_eq!(contract.counter, None);
         assert_eq!(contract.delegate, None);
-        assert_eq!(contract.balance, BigInt::from(0));
+        assert_eq!(contract.balance, BigInt::from(0u8));
 
         let contract_script = contract.script.expect("Script exists");
-        assert!(contract_script.code.is_micheline_sequence());
         assert!(contract_script.storage.is_micheline_primitive_application());
 
         Ok(())

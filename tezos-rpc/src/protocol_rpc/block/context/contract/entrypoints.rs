@@ -6,10 +6,10 @@ pub mod entrypoint;
 
 use {
     crate::client::TezosRpcContext, crate::error::Error,
-    crate::models::contract::ContractEntrypoints, crate::protocol_rpc::block::BlockID,
+    crate::models::contract::ContractEntrypoints, crate::protocol_rpc::block::BlockId,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S) -> String {
     format!("{}/entrypoints", super::path(chain_id, block_id, contract))
 }
 
@@ -18,7 +18,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     contract: &'a Address,
     normalize_types: Option<bool>,
 }
@@ -28,21 +28,21 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             contract,
             normalize_types: None,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -51,7 +51,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// Whether the types should be normalized or not.
     ///
     /// For this to work, an `unparsing_mode` also needs to be provided.
-    pub fn normalize_types(&mut self, normalize_types: bool) -> &mut Self {
+    pub fn normalize_types(mut self, normalize_types: bool) -> Self {
         self.normalize_types = Some(normalize_types);
 
         self
@@ -95,7 +95,7 @@ mod tests {
     use crate::client::TezosRpcChainId;
 
     use {
-        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockId},
         httpmock::prelude::*,
     };
 
@@ -105,7 +105,7 @@ mod tests {
         let rpc_url = server.base_url();
 
         let contract_address: Address = "KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA".try_into().unwrap();
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
 
         server.mock(|when, then| {
             when.method(GET)

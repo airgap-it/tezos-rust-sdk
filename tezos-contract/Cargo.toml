@@ -1,0 +1,19 @@
+[package]
+name = "tezos-contract"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+derive_more = "0.99.17"
+async-trait = "0.1"
+
+# Local dependencies
+tezos-core = { path = "../tezos-core" }
+tezos-rpc = { path = "../tezos-rpc", default-features = false }
+tezos-michelson = { path = "../tezos-michelson" }
+tezos-operation = { path = "../tezos-operation" }
+
+[features]
+default = [ "tezos-rpc/default" ]

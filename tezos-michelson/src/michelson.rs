@@ -27,56 +27,35 @@ pub enum Michelson {
 }
 
 impl Michelson {
-    pub fn pack(self, schema: Option<Type>) -> Result<Vec<u8>> {
+    pub fn pack(self, schema: Option<&Type>) -> Result<Vec<u8>> {
         let micheline: Micheline = self.into();
         let schema: Option<Micheline> = schema.map(|schema| schema.into());
         micheline.pack(schema.as_ref())
     }
 
-    pub fn unpack(bytes: &[u8], schema: Option<Type>) -> Result<Self> {
+    pub fn unpack(bytes: &[u8], schema: Option<&Type>) -> Result<Self> {
         let schema: Option<Micheline> = schema.map(|value| value.into());
         let micheline = Micheline::unpack(bytes, schema.as_ref())?;
         micheline.try_into()
     }
 
-    pub fn is_michelson_data(&self) -> bool {
+    fn is_data(&self) -> bool {
         if let Self::Data(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn is_michelson_type(&self) -> bool {
-        if let Self::Type(_) = self {
+    fn is_instruction(&self) -> bool {
+        if let Self::Data(Data::Instruction(_)) = self {
             return true;
         }
         return false;
     }
 
-    pub fn into_michelson_data(self) -> Option<Data> {
-        if let Self::Data(value) = self {
-            return Some(value);
-        }
-        None
-    }
-
-    pub fn into_michelson_type(self) -> Option<Type> {
-        if let Self::Type(value) = self {
-            return Some(value);
-        }
-        None
-    }
-
-    fn is_michelson_instruction(&self) -> bool {
-        if let Self::Data(value) = self {
-            return value.is_michelson_instruction();
-        }
-        return false;
-    }
-
-    fn is_michelson_elt(&self) -> bool {
-        if let Self::Data(value) = self {
-            return value.is_michelson_elt();
+    fn is_elt(&self) -> bool {
+        if let Self::Data(Data::Elt(_)) = self {
+            return true;
         }
         return false;
     }
@@ -140,54 +119,30 @@ impl TryFrom<Vec<Micheline>> for Michelson {
             .map(|value| value.try_into())
             .collect::<Result<Vec<Michelson>>>()?;
 
-        if michelson_values
-            .iter()
-            .all(|value| value.is_michelson_instruction())
-        {
-            let instructions = michelson_values
+        if michelson_values.iter().all(|value| value.is_instruction()) {
+            let instructions: Vec<Instruction> = michelson_values
                 .into_iter()
-                .map(|value| {
-                    value
-                        .into_michelson_data()
-                        .unwrap()
-                        .into_michelson_instruction()
-                        .unwrap()
-                })
+                .map(|value| value.try_into().unwrap())
                 .collect::<Vec<_>>();
             return Ok(data::instructions::sequence(instructions));
         }
 
-        if michelson_values
-            .iter()
-            .all(|value| value.is_michelson_elt())
-        {
-            let elts = michelson_values
+        if michelson_values.iter().all(|value| value.is_elt()) {
+            let elts: Vec<data::Elt> = michelson_values
                 .into_iter()
-                .map(|value| {
-                    value
-                        .into_michelson_data()
-                        .unwrap()
-                        .into_michelson_elt()
-                        .unwrap()
-                })
+                .map(|value| value.try_into().unwrap())
                 .collect::<Vec<_>>();
             return Ok(data::map(elts));
         }
 
-        if michelson_values
-            .iter()
-            .any(|value| value.is_michelson_elt())
-        {
+        if michelson_values.iter().any(|value| value.is_elt()) {
             return Err(Error::InvalidMicheline);
         }
 
-        if michelson_values
-            .iter()
-            .all(|value| value.is_michelson_data())
-        {
-            let data_values = michelson_values
+        if michelson_values.iter().all(|value| value.is_data()) {
+            let data_values: Vec<Data> = michelson_values
                 .into_iter()
-                .map(|value| value.into_michelson_data().unwrap())
+                .map(|value| value.try_into().unwrap())
                 .collect::<Vec<_>>();
             return Ok(data::sequence(data_values));
         }

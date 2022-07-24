@@ -1,4 +1,3 @@
-use num_derive::FromPrimitive;
 use tezos_core::types::{
     encoded::{Address, ImplicitAddress},
     mutez::Mutez,
@@ -86,81 +85,79 @@ impl Parameters {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Entrypoint {
-    Primitive(PrimitiveEntrypoint),
+    Default,
+    Root,
+    Do,
+    SetDelegate,
+    RemoveDelegate,
     Named(String),
 }
 
 impl Entrypoint {
+    const DEFAULT_TAG: u8 = 0;
+    const ROOT_TAG: u8 = 1;
+    const DO_TAG: u8 = 2;
+    const SET_DELEGATE_TAG: u8 = 3;
+    const REMOVE_DELEGATE_TAG: u8 = 4;
     const NAMED_TAG: u8 = 255;
 
-    pub fn tag(&self) -> u8 {
-        match self {
-            Entrypoint::Primitive(value) => value.tag(),
-            Entrypoint::Named(_) => Self::named_tag(),
-        }
-    }
-
-    pub fn named_tag() -> u8 {
-        Self::NAMED_TAG
-    }
-}
-
-impl Entrypoint {
-    fn default() -> Self {
-        Self::Primitive(PrimitiveEntrypoint::Default)
-    }
-
-    pub fn root() -> Self {
-        Self::Primitive(PrimitiveEntrypoint::Root)
-    }
-
-    pub fn r#do() -> Self {
-        Self::Primitive(PrimitiveEntrypoint::Do)
-    }
-
-    pub fn set_delegate() -> Self {
-        Self::Primitive(PrimitiveEntrypoint::SetDelegate)
-    }
-
-    pub fn remove_delegate() -> Self {
-        Self::Primitive(PrimitiveEntrypoint::RemoveDelegate)
-    }
-}
-
-impl Default for Entrypoint {
-    fn default() -> Self {
-        Self::default()
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
-#[repr(u8)]
-pub enum PrimitiveEntrypoint {
-    Default = 0,
-    Root = 1,
-    Do = 2,
-    SetDelegate = 3,
-    RemoveDelegate = 4,
-}
-
-impl PrimitiveEntrypoint {
     const DEFAULT: &'static str = "default";
     const ROOT: &'static str = "root";
     const DO: &'static str = "do";
     const SET_DELEGATE: &'static str = "set_delegate";
     const REMOVE_DELEGATE: &'static str = "remove_delegate";
 
-    pub fn to_str(&self) -> &'static str {
+    pub fn tag(&self) -> u8 {
+        match self {
+            Self::Default => Self::DEFAULT_TAG,
+            Self::Root => Self::ROOT_TAG,
+            Self::Do => Self::DO_TAG,
+            Self::SetDelegate => Self::SET_DELEGATE_TAG,
+            Self::RemoveDelegate => Self::REMOVE_DELEGATE_TAG,
+            Self::Named(_) => Self::named_tag(),
+        }
+    }
+
+    pub fn to_str(&self) -> &str {
         match self {
             Self::Default => Self::DEFAULT,
             Self::Root => Self::ROOT,
             Self::Do => Self::DO,
             Self::SetDelegate => Self::SET_DELEGATE,
             Self::RemoveDelegate => Self::REMOVE_DELEGATE,
+            Self::Named(value) => value.as_str(),
         }
     }
 
-    pub fn tag(&self) -> u8 {
-        *self as u8
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            Self::DEFAULT => Self::Default,
+            Self::ROOT => Self::Root,
+            Self::DO => Self::Do,
+            Self::SET_DELEGATE => Self::SetDelegate,
+            Self::REMOVE_DELEGATE => Self::RemoveDelegate,
+            _ => Self::Named(value.into()),
+        }
+    }
+
+    pub fn named_tag() -> u8 {
+        Self::NAMED_TAG
+    }
+
+    pub fn from_tag(tag: u8) -> Option<Self> {
+        match tag {
+            Self::DEFAULT_TAG => Some(Self::Default),
+            Self::ROOT_TAG => Some(Self::Root),
+            Self::DO_TAG => Some(Self::Do),
+            Self::SET_DELEGATE_TAG => Some(Self::SetDelegate),
+            Self::REMOVE_DELEGATE_TAG => Some(Self::RemoveDelegate),
+            _ => None,
+        }
+    }
+}
+
+impl Default for Entrypoint {
+    fn default() -> Self {
+        Self::Default
     }
 }

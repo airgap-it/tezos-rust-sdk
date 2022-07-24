@@ -103,6 +103,13 @@ impl From<ContractAddress> for Address {
     }
 }
 
+impl From<&ContractHash> for Address {
+    fn from(value: &ContractHash) -> Self {
+        let contract_address = ContractAddress::from_components(value, None);
+        contract_address.into()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",

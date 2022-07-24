@@ -81,6 +81,12 @@ impl From<Int> for Literal {
     }
 }
 
+impl From<&Int> for Literal {
+    fn from(value: &Int) -> Self {
+        Literal::Int(value.clone())
+    }
+}
+
 impl From<Int> for Micheline {
     fn from(value: Int) -> Self {
         let literal: Literal = value.into();
@@ -88,8 +94,21 @@ impl From<Int> for Micheline {
     }
 }
 
+impl From<&Int> for Micheline {
+    fn from(value: &Int) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
 impl From<Nat> for Micheline {
     fn from(value: Nat) -> Self {
+        Literal::Int(value.into()).into()
+    }
+}
+
+impl From<&Nat> for Micheline {
+    fn from(value: &Nat) -> Self {
         Literal::Int(value.into()).into()
     }
 }
@@ -122,8 +141,21 @@ impl From<String> for Literal {
     }
 }
 
+impl From<&String> for Literal {
+    fn from(value: &String) -> Self {
+        Literal::String(value.clone())
+    }
+}
+
 impl From<String> for Micheline {
     fn from(value: String) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
+impl From<&String> for Micheline {
+    fn from(value: &String) -> Self {
         let literal: Literal = value.into();
         literal.into()
     }
@@ -145,8 +177,21 @@ impl From<Bytes> for Literal {
     }
 }
 
+impl From<&Bytes> for Literal {
+    fn from(value: &Bytes) -> Self {
+        Literal::Bytes(value.clone())
+    }
+}
+
 impl From<Bytes> for Micheline {
     fn from(value: Bytes) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
+impl From<&Bytes> for Micheline {
+    fn from(value: &Bytes) -> Self {
         let literal: Literal = value.into();
         literal.into()
     }

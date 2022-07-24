@@ -13,7 +13,7 @@ macro_rules! make_types {
             ),
         )+
     ) => {
-        use crate::{micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
+        use crate::{micheline::{Micheline, primitive_application::PrimitiveApplication}, michelson::metadata::TypeFieldMetadata, common::macros::make_primitive_enum};
         pub use self::{
             $($code::{$name, $code},)*
         };
@@ -28,10 +28,48 @@ macro_rules! make_types {
             $(
                 $type_impl
             )*
+
+            pub fn metadata(&self) -> &TypeFieldMetadata {
+                match self {
+                    $(
+                        Type::$enum_case_name(value) => value.metadata(),
+                    )?
+                    $(
+                        Type::$name(value) => value.metadata(),
+                    )*
+                }
+            }
         }
+
+        $(
+            use tezos_core::internal::traits::InnerValueRef;
+
+            impl InnerValueRef<$enum_case_type> for Type {
+                fn inner_value_ref(&self) -> core::option::Option<&$enum_case_type> {
+                    if let Type::$enum_case_name(value) = self {
+                        return Some(value);
+                    }
+
+                    None
+                }
+            }
+        )?
 
         impl From<Type> for Micheline {
             fn from(value: Type) -> Self {
+                match value {
+                    $(
+                        Type::$enum_case_name(value) => value.into(),
+                    )?
+                    $(
+                        Type::$name(value) => value.into(),
+                    )*
+                }
+            }
+        }
+
+        impl From<&Type> for Micheline {
+            fn from(value: &Type) -> Self {
                 match value {
                     $(
                         Type::$enum_case_name(value) => value.into(),
@@ -87,6 +125,7 @@ macro_rules! make_type {
         $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
     ) => {
         mod $code {
+            use tezos_core::internal::traits::InnerValueRef;
             use crate::{
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
                 michelson::{Annotation, metadata::TypeFieldMetadata, PrimType, Michelson},
@@ -97,36 +136,18 @@ macro_rules! make_type {
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
                 $(
-                    $field_name: $field_type,
+                    pub $field_name: $field_type,
                 )*
                 $(
-                    $boxed_field_name: Box<$boxed_field_type>,
+                    pub $boxed_field_name: Box<$boxed_field_type>,
                 )*
                 $(
-                    $vec_field_name: Vec<$vec_field_type>,
+                    pub $vec_field_name: Vec<$vec_field_type>,
                 )*
                 metadata: TypeFieldMetadata,
             }
 
             impl $name {
-                $(
-                    pub fn $field_name(&self) -> &$field_type {
-                        &self.$field_name
-                    }
-                )*
-
-                $(
-                    pub fn $boxed_field_name(&self) -> &Box<$boxed_field_type> {
-                        &self.$boxed_field_name
-                    }
-                )*
-
-                $(
-                    pub fn $vec_field_name(&self) -> &[$vec_field_type] {
-                        &self.$vec_field_name
-                    }
-                )*
-
                 pub fn metadata(&self) -> &TypeFieldMetadata {
                     &self.metadata
                 }
@@ -148,6 +169,16 @@ macro_rules! make_type {
             impl PrimType for $name {
                 fn prim_value() -> crate::michelson::Primitive {
                     Primitive::$name.into()
+                }
+            }
+
+            impl InnerValueRef<$name> for Type {
+                fn inner_value_ref(&self) -> core::option::Option<&$name> {
+                    if let Type::$name(value) = self {
+                        return Some(value);
+                    }
+
+                    None
                 }
             }
 
@@ -219,7 +250,7 @@ macro_rules! make_type {
             }
 
             impl From<$name> for Micheline {
-                #[allow(unused_mut)]
+                #[allow(unused)]
                 fn from(value: $name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
                     let annots: Vec<std::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
@@ -231,6 +262,27 @@ macro_rules! make_type {
                     )*
                     $(
                         let mut values = value.$vec_field_name.into_iter().map(|value| value.into()).collect::<Vec<Micheline>>();
+                        args.append(&mut values);
+                    )*
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));
+
+                    primitive_application.into()
+                }
+            }
+
+            impl From<&$name> for Micheline {
+                #[allow(unused)]
+                fn from(value: &$name) -> Self {
+                    let mut args: Vec<Micheline> = vec![];
+                    let annots: Vec<std::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
+                    $(
+                        args.push((&value.$field_name).into());
+                    )*
+                    $(
+                        args.push((&*value.$boxed_field_name).into());
+                    )*
+                    $(
+                        let mut values = value.$vec_field_name.iter().map(|value| value.into()).collect::<Vec<Micheline>>();
                         args.append(&mut values);
                     )*
                     let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));

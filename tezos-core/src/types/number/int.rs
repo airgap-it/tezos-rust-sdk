@@ -30,11 +30,16 @@ lazy_static! {
 pub struct Int(String);
 
 impl Int {
-    pub fn from_string(value: String) -> Result<Self> {
+    pub fn from<S: Into<String>>(value: S) -> Result<Self> {
+        let value: String = value.into();
         if Self::is_valid(&value) {
-            return Ok(Int(value));
+            return Ok(Self(value));
         }
         Err(Error::InvalidIntegerString)
+    }
+
+    pub fn from_string(value: String) -> Result<Self> {
+        Self::from(value)
     }
 
     pub fn from_intenger<I: Integer + ToString>(value: I) -> Self {
@@ -134,6 +139,12 @@ impl From<BigInt> for Int {
 
 impl From<Nat> for Int {
     fn from(value: Nat) -> Self {
+        Int(value.to_string())
+    }
+}
+
+impl From<&Nat> for Int {
+    fn from(value: &Nat) -> Self {
         Int(value.to_string())
     }
 }

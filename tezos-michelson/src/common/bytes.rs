@@ -89,17 +89,6 @@ impl From<Bytes> for MichelsonData {
     }
 }
 
-impl TryFrom<MichelsonData> for Bytes {
-    type Error = Error;
-
-    fn try_from(value: MichelsonData) -> Result<Self> {
-        if let MichelsonData::Bytes(value) = value {
-            return Ok(value);
-        }
-        Err(Error::InvalidMichelsonData)
-    }
-}
-
 #[cfg(feature = "serde")]
 fn literal_bytes_serializer<S>(value: &str, s: S) -> core::result::Result<S::Ok, S::Error>
 where

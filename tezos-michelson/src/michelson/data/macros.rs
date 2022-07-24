@@ -13,6 +13,7 @@ macro_rules! make_all_data {
             ),
         )+
     ) => {
+        use tezos_core::internal::traits::InnerValueRef;
         use crate::{michelson::{Michelson, Literal}, Result, Error, micheline::{Micheline, primitive_application::PrimitiveApplication}, common::macros::make_primitive_enum};
         pub use self::{
             instructions::Instruction,
@@ -25,8 +26,51 @@ macro_rules! make_all_data {
             $($name($name),)*
         }
 
+        $(
+            $(
+                impl TryFrom<Data> for $enum_case_type {
+                    type Error = Error;
+
+                    fn try_from(value: Data) -> Result<$enum_case_type> {
+                        if let Data::$enum_case_name(value) = value {
+                            return Ok(value);
+                        }
+                        Err(Error::InvalidMichelsonData)
+                    }
+                }
+            )+
+        )?
+
+        $(
+            $(
+                impl InnerValueRef<$enum_case_name> for Data {
+                    fn inner_value_ref(&self) -> Option<&$enum_case_type> {
+                        if let Data::$enum_case_name(value) = self {
+                            return Option::Some(value);
+                        }
+                        Option::None
+                    }
+                }
+            )+
+        )?
+
         impl From<Data> for Micheline {
             fn from(value: Data) -> Self {
+                match value {
+                    $(
+                        Data::$name(value) => value.into(),
+                    )*
+                    $(
+                        $(
+                            Data::$enum_case_name(value) => value.into(),
+                        )*
+                    )+
+                }
+            }
+        }
+
+        impl From<&Data> for Micheline {
+            fn from(value: &Data) -> Self {
                 match value {
                     $(
                         Data::$name(value) => value.into(),
@@ -98,6 +142,7 @@ macro_rules! make_all_data {
 macro_rules! make_data {
     ($name:ident, $mod_name:ident, $tag:literal) => {
         mod $mod_name {
+            use tezos_core::internal::traits::InnerValueRef;
             use crate::{
                 michelson::{PrimType, Michelson},
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
@@ -151,8 +196,15 @@ macro_rules! make_data {
             }
 
             impl From<$name> for Micheline {
-                #[allow(unused)]
-                fn from(value: $name) -> Self {
+                fn from(_: $name) -> Self {
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Option::None, Option::None);
+
+                    primitive_application.into()
+                }
+            }
+
+            impl From<&$name> for Micheline {
+                fn from(_: &$name) -> Self {
                     let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Option::None, Option::None);
 
                     primitive_application.into()
@@ -172,6 +224,15 @@ macro_rules! make_data {
                 }
             }
 
+            impl InnerValueRef<$name> for Data {
+                fn inner_value_ref(&self) -> Option<&$name> {
+                    if let Data::$name(value) = self {
+                        return Option::Some(value);
+                    }
+                    Option::None
+                }
+            }
+
             pub fn $mod_name<Output>() -> Output where Output: From<$name> {
                 $name.into()
             }
@@ -185,6 +246,7 @@ macro_rules! make_data {
         $(, vec: ($vec_field_name:ident: $vec_field_type:ty))*
     ) => {
         mod $mod_name {
+            use tezos_core::internal::traits::InnerValueRef;
             use crate::{
                 michelson::{PrimType, Michelson, Data, data::Primitive},
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
@@ -194,44 +256,20 @@ macro_rules! make_data {
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
                 $(
-                    $field_name: $field_type,
+                    pub $field_name: $field_type,
                 )*
                 $(
-                    $opt_field_name: Option<$opt_field_type>,
+                    pub $opt_field_name: Option<$opt_field_type>,
                 )*
                 $(
-                    $boxed_field_name: Box<$boxed_field_type>,
+                    pub $boxed_field_name: Box<$boxed_field_type>,
                 )*
                 $(
-                    $vec_field_name: Vec<$vec_field_type>,
+                    pub $vec_field_name: Vec<$vec_field_type>,
                 )*
             }
 
             impl $name {
-                $(
-                    pub fn $field_name(&self) -> &$field_type {
-                        &self.$field_name
-                    }
-                )*
-
-                $(
-                    pub fn $opt_field_name(&self) -> &Option<$opt_field_type> {
-                        &self.$opt_field_name
-                    }
-                )*
-
-                $(
-                    pub fn $boxed_field_name(&self) -> &Box<$boxed_field_type> {
-                        &self.$boxed_field_name
-                    }
-                )*
-
-                $(
-                    pub fn $vec_field_name(&self) -> &[$vec_field_type] {
-                        &self.$vec_field_name
-                    }
-                )*
-
                 pub fn new($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)* $($vec_field_name: Vec<$vec_field_type>,)*) -> Self {
                     Self {
                         $($field_name,)*
@@ -245,6 +283,15 @@ macro_rules! make_data {
             impl PrimType for $name {
                 fn prim_value() -> crate::michelson::Primitive {
                     Primitive::$name.into()
+                }
+            }
+
+            impl InnerValueRef<$name> for Data {
+                fn inner_value_ref(&self) -> Option<&$name> {
+                    if let Data::$name(value) = self {
+                        return Option::Some(value);
+                    }
+                    Option::None
                 }
             }
 
@@ -285,7 +332,7 @@ macro_rules! make_data {
             }
 
             impl From<$name> for Micheline {
-                #[allow(unused)]
+
                 fn from(value: $name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
                     $(
@@ -301,6 +348,32 @@ macro_rules! make_data {
                     )*
                     $(
                         let mut values = value.$vec_field_name.into_iter().map(|value| value.into()).collect::<Vec<Micheline>>();
+                        args.append(&mut values);
+                    )*
+
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Option::None);
+
+                    primitive_application.into()
+                }
+            }
+
+            impl From<&$name> for Micheline {
+
+                fn from(value: &$name) -> Self {
+                    let mut args: Vec<Micheline> = vec![];
+                    $(
+                        args.push(value.$field_name.into());
+                    )*
+                    $(
+                        if let Some(value) = value.$opt_field_name {
+                            args.push(value.into());
+                        }
+                    )*
+                    $(
+                        args.push((&*value.$boxed_field_name).into());
+                    )*
+                    $(
+                        let mut values = value.$vec_field_name.iter().map(|value| value.into()).collect::<Vec<Micheline>>();
                         args.append(&mut values);
                     )*
 
