@@ -45,6 +45,8 @@ impl TryFrom<Micheline> for Sequence {
         if let Micheline::Sequence(value) = value {
             return Ok(value);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Sequence", value),
+        })
     }
 }

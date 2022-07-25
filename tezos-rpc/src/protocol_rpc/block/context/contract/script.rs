@@ -14,6 +14,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S) -> String {
 #[derive(Serialize)]
 struct NormalizedPayload {
     unparsing_mode: UnparsingMode,
+    #[serde(skip_serializing_if = "Option::is_none")]
     normalize_types: Option<bool>,
 }
 

@@ -38,6 +38,12 @@ macro_rules! make_all_data {
                         Err(Error::InvalidMichelsonData)
                     }
                 }
+
+                impl From<$enum_case_type> for Data {
+                    fn from(value: $enum_case_type) -> Self {
+                        Self::$enum_case_name(value)
+                    }
+                }
             )+
         )?
 
@@ -105,12 +111,11 @@ macro_rules! make_all_data {
             type Error = Error;
 
             fn try_from(value: Micheline) -> Result<Self> {
-                if value.is_sequence() {
-                    return Ok(Data::Sequence(value.try_into()?));
+                match value {
+                    Micheline::Literal(value) => Ok(value.into()),
+                    Micheline::PrimitiveApplication(value) => value.try_into(),
+                    Micheline::Sequence(_) => Ok(Data::Sequence(value.try_into()?)),
                 }
-                let primitive_application: PrimitiveApplication = value.try_into()?;
-
-                primitive_application.try_into()
             }
         }
 

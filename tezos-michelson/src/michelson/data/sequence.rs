@@ -41,12 +41,6 @@ impl From<Sequence> for Vec<Data> {
     }
 }
 
-impl From<Sequence> for Data {
-    fn from(value: Sequence) -> Self {
-        Self::Sequence(value)
-    }
-}
-
 impl From<Sequence> for Micheline {
     fn from(value: Sequence) -> Self {
         value

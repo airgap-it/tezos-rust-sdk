@@ -31,12 +31,6 @@ impl From<Map> for Vec<Elt> {
     }
 }
 
-impl From<Map> for Data {
-    fn from(value: Map) -> Self {
-        Self::Map(value)
-    }
-}
-
 impl From<Map> for Micheline {
     fn from(value: Map) -> Self {
         value

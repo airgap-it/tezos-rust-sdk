@@ -56,16 +56,19 @@ impl From<Int> for Michelson {
     }
 }
 
-impl From<Int> for Data {
-    fn from(value: Int) -> Self {
-        Data::Int(value)
-    }
-}
-
 impl From<i8> for Data {
     fn from(value: i8) -> Self {
         let integer: Int = value.into();
         integer.into()
+    }
+}
+
+impl TryFrom<std::string::String> for Data {
+    type Error = Error;
+
+    fn try_from(value: std::string::String) -> Result<Self> {
+        let value: String = value.try_into()?;
+        Ok(value.into())
     }
 }
 
@@ -141,12 +144,6 @@ impl TryFrom<Data> for i128 {
 impl From<Nat> for Michelson {
     fn from(value: Nat) -> Self {
         Self::Data(value.into())
-    }
-}
-
-impl From<Nat> for Data {
-    fn from(value: Nat) -> Self {
-        Data::Nat(value)
     }
 }
 

@@ -71,7 +71,9 @@ impl TryFrom<Micheline> for Literal {
         if let Micheline::Literal(value) = value {
             return Ok(value);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Micheline Literal", value),
+        })
     }
 }
 
@@ -120,7 +122,9 @@ impl TryFrom<Micheline> for Nat {
         if let Micheline::Literal(Literal::Int(value)) = value {
             return Ok(value.to_string().try_into()?);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Nat", value),
+        })
     }
 }
 

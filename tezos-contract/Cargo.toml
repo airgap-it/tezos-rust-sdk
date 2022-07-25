@@ -15,5 +15,9 @@ tezos-rpc = { path = "../tezos-rpc", default-features = false }
 tezos-michelson = { path = "../tezos-michelson" }
 tezos-operation = { path = "../tezos-operation" }
 
+[dev-dependencies]
+tokio = { version = "1.19", features = ["macros"] }
+httpmock = { version = "0.6" }
+
 [features]
 default = [ "tezos-rpc/default" ]

@@ -22,12 +22,6 @@ macro_rules! make_instructions {
             $($name($name),)*
         }
 
-        impl From<Instruction> for Data {
-            fn from(value: Instruction) -> Self {
-                Self::Instruction(value)
-            }
-        }
-
         impl From<Instruction> for Micheline {
             fn from(value: Instruction) -> Self {
                 match value {

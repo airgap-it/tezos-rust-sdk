@@ -7,7 +7,11 @@ use tezos_michelson::{
     },
     MichelinePacker,
 };
-use tezos_rpc::{client::TezosRpc, http::Http, models::block::BlockId};
+use tezos_rpc::{
+    client::TezosRpc,
+    http::Http,
+    models::{block::BlockId, contract::UnparsingMode},
+};
 
 use crate::{utils::AnyAnnotationValue, Result};
 
@@ -39,7 +43,10 @@ impl<'a, HttpClient: Http> BigMap<'a, HttpClient> {
         let packed_key = key.pack(Some(&self.key_type))?;
         let hashed = Tezos::default().get_crypto().blake2b(&packed_key, 32)?;
         let script_expr: ScriptExprHash = (&hashed).try_into()?;
-        let mut request = self.client.get_big_map_value(self.id, &script_expr);
+        let mut request = self
+            .client
+            .get_big_map_value(self.id, &script_expr)
+            .unparsing_mode(UnparsingMode::Optimized_legacy);
         if let Some(block_id) = block_id {
             request = request.block_id(block_id);
         }

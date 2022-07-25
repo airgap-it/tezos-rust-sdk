@@ -136,7 +136,9 @@ impl TryFrom<Vec<Micheline>> for Michelson {
         }
 
         if michelson_values.iter().any(|value| value.is_elt()) {
-            return Err(Error::InvalidMicheline);
+            return Err(Error::InvalidMicheline {
+                description: format!("Invalid sequence of values: {:?}", michelson_values),
+            });
         }
 
         if michelson_values.iter().all(|value| value.is_data()) {
@@ -147,7 +149,9 @@ impl TryFrom<Vec<Micheline>> for Michelson {
             return Ok(data::sequence(data_values));
         }
 
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Invalid sequence of values: {:?}", michelson_values),
+        })
     }
 }
 

@@ -5,10 +5,7 @@ use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    michelson::data::Data as MichelsonData,
-    {Error, Result},
-};
+use crate::{Error, Result};
 
 lazy_static! {
     static ref REGEX: Regex = Regex::new("^(\"|\r|\n|\t|\\b|\\\\|[^\"\\\\])*$").unwrap();
@@ -66,11 +63,5 @@ impl TryFrom<&str> for String {
 impl From<String> for std::string::String {
     fn from(value: String) -> Self {
         value.0
-    }
-}
-
-impl From<String> for MichelsonData {
-    fn from(value: String) -> Self {
-        Self::String(value)
     }
 }

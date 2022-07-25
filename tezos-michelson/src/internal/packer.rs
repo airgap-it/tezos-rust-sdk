@@ -37,7 +37,7 @@ impl MichelinePacker {
             Micheline::Sequence(sequence) => {
                 Self::pre_pack_sequence(value.try_into()?, sequence).map(|value| value.into())
             }
-            _ => Err(Error::InvalidMicheline),
+            _ => Err(Error::InvalidMicheline { description: format!("Pre pack failed because provided schema ({:?}) is not a primitive application or sequence", schema) }),
         }
     }
 
@@ -49,7 +49,7 @@ impl MichelinePacker {
             Micheline::Sequence(sequence) => {
                 Self::post_unpack_sequence(value.try_into()?, sequence).map(|value| value.into())
             }
-            _ => Err(Error::InvalidMicheline),
+            _ => Err(Error::InvalidMicheline { description: format!("Post unpack failed because provided schema ({:?}) is not a primitive application or sequence", schema) }),
         }
     }
 

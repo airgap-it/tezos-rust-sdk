@@ -9,8 +9,8 @@ impl AnyAnnotationValue for TypeFieldMetadata {
         self.field_name().as_ref().map_or(
             self.type_name()
                 .as_ref()
-                .map(|annotation| annotation.value()),
-            |annotation| Some(annotation.value()),
+                .map(|annotation| annotation.value_without_prefix()),
+            |annotation| Some(annotation.value_without_prefix()),
         )
     }
 }
