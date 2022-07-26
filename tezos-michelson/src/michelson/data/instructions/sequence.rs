@@ -13,6 +13,10 @@ impl Sequence {
         &self.0
     }
 
+    pub fn into_instructions(self) -> Vec<Instruction> {
+        self.0
+    }
+
     pub fn form(values: Vec<Instruction>) -> Self {
         Self(values)
     }

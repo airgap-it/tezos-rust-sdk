@@ -161,3 +161,9 @@ impl Default for Entrypoint {
         Self::Default
     }
 }
+
+impl From<&str> for Entrypoint {
+    fn from(value: &str) -> Self {
+        Self::from_str(value)
+    }
+}

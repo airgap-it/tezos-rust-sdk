@@ -170,7 +170,7 @@ impl<O: TraitOperation> MaxLimits for O {
         let requires_estimation = self
             .contents()
             .iter()
-            .filter(|content| content.has_fee())
+            .filter(|content| !content.has_fee())
             .collect::<Vec<_>>()
             .len();
         let max_gas_limit_per_operation: BigUint = if requires_estimation > 0 {

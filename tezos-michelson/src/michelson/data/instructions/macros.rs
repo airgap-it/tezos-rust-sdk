@@ -126,7 +126,7 @@ macro_rules! make_instruction {
                     pub $boxed_field_name: Box<$boxed_field_type>,
                 )*
                 $(
-                    metadata: $metadata_type,
+                    pub metadata: $metadata_type,
                 )?
             }
 

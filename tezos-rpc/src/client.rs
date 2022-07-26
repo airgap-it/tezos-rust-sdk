@@ -302,6 +302,13 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
         protocol_rpc::block::get(&self.context)
     }
 
+    /// Get the block hash.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/hash]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-hash)
+    pub fn get_block_hash(&self) -> protocol_rpc::block::hash::RpcRequestBuilder<HttpClient> {
+        protocol_rpc::block::hash::get(&self.context)
+    }
+
     /// Access the list of all constants.
     ///
     /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)

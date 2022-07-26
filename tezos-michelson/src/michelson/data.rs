@@ -5,8 +5,10 @@ mod sequence;
 
 use self::macros::{make_all_data, make_data};
 pub use crate::common::{bytes::Bytes, string::String};
+use crate::internal::normalizer::MichelsonNormalizer;
 pub use map::{map, Map};
 pub use sequence::{sequence, Sequence};
+use tezos_core::internal::normalizer::Normalizer;
 pub use tezos_core::types::number::{Int, Nat};
 
 make_all_data!(
@@ -37,6 +39,10 @@ impl Data {
             return name.parse::<instructions::Primitive>().is_ok();
         }
         primitive.is_ok()
+    }
+
+    pub fn normalized(self) -> Self {
+        MichelsonNormalizer::normalize(self)
     }
 }
 

@@ -110,6 +110,27 @@ impl From<&ContractHash> for Address {
     }
 }
 
+impl TryFrom<Address> for ContractAddress {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        if let Address::Originated(value) = value {
+            return Ok(value);
+        }
+
+        Err(Error::InvalidAddress)
+    }
+}
+
+impl TryFrom<Address> for ContractHash {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        let contract_address: ContractAddress = value.try_into()?;
+        contract_address.contract_hash().try_into()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",

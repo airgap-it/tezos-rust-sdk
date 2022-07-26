@@ -1,6 +1,7 @@
 use crate::{client::TezosRpcChainId, http::Http};
 
 pub mod context;
+pub mod hash;
 pub mod helpers;
 
 use {

@@ -5,6 +5,7 @@ pub mod types;
 
 use annotations::Annotation;
 use std::str::FromStr;
+use tezos_core::internal::normalizer::Normalizer;
 
 pub use self::{
     data::instructions::Primitive as InstructionPrimitive,
@@ -16,6 +17,7 @@ use self::{
     types::Type,
 };
 use crate::{
+    internal::normalizer::MichelsonNormalizer,
     micheline::{literals::Literal, primitive_application::PrimitiveApplication, Micheline},
     Error, Result,
 };
@@ -37,6 +39,10 @@ impl Michelson {
         let schema: Option<Micheline> = schema.map(|value| value.into());
         let micheline = Micheline::unpack(bytes, schema.as_ref())?;
         micheline.try_into()
+    }
+
+    pub fn normalized(self) -> Self {
+        MichelsonNormalizer::normalize(self)
     }
 
     fn is_data(&self) -> bool {

@@ -33,20 +33,32 @@ use crate::{utils::AnyAnnotationValue, Error, Result};
 use self::entrypoints::MappedEntrypoints;
 pub use self::{
     big_map::{BigMap, BigMapContainer},
-    entrypoints::EntrypointPath,
+    entrypoints::EntrypointPathComponent,
     storage::Storage,
 };
 
 #[derive(Debug, Clone)]
 pub struct Contract<'a, HttpClient: Http> {
-    pub address: ContractHash,
-    pub storage: Storage<'a, HttpClient>,
-    pub client: &'a TezosRpc<HttpClient>,
+    address: ContractHash,
+    storage: Storage<'a, HttpClient>,
+    client: &'a TezosRpc<HttpClient>,
 
     entrypoints: MappedEntrypoints,
 }
 
 impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
+    pub fn address(&self) -> &ContractHash {
+        &self.address
+    }
+
+    pub fn storage(&self) -> &Storage<'a, HttpClient> {
+        &self.storage
+    }
+
+    pub fn client(&self) -> &'a TezosRpc<HttpClient> {
+        self.client
+    }
+
     pub(crate) async fn new(
         address: ContractHash,
         client: &'a TezosRpc<HttpClient>,
@@ -80,10 +92,10 @@ impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
     pub fn call(
         &self,
         entrypoint: Entrypoint,
-        arguments: &[(&str, Data)],
+        arguments: Vec<(&str, Data)>,
     ) -> Result<PartialTransaction> {
         if let Some(entrypoint_type) = self.entrypoints.get(&entrypoint) {
-            let mut args = arguments.to_vec();
+            let mut args = arguments;
             let parameters = Parameters::new(
                 entrypoint,
                 entrypoint_type
@@ -100,7 +112,7 @@ impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
         Err(Error::EntrypointNotFound)
     }
 
-    pub fn get_entrypoint_at_path(&self, path: &[EntrypointPath]) -> Option<Entrypoint> {
+    pub fn get_entrypoint_at_path(&self, path: &[EntrypointPathComponent]) -> Option<Entrypoint> {
         self.entrypoints.get_entrypoint_at_path(path)
     }
 }
@@ -149,7 +161,7 @@ impl ParametersValueConstructor for Type {
     fn construct_parameter_value(&self, arguments: &mut Vec<(&str, Data)>) -> Result<Micheline> {
         if let Some(key) = self.metadata().any_annotation_value() {
             if let Some(matching_arg_index) = arguments.iter().position(|arg| arg.0.eq(key)) {
-                let value = arguments.remove(matching_arg_index).1;
+                let value = arguments.remove(matching_arg_index).1.normalized();
                 if value.is_compatible_with(self) {
                     let schema: Micheline = self.into();
                     return Ok(MichelinePacker::pre_pack(value.into(), &schema)?);
@@ -161,10 +173,11 @@ impl ParametersValueConstructor for Type {
             }
         }
         if let Some(first) = arguments.first().cloned() {
-            if first.0.is_empty() && first.1.is_compatible_with(self) {
+            let value = first.1.normalized();
+            if first.0.is_empty() && value.is_compatible_with(self) {
                 arguments.remove(0);
                 let schema: Micheline = self.into();
-                return Ok(MichelinePacker::pre_pack(first.1.into(), &schema)?);
+                return Ok(MichelinePacker::pre_pack(value.into(), &schema)?);
             }
         }
         match self {
@@ -382,6 +395,16 @@ impl CompatibleWith<Type> for Pair {
                     .zip(self.values.iter())
                     .all(|(r#type, value)| value.is_compatible_with(r#type))
             }
+            Type::Comparable(ComparableType::Pair(pair)) => {
+                if pair.types.len() != self.values.len() {
+                    return false;
+                }
+
+                pair.types
+                    .iter()
+                    .zip(self.values.iter())
+                    .all(|(r#type, value)| value.is_compatible_with(&r#type.clone().into()))
+            }
             _ => false,
         }
     }
@@ -391,6 +414,9 @@ impl CompatibleWith<Type> for Left {
     fn is_compatible_with(&self, value: &Type) -> bool {
         match value {
             Type::Or(or) => self.value.is_compatible_with(&or.lhs),
+            Type::Comparable(ComparableType::Or(or)) => {
+                self.value.is_compatible_with(&(*or.lhs).clone().into())
+            }
             _ => false,
         }
     }
@@ -400,6 +426,9 @@ impl CompatibleWith<Type> for Right {
     fn is_compatible_with(&self, value: &Type) -> bool {
         match value {
             Type::Or(or) => self.value.is_compatible_with(&or.rhs),
+            Type::Comparable(ComparableType::Or(or)) => {
+                self.value.is_compatible_with(&(*or.rhs).clone().into())
+            }
             _ => false,
         }
     }
@@ -409,6 +438,9 @@ impl CompatibleWith<Type> for DataSome {
     fn is_compatible_with(&self, value: &Type) -> bool {
         match value {
             Type::Option(option) => self.value.is_compatible_with(&option.r#type),
+            Type::Comparable(ComparableType::Option(option)) => self
+                .value
+                .is_compatible_with(&(*option.r#type).clone().into()),
             _ => false,
         }
     }

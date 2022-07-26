@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use tezos_michelson::michelson::types::{Or, Parameter, Type};
 use tezos_operation::operations::Entrypoint;
 
@@ -8,11 +6,11 @@ use crate::Result;
 #[derive(Debug, Clone)]
 pub struct MappedEntrypoints {
     parameters_type: Type,
-    entrypoint_paths: HashMap<Entrypoint, Vec<EntrypointPath>>,
+    entrypoint_paths: Vec<(Entrypoint, Vec<EntrypointPathComponent>)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum EntrypointPath {
+pub enum EntrypointPathComponent {
     Left,
     Right,
 }
@@ -23,7 +21,7 @@ impl MappedEntrypoints {
         let entrypoint_paths = if let Type::Or(value) = &parameters_type {
             entrypoint_paths(value, None)
         } else {
-            HashMap::new()
+            vec![]
         };
         return Ok(MappedEntrypoints {
             parameters_type,
@@ -36,14 +34,18 @@ impl MappedEntrypoints {
             return Some(&self.parameters_type);
         }
 
-        if let Some(path) = self.entrypoint_paths.get(entrypoint) {
+        if let Some((_, path)) = self
+            .entrypoint_paths
+            .iter()
+            .find(|(entry, _)| entry == entrypoint)
+        {
             return get_at_path(&self.parameters_type, path);
         }
 
         None
     }
 
-    pub fn get_entrypoint_at_path(&self, path: &[EntrypointPath]) -> Option<Entrypoint> {
+    pub fn get_entrypoint_at_path(&self, path: &[EntrypointPathComponent]) -> Option<Entrypoint> {
         let value = get_at_path(&self.parameters_type, path)?;
         if let Some(annotation) = value.metadata().field_name() {
             let entrypoint = Entrypoint::from_str(annotation.value());
@@ -57,37 +59,37 @@ impl MappedEntrypoints {
 
 fn entrypoint_paths(
     value: &Or,
-    current_path: Option<Vec<EntrypointPath>>,
-) -> HashMap<Entrypoint, Vec<EntrypointPath>> {
-    let mut result: HashMap<Entrypoint, Vec<EntrypointPath>> = HashMap::new();
+    current_path: Option<Vec<EntrypointPathComponent>>,
+) -> Vec<(Entrypoint, Vec<EntrypointPathComponent>)> {
+    let mut result: Vec<(Entrypoint, Vec<EntrypointPathComponent>)> = Vec::new();
 
     fn handle(
         value: &Type,
-        path_component: EntrypointPath,
-        current_path: Option<&Vec<EntrypointPath>>,
-        map: &mut HashMap<Entrypoint, Vec<EntrypointPath>>,
+        path_component: EntrypointPathComponent,
+        current_path: Option<&Vec<EntrypointPathComponent>>,
+        entries: &mut Vec<(Entrypoint, Vec<EntrypointPathComponent>)>,
     ) {
         if let Type::Or(lhs) = value {
             let mut path = current_path.map(|value| value.clone()).unwrap_or(vec![]);
             path.push(path_component);
             let entrypoints = entrypoint_paths(lhs, Some(path));
-            map.extend(entrypoints.into_iter());
+            entries.extend(entrypoints.into_iter());
         } else if let Some(name) = value.metadata().field_name() {
             let mut path = current_path.map(|value| value.clone()).unwrap_or(vec![]);
             path.push(path_component);
-            map.insert(Entrypoint::from_str(name.value()), path);
+            entries.push((Entrypoint::from_str(name.value_without_prefix()), path));
         }
     }
 
     handle(
         &value.lhs,
-        EntrypointPath::Left,
+        EntrypointPathComponent::Left,
         current_path.as_ref(),
         &mut result,
     );
     handle(
         &value.rhs,
-        EntrypointPath::Right,
+        EntrypointPathComponent::Right,
         current_path.as_ref(),
         &mut result,
     );
@@ -95,12 +97,12 @@ fn entrypoint_paths(
     result
 }
 
-fn get_at_path<'a>(value: &'a Type, path: &[EntrypointPath]) -> Option<&'a Type> {
+fn get_at_path<'a>(value: &'a Type, path: &[EntrypointPathComponent]) -> Option<&'a Type> {
     if let Some(path_component) = path.first() {
         if let Type::Or(value) = value {
             let next_value = match path_component {
-                EntrypointPath::Left => &*value.lhs,
-                EntrypointPath::Right => &*value.rhs,
+                EntrypointPathComponent::Left => &*value.lhs,
+                EntrypointPathComponent::Right => &*value.rhs,
             };
             if path.len() > 1 {
                 return get_at_path(next_value, &path[1..]);

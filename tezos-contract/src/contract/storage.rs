@@ -17,11 +17,15 @@ use super::big_map::{BigMap, BigMapContainer};
 
 #[derive(Debug, Clone)]
 pub struct Storage<'a, HttpClient: Http> {
-    pub big_maps: BigMapContainer<'a, HttpClient>,
+    big_maps: BigMapContainer<'a, HttpClient>,
     mapped: MappedStorage,
 }
 
 impl<'a, HttpClient: Http> Storage<'a, HttpClient> {
+    pub fn big_maps(&self) -> &BigMapContainer<'a, HttpClient> {
+        &self.big_maps
+    }
+
     pub fn new(script: ContractScript, client: &'a TezosRpc<HttpClient>) -> Result<Self> {
         let storage_type: TypeStorage = script
             .code
