@@ -95,9 +95,9 @@ impl Normalizer<Data> for MichelsonNormalizer {
             ),
             Data::Instruction(value) => Data::Instruction(Self::normalize(value)),
             Data::Pair(value) => Data::Pair(Self::normalize(value)),
-            Data::Left(value) => Data::Left(data::Left::new(Self::normalize(*value.value))),
-            Data::Right(value) => Data::Right(data::Right::new(Self::normalize(*value.value))),
-            Data::Some(value) => Data::Some(data::Some::new(Self::normalize(*value.value))),
+            Data::Left(value) => data::Left::new(Self::normalize(*value.value)).into(),
+            Data::Right(value) => data::Right::new(Self::normalize(*value.value)).into(),
+            Data::Some(value) => data::Some::new(Self::normalize(*value.value)).into(),
             Data::Elt(value) => Data::Elt(Self::normalize(value)),
             _ => value,
         }
@@ -107,59 +107,55 @@ impl Normalizer<Data> for MichelsonNormalizer {
 impl Normalizer<Type> for MichelsonNormalizer {
     fn normalize(value: Type) -> Type {
         match value {
-            Type::Parameter(value) => Type::Parameter(types::Parameter::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
-            Type::Storage(value) => Type::Storage(types::Storage::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
-            Type::Code(value) => Type::Code(types::Code::new(
-                Self::normalize(*value.code),
-                Some(value.metadata),
-            )),
-            Type::Option(value) => Type::Option(types::Option::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
-            Type::List(value) => Type::List(types::List::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
-            Type::Set(value) => Type::Set(types::Set::new(
-                Self::normalize(value.r#type),
-                Some(value.metadata),
-            )),
-            Type::Contract(value) => Type::Contract(types::Contract::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
-            Type::Ticket(value) => Type::Ticket(types::Ticket::new(
-                Self::normalize(*value.r#type),
-                Some(value.metadata),
-            )),
+            Type::Parameter(value) => {
+                types::Parameter::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
+            Type::Storage(value) => {
+                types::Storage::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
+            Type::Code(value) => {
+                types::Code::new(Self::normalize(*value.code), Some(value.metadata)).into()
+            }
+            Type::Option(value) => {
+                types::Option::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
+            Type::List(value) => {
+                types::List::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
+            Type::Set(value) => {
+                types::Set::new(Self::normalize(value.r#type), Some(value.metadata)).into()
+            }
+            Type::Contract(value) => {
+                types::Contract::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
+            Type::Ticket(value) => {
+                types::Ticket::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
+            }
             Type::Pair(value) => Type::Pair(Self::normalize(value)),
-            Type::Or(value) => Type::Or(types::Or::new(
+            Type::Or(value) => types::Or::new(
                 Self::normalize(*value.lhs),
                 Self::normalize(*value.rhs),
                 Some(value.metadata),
-            )),
-            Type::Lambda(value) => Type::Lambda(types::Lambda::new(
+            )
+            .into(),
+            Type::Lambda(value) => types::Lambda::new(
                 Self::normalize(*value.parameter_type),
                 Self::normalize(*value.return_type),
                 Some(value.metadata),
-            )),
-            Type::Map(value) => Type::Map(types::Map::new(
+            )
+            .into(),
+            Type::Map(value) => types::Map::new(
                 Self::normalize(*value.key_type),
                 Self::normalize(*value.value_type),
                 Some(value.metadata),
-            )),
-            Type::BigMap(value) => Type::BigMap(types::BigMap::new(
+            )
+            .into(),
+            Type::BigMap(value) => types::BigMap::new(
                 Self::normalize(*value.key_type),
                 Self::normalize(*value.value_type),
                 Some(value.metadata),
-            )),
+            )
+            .into(),
             _ => value,
         }
     }
@@ -168,9 +164,17 @@ impl Normalizer<Type> for MichelsonNormalizer {
 impl Normalizer<ComparableType> for MichelsonNormalizer {
     fn normalize(value: ComparableType) -> ComparableType {
         match value {
-            ComparableType::Option(_) => todo!(),
-            ComparableType::Or(_) => todo!(),
-            ComparableType::Pair(_) => todo!(),
+            ComparableType::Option(value) => {
+                types::ComparableOption::new(Self::normalize(*value.r#type), Some(value.metadata))
+                    .into()
+            }
+            ComparableType::Or(value) => types::ComparableOr::new(
+                Self::normalize(*value.lhs),
+                Self::normalize(*value.rhs),
+                Some(value.metadata),
+            )
+            .into(),
+            ComparableType::Pair(value) => Self::normalize(value).into(),
             _ => value,
         }
     }
@@ -222,6 +226,31 @@ impl Normalizer<types::Pair> for MichelsonNormalizer {
     }
 }
 
+impl Normalizer<types::ComparablePair> for MichelsonNormalizer {
+    fn normalize(value: types::ComparablePair) -> types::ComparablePair {
+        if value.types.len() > 2 {
+            let mut values = value.types;
+            let first = values.remove(0);
+            types::ComparablePair::new(
+                vec![
+                    Self::normalize(first),
+                    Self::normalize(types::ComparablePair::new(values, None).into()),
+                ],
+                Some(value.metadata),
+            )
+        } else {
+            let values = value.types;
+            types::ComparablePair::new(
+                values
+                    .into_iter()
+                    .map(|value| Self::normalize(value))
+                    .collect(),
+                Some(value.metadata),
+            )
+        }
+    }
+}
+
 impl Normalizer<data::Elt> for MichelsonNormalizer {
     fn normalize(value: data::Elt) -> data::Elt {
         data::Elt::new(Self::normalize(*value.key), Self::normalize(*value.value))
@@ -233,93 +262,88 @@ impl Normalizer<Instruction> for MichelsonNormalizer {
         match value {
             Instruction::Sequence(value) => Instruction::Sequence(Self::normalize(value)),
             Instruction::Iter(value) => {
-                Instruction::Iter(instructions::Iter::new(Self::normalize(value.expression)))
+                instructions::Iter::new(Self::normalize(value.expression)).into()
             }
             Instruction::LoopLeft(value) => {
-                Instruction::LoopLeft(instructions::LoopLeft::new(Self::normalize(value.body)))
+                instructions::LoopLeft::new(Self::normalize(value.body)).into()
             }
-            Instruction::Loop(value) => {
-                Instruction::Loop(instructions::Loop::new(Self::normalize(value.body)))
+            Instruction::Loop(value) => instructions::Loop::new(Self::normalize(value.body)).into(),
+            Instruction::Dip(value) => {
+                instructions::Dip::new(Self::normalize(value.instruction), value.n).into()
             }
-            Instruction::Dip(value) => Instruction::Dip(instructions::Dip::new(
-                Self::normalize(value.instruction),
-                value.n,
-            )),
-            Instruction::EmptyBigMap(value) => {
-                Instruction::EmptyBigMap(instructions::EmptyBigMap::new(
-                    Self::normalize(value.key_type),
-                    Self::normalize(value.value_type),
-                    value.metadata,
-                ))
-            }
-            Instruction::EmptyMap(value) => Instruction::EmptyMap(instructions::EmptyMap::new(
+            Instruction::EmptyBigMap(value) => instructions::EmptyBigMap::new(
                 Self::normalize(value.key_type),
                 Self::normalize(value.value_type),
                 value.metadata,
-            )),
-            Instruction::EmptySet(value) => Instruction::EmptySet(instructions::EmptySet::new(
-                Self::normalize(value.r#type),
+            )
+            .into(),
+            Instruction::EmptyMap(value) => instructions::EmptyMap::new(
+                Self::normalize(value.key_type),
+                Self::normalize(value.value_type),
                 value.metadata,
-            )),
-            Instruction::IfCons(value) => Instruction::IfCons(instructions::IfCons::new(
+            )
+            .into(),
+            Instruction::EmptySet(value) => {
+                instructions::EmptySet::new(Self::normalize(value.r#type), value.metadata).into()
+            }
+            Instruction::IfCons(value) => instructions::IfCons::new(
                 Self::normalize(value.if_branch),
                 Self::normalize(value.else_branch),
-            )),
-            Instruction::IfLeft(value) => Instruction::IfLeft(instructions::IfLeft::new(
+            )
+            .into(),
+            Instruction::IfLeft(value) => instructions::IfLeft::new(
                 Self::normalize(value.if_branch),
                 Self::normalize(value.else_branch),
-            )),
-            Instruction::IfNone(value) => Instruction::IfNone(instructions::IfNone::new(
+            )
+            .into(),
+            Instruction::IfNone(value) => instructions::IfNone::new(
                 Self::normalize(value.if_branch),
                 Self::normalize(value.else_branch),
-            )),
-            Instruction::If(value) => Instruction::If(instructions::If::new(
+            )
+            .into(),
+            Instruction::If(value) => instructions::If::new(
                 Self::normalize(value.if_branch),
                 Self::normalize(value.else_branch),
-            )),
-            Instruction::Lambda(value) => Instruction::Lambda(instructions::Lambda::new(
+            )
+            .into(),
+            Instruction::Lambda(value) => instructions::Lambda::new(
                 Self::normalize(value.parameter_type),
                 Self::normalize(value.return_type),
                 Self::normalize(value.body),
                 value.metadata,
-            )),
-            Instruction::Left(value) => Instruction::Left(instructions::Left::new(
-                Self::normalize(value.r#type),
-                value.metadata,
-            )),
-            Instruction::Right(value) => Instruction::Right(instructions::Right::new(
-                Self::normalize(value.r#type),
-                value.metadata,
-            )),
-            Instruction::Map(value) => Instruction::Map(instructions::Map::new(
-                Self::normalize(value.expression),
-                value.metadata,
-            )),
-            Instruction::Nil(value) => Instruction::Nil(instructions::Nil::new(
-                Self::normalize(value.r#type),
-                value.metadata,
-            )),
-            Instruction::None(value) => Instruction::None(instructions::None::new(
-                Self::normalize(value.r#type),
-                value.metadata,
-            )),
-            Instruction::Push(value) => Instruction::Push(instructions::Push::new(
+            )
+            .into(),
+            Instruction::Left(value) => {
+                instructions::Left::new(Self::normalize(value.r#type), value.metadata).into()
+            }
+            Instruction::Right(value) => {
+                instructions::Right::new(Self::normalize(value.r#type), value.metadata).into()
+            }
+            Instruction::Map(value) => {
+                instructions::Map::new(Self::normalize(value.expression), value.metadata).into()
+            }
+            Instruction::Nil(value) => {
+                instructions::Nil::new(Self::normalize(value.r#type), value.metadata).into()
+            }
+            Instruction::None(value) => {
+                instructions::None::new(Self::normalize(value.r#type), value.metadata).into()
+            }
+            Instruction::Push(value) => instructions::Push::new(
                 Self::normalize(value.r#type),
                 Self::normalize(*value.value),
                 value.metadata,
-            )),
-            Instruction::Contract(value) => Instruction::Contract(instructions::Contract::new(
-                Self::normalize(value.r#type),
-                value.metadata,
-            )),
-            Instruction::CreateContract(value) => {
-                Instruction::CreateContract(instructions::CreateContract::new(
-                    Self::normalize(value.parameter_type),
-                    Self::normalize(value.storage_type),
-                    Self::normalize(value.code),
-                    value.metadata,
-                ))
+            )
+            .into(),
+            Instruction::Contract(value) => {
+                instructions::Contract::new(Self::normalize(value.r#type), value.metadata).into()
             }
+            Instruction::CreateContract(value) => instructions::CreateContract::new(
+                Self::normalize(value.parameter_type),
+                Self::normalize(value.storage_type),
+                Self::normalize(value.code),
+                value.metadata,
+            )
+            .into(),
             _ => value,
         }
     }

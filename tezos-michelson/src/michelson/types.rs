@@ -8,6 +8,7 @@ use super::Michelson;
 use crate::{internal::normalizer::MichelsonNormalizer, Error, Result};
 pub use comparables::{
     option as comparable_option, or as comparable_or, pair as comparable_pair,
+    Option as ComparableOption, Or as ComparableOr, Pair as ComparablePair,
     Primitive as ComparableTypePrimitive, Type as ComparableType, *,
 };
 
