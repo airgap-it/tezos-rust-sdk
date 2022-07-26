@@ -30,7 +30,7 @@ mod test {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let contract_address: ContractHash = "KT&1J4CiyWPmtFPXAjpgBezM5hoVHXHNzWBHK".try_into()?;
+        let contract_address: ContractHash = "KT1J4CiyWPmtFPXAjpgBezM5hoVHXHNzWBHK".try_into()?;
         server.mock(|when, then| {
             when.method(POST).path(format!(
                 "/chains/main/blocks/head/context/contracts/{}/script/normalized",
