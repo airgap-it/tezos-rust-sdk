@@ -144,7 +144,7 @@ macro_rules! make_type {
                 $(
                     pub $vec_field_name: Vec<$vec_field_type>,
                 )*
-                pub metadata: TypeFieldMetadata,
+                pub(crate) metadata: TypeFieldMetadata,
             }
 
             impl $name {
