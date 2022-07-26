@@ -1,7 +1,6 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress},
-    mutez::Mutez,
-};
+use crate::models::operation::operation_result::operations::InternalOperationResult;
+
+use crate::{Error, Result};
 
 use {
     crate::{
@@ -9,6 +8,10 @@ use {
         models::operation::operation_result::operations::transaction::TransactionOperationResult,
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::{
+        encoded::{Address, ImplicitAddress},
+        mutez::Mutez,
+    },
     tezos_michelson::micheline::Micheline,
 };
 
@@ -37,37 +40,71 @@ pub struct Transaction {
     pub metadata: Option<TransactionMetadata>,
 }
 
+impl From<tezos_operation::operations::Transaction> for Transaction {
+    fn from(value: tezos_operation::operations::Transaction) -> Self {
+        Self {
+            kind: OperationKind::Transaction,
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.into(),
+            gas_limit: value.gas_limit.into(),
+            storage_limit: value.storage_limit.into(),
+            amount: value.amount,
+            destination: value.destination,
+            parameters: value.parameters.map(|parameters| parameters.into()),
+            metadata: None,
+        }
+    }
+}
+
+impl TryFrom<Transaction> for tezos_operation::operations::Transaction {
+    type Error = Error;
+
+    fn try_from(value: Transaction) -> Result<Self> {
+        Ok(Self {
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.try_into()?,
+            gas_limit: value.gas_limit.try_into()?,
+            storage_limit: value.storage_limit.try_into()?,
+            amount: value.amount,
+            destination: value.destination,
+            parameters: value.parameters.map(|parameters| parameters.into()),
+        })
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TransactionMetadata {
     pub operation_result: TransactionOperationResult,
     #[serde(default)]
     pub balance_updates: Vec<BalanceUpdate>,
     #[serde(default)]
-    pub internal_operation_results: Vec<InternalTransactionOperationResult>,
+    pub internal_operation_results: Vec<InternalOperationResult>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalTransactionOperationResult {
-    /// [OperationKind::Transaction]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    /// Mutez
-    pub amount: Mutez,
-    /// Address (Base58Check-encoded)
-    pub destination: Address,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub parameters: Option<TransactionParameters>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub result: Option<TransactionOperationResult>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransactionParameters {
     pub entrypoint: Entrypoint,
     pub value: Micheline,
+}
+
+impl From<tezos_operation::operations::Parameters> for TransactionParameters {
+    fn from(value: tezos_operation::operations::Parameters) -> Self {
+        Self {
+            entrypoint: value.entrypoint.into(),
+            value: value.value,
+        }
+    }
+}
+
+impl From<TransactionParameters> for tezos_operation::operations::Parameters {
+    fn from(value: TransactionParameters) -> Self {
+        Self {
+            entrypoint: value.entrypoint.into(),
+            value: value.value,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
@@ -107,38 +144,38 @@ impl From<String> for Entrypoint {
     }
 }
 
-impl<'a> Into<&'a str> for &'a Entrypoint {
-    fn into(self) -> &'a str {
-        match self {
-            Entrypoint::Default => DEFAULT,
-            Entrypoint::Root => ROOT,
-            Entrypoint::Do => DO,
-            Entrypoint::SetDelegate => SET_DELEGATE,
-            Entrypoint::RemoveDelegate => REMOVE_DELEGATE,
-            Entrypoint::Named(value) => value,
+impl From<tezos_operation::operations::Entrypoint> for Entrypoint {
+    fn from(value: tezos_operation::operations::Entrypoint) -> Self {
+        match value {
+            tezos_operation::operations::Entrypoint::Default => Self::Default,
+            tezos_operation::operations::Entrypoint::Root => Self::Root,
+            tezos_operation::operations::Entrypoint::Do => Self::Do,
+            tezos_operation::operations::Entrypoint::SetDelegate => Self::SetDelegate,
+            tezos_operation::operations::Entrypoint::RemoveDelegate => Self::RemoveDelegate,
+            tezos_operation::operations::Entrypoint::Named(value) => Self::Named(value),
         }
     }
 }
 
-impl Into<String> for Entrypoint {
-    fn into(self) -> String {
-        match self {
-            Entrypoint::Default => DEFAULT.into(),
-            Entrypoint::Root => ROOT.into(),
-            Entrypoint::Do => DO.into(),
-            Entrypoint::SetDelegate => SET_DELEGATE.into(),
-            Entrypoint::RemoveDelegate => REMOVE_DELEGATE.into(),
-            Entrypoint::Named(value) => value,
+impl From<Entrypoint> for tezos_operation::operations::Entrypoint {
+    fn from(value: Entrypoint) -> Self {
+        match value {
+            Entrypoint::Default => Self::Default,
+            Entrypoint::Root => Self::Root,
+            Entrypoint::Do => Self::Do,
+            Entrypoint::SetDelegate => Self::SetDelegate,
+            Entrypoint::RemoveDelegate => Self::RemoveDelegate,
+            Entrypoint::Named(value) => Self::Named(value),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::error::Error};
+    use super::*;
 
     #[tokio::test]
-    async fn test_transaction_deserialization() -> Result<(), Error> {
+    async fn test_transaction_deserialization() -> Result<()> {
         let result =
             serde_json::from_str::<Transaction>(include_str!("__TEST_DATA__/transaction.json"));
 

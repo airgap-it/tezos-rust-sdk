@@ -17,6 +17,7 @@ async-trait = "0.1"
 # Local dependencies
 tezos-core = { path = "../tezos-core", features = ["serde"] }
 tezos-michelson = { path = "../tezos-michelson", features = ["serde"] }
+tezos-operation = { path = "../tezos-operation" }
 
 [dev-dependencies]
 tokio = { version = "1.19", features = ["macros"] }

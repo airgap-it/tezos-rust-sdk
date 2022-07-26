@@ -2,8 +2,8 @@ pub mod big_maps;
 pub mod constants;
 pub mod contract;
 
-use super::BlockID;
+use super::BlockId;
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId) -> String {
     format!("{}/context", super::path(chain_id, block_id))
 }

@@ -3,10 +3,10 @@ use crate::{
     error::Error,
     http::Http,
     models::operation::{Operation, OperationWithMetadata},
-    protocol_rpc::block::BlockID,
+    protocol_rpc::block::BlockId,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId) -> String {
     format!("{}/operations", super::path(chain_id, block_id))
 }
 
@@ -15,7 +15,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID) -> String {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     operations: &'a Vec<&'a Operation>,
 }
 
@@ -24,20 +24,20 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             operations,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -75,7 +75,7 @@ mod tests {
                 kind::OperationKind, operation_contents_and_result::endorsement::Endorsement,
                 Operation, OperationContent, OperationWithMetadata,
             },
-            protocol_rpc::block::BlockID,
+            protocol_rpc::block::BlockId,
         },
         httpmock::prelude::*,
     };
@@ -85,7 +85,7 @@ mod tests {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
         let operation_group = Operation {
             protocol: Some("PtJakart2xVj7pYXJBXrqHgd82rdkLey5ZeeGwDgPp9rhQUbSqY".try_into().unwrap()),
             branch: "BKoVxMrDZHW8yvh6u5pWwCS9qYi8ApUtjt5KMMBN5ofikNW1cJW".try_into().unwrap(),

@@ -1,14 +1,14 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress, PublicKey},
-    mutez::Mutez,
-};
-
 use {
     crate::{
         models::balance_update::BalanceUpdate, models::operation::kind::OperationKind,
         models::operation::operation_result::operations::reveal::RevealOperationResult,
     },
+    crate::{Error, Result},
     serde::{Deserialize, Serialize},
+    tezos_core::types::{
+        encoded::{ImplicitAddress, PublicKey},
+        mutez::Mutez,
+    },
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -27,26 +27,41 @@ pub struct Reveal {
     pub metadata: Option<RevealMetadata>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RevealMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
-    pub operation_result: RevealOperationResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<Vec<InternalRevealOperationResult>>,
+impl From<tezos_operation::operations::Reveal> for Reveal {
+    fn from(value: tezos_operation::operations::Reveal) -> Self {
+        Self {
+            kind: OperationKind::Reveal,
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.into(),
+            gas_limit: value.gas_limit.into(),
+            storage_limit: value.storage_limit.into(),
+            public_key: value.public_key,
+            metadata: None,
+        }
+    }
+}
+
+impl TryFrom<Reveal> for tezos_operation::operations::Reveal {
+    type Error = Error;
+
+    fn try_from(value: Reveal) -> Result<Self> {
+        Ok(Self {
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.try_into()?,
+            gas_limit: value.gas_limit.try_into()?,
+            storage_limit: value.storage_limit.try_into()?,
+            public_key: value.public_key,
+        })
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalRevealOperationResult {
-    /// [OperationKind::Reveal]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    /// Public key (Base58Check-encoded)
-    pub public_key: PublicKey,
-    pub result: RevealOperationResult,
+pub struct RevealMetadata {
+    pub operation_result: RevealOperationResult,
+    #[serde(default)]
+    pub balance_updates: Vec<BalanceUpdate>,
 }
 
 #[cfg(test)]

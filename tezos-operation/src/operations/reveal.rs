@@ -8,19 +8,15 @@ use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerCon
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Reveal {
-    source: ImplicitAddress,
-    fee: Mutez,
-    counter: Nat,
-    gas_limit: Nat,
-    storage_limit: Nat,
-    public_key: PublicKey,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
+    pub counter: Nat,
+    pub gas_limit: Nat,
+    pub storage_limit: Nat,
+    pub public_key: PublicKey,
 }
 
 impl Reveal {
-    pub fn public_key(&self) -> &PublicKey {
-        &self.public_key
-    }
-
     pub fn new(
         source: ImplicitAddress,
         fee: Mutez,

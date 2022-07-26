@@ -4,8 +4,12 @@ use derive_more::{Display, Error as DError, From};
 
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
-    Internal { description: String },
-    Core { source: tezos_core::Error },
+    Internal {
+        description: String,
+    },
+    Core {
+        source: tezos_core::Error,
+    },
     InvalidAnnotationString,
     InvalidAnnotation,
     InvalidIntString,
@@ -21,7 +25,10 @@ pub enum Error {
     UnknownMichelsonPrimName,
     UnknownMichelsonPrimTag,
     InvalidBytes,
-    InvalidMicheline,
+    #[from(ignore)]
+    InvalidMicheline {
+        description: String,
+    },
     InvalidPrimitiveApplication,
     InvalidMichelineLiteral,
     MichelineValueSchemaMismatch,

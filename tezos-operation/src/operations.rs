@@ -18,13 +18,20 @@ mod transaction;
 use num_derive::FromPrimitive;
 use tezos_core::{
     internal::coder::{Decoder, Encoder},
-    types::encoded::{BlockHash, Signature},
+    types::{
+        encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
+        mutez::Mutez,
+    },
+    Tezos,
 };
 
 use crate::{
-    internal::coder::{
-        operation_bytes_coder::OperationBytesCoder,
-        operation_content_bytes_coder::OperationContentBytesCoder,
+    internal::{
+        coder::{
+            operation_bytes_coder::OperationBytesCoder,
+            operation_content_bytes_coder::OperationContentBytesCoder,
+        },
+        signer::{OperationSigner, Signer, Verifier},
     },
     Result,
 };
@@ -50,7 +57,7 @@ pub use self::{
         OperationContent as TraitOperationContent,
         OperationManagerContent as TraitOperationManagerContent,
     },
-    transaction::{Entrypoint, Parameters, PrimitiveEntrypoint, Transaction},
+    transaction::{Entrypoint, Parameters, Transaction},
 };
 
 pub trait Operation {
@@ -67,8 +74,8 @@ pub trait Operation {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnsignedOperation {
-    branch: BlockHash,
-    contents: Vec<OperationContent>,
+    pub branch: BlockHash,
+    pub contents: Vec<OperationContent>,
 }
 
 impl UnsignedOperation {
@@ -78,6 +85,25 @@ impl UnsignedOperation {
 
     pub fn from_forged_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self> {
         OperationBytesCoder::decode(bytes.as_ref())
+    }
+
+    pub fn into_signed_operation_with(
+        self,
+        key: &SecretKey,
+        tezos: &Tezos,
+    ) -> Result<SignedOperation> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+        let signature = signer.sign(&self, key)?;
+
+        Ok(SignedOperation::new(self.branch, self.contents, signature))
+    }
+
+    pub fn into_signed_operation(self, key: &SecretKey) -> Result<SignedOperation> {
+        let tezos: Tezos = Default::default();
+        let signer = OperationSigner::new(tezos.get_crypto());
+        let signature = signer.sign(&self, key)?;
+
+        Ok(SignedOperation::new(self.branch, self.contents, signature))
     }
 }
 
@@ -99,14 +125,39 @@ impl From<SignedOperation> for UnsignedOperation {
 
 #[derive(Debug, Clone)]
 pub struct SignedOperation {
-    branch: BlockHash,
-    contents: Vec<OperationContent>,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub contents: Vec<OperationContent>,
+    pub signature: Signature,
 }
 
 impl SignedOperation {
-    pub fn signature(&self) -> &Signature {
-        &self.signature
+    pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn verify(&self, key: &PublicKey) -> Result<bool> {
+        let tezos: Tezos = Default::default();
+        let signer = OperationSigner::new(tezos.get_crypto());
+        signer.verify(self, key)
+    }
+
+    pub fn to_injectable_string(&self) -> Result<String> {
+        let forged_bytes = self.to_forged_bytes()?;
+        let signature_bytes = self.signature.to_bytes()?;
+        Ok(hex::encode([forged_bytes, signature_bytes].concat()))
+    }
+
+    pub fn new(branch: BlockHash, contents: Vec<OperationContent>, signature: Signature) -> Self {
+        Self {
+            branch,
+            contents,
+            signature,
+        }
+    }
+
+    pub fn from(operation: UnsignedOperation, signature: Signature) -> Self {
+        Self::new(operation.branch, operation.contents, signature)
     }
 }
 
@@ -147,6 +198,22 @@ impl OperationContent {
 
     pub fn from_forged_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self> {
         OperationContentBytesCoder::decode(bytes.as_ref())
+    }
+
+    pub fn fee(&self) -> Mutez {
+        match self {
+            Self::Reveal(value) => value.fee,
+            Self::Transaction(value) => value.fee,
+            Self::Origination(value) => value.fee,
+            Self::Delegation(value) => value.fee,
+            Self::RegisterGlobalConstant(value) => value.fee,
+            Self::SetDepositsLimit(value) => value.fee,
+            _ => 0u8.into(),
+        }
+    }
+
+    pub fn has_fee(&self) -> bool {
+        self.fee() != 0u8.into()
     }
 }
 
@@ -275,24 +342,12 @@ impl OperationContentTag {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InlinedEndorsement {
-    branch: BlockHash,
-    operations: Endorsement,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub operations: Endorsement,
+    pub signature: Signature,
 }
 
 impl InlinedEndorsement {
-    pub fn branch(&self) -> &BlockHash {
-        &self.branch
-    }
-
-    pub fn operations(&self) -> &Endorsement {
-        &self.operations
-    }
-
-    pub fn signature(&self) -> &Signature {
-        &self.signature
-    }
-
     pub fn new(branch: BlockHash, operations: Endorsement, signature: Signature) -> Self {
         Self {
             branch,
@@ -304,24 +359,12 @@ impl InlinedEndorsement {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InlinedPreendrosement {
-    branch: BlockHash,
-    operations: Preendorsement,
-    signature: Signature,
+    pub branch: BlockHash,
+    pub operations: Preendorsement,
+    pub signature: Signature,
 }
 
 impl InlinedPreendrosement {
-    pub fn branch(&self) -> &BlockHash {
-        &self.branch
-    }
-
-    pub fn operations(&self) -> &Preendorsement {
-        &self.operations
-    }
-
-    pub fn signature(&self) -> &Signature {
-        &self.signature
-    }
-
     pub fn new(branch: BlockHash, operations: Preendorsement, signature: Signature) -> Self {
         Self {
             branch,
@@ -407,19 +450,19 @@ mod test {
     fn operations_with_bytes() -> Vec<(UnsignedOperation, &'static [u8])> {
         vec![
             (
-                UnsignedOperation::new("BLyKu3tnc9NCuiFfCqfeVGPCoZTyW63dYh2XAYxkM7fQYKCqsju".try_into().unwrap(), vec![]), 
+                UnsignedOperation::new("BLyKu3tnc9NCuiFfCqfeVGPCoZTyW63dYh2XAYxkM7fQYKCqsju".try_into().unwrap(), vec![]),
                 &hex!("a5db12a8a7716fa5445bd374c8b3239c876dde8397efae0eb0dd223dc23a51c7")
             ),
             (
                 UnsignedOperation::new(
-                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), 
+                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(),
                     vec![SeedNonceRevelation::new(1, "6cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214".try_into().unwrap()).into()]
                 ),
                 &hex!("86db32fcecf30277eef3ef9f397118ed067957dd998979fd723ea0a0d50beead01000000016cdaf9367e551995a670a5c642a9396290f8c9d17e6bc3c1555bfaa910d92214")
             ),
             (
                 UnsignedOperation::new(
-                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(), 
+                    "BLjg4HU2BwnCgJfRutxJX5rHACzLDxRJes1MXqbXXdxvHWdK3Te".try_into().unwrap(),
                     vec![
                         SeedNonceRevelation::new(1, "9d15bcdc0194b327d3cb0dcd05242bc6ff1635da635e38ed7a62b8c413ce6833".try_into().unwrap()).into(),
                         SeedNonceRevelation::new(2, "921ed0115c7cc1b5dcd07ad66ce4d9b2b0186c93c27a80d70b66b4e309add170".try_into().unwrap()).into(),
@@ -608,23 +651,23 @@ mod test {
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff00000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::root(), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::Root, vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff01000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::r#do(), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::Do, vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff02000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::set_delegate(), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::SetDelegate, vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff03000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::remove_delegate(), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::RemoveDelegate, vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ff04000000050200000000"),
             ),
             (
-                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::named("named".into()), vec![].into()))).into(),
+                Transaction::new("tz1i8xLzLPQHknc5jmeFc3qxijar2HLG2W4Z".try_into().unwrap(), 135675u32.into(), 154u32.into(), 23675u32.into(), 34152u32.into(), 763243u32.into(), "tz1YbTdYqmpLatAqLb1sm67qqXMXyRB3UYiz".try_into().unwrap(), Some(Parameters::new(Entrypoint::Named("named".into()), vec![].into()))).into(),
                 &hex!("6c00f6cb338e136f281d17a2657437f090daf84b42affba3089a01fbb801e88a02ebca2e00008e1d34730fcd7e8282b0efe7b09b3c57543e59c8ffff056e616d6564000000050200000000"),
             ),
             (

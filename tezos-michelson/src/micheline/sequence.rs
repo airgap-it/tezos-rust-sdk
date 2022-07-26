@@ -1,9 +1,14 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use tezos_core::internal::normalizer::Normalizer;
+use tezos_core::internal::{coder::Encoder, normalizer::Normalizer};
 
 use super::Micheline;
-use crate::{internal::normalizer::MichelineNormalizer, Error, Result};
+use crate::{
+    internal::{
+        coder::micheline_bytes_coder::MichelineBytesCoder, normalizer::MichelineNormalizer,
+    },
+    Error, Result,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -21,6 +26,10 @@ impl Sequence {
     pub fn normalized(self) -> Self {
         MichelineNormalizer::normalize(self)
     }
+
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        MichelineBytesCoder::encode(self)
+    }
 }
 
 impl From<Vec<Micheline>> for Sequence {
@@ -36,6 +45,8 @@ impl TryFrom<Micheline> for Sequence {
         if let Micheline::Sequence(value) = value {
             return Ok(value);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Sequence", value),
+        })
     }
 }

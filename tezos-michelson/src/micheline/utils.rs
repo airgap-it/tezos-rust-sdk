@@ -65,11 +65,12 @@ where
     PrimitiveApplication::new(prim.into(), None, None)
 }
 
-pub fn sequence<T, Output>(values: Vec<Micheline>) -> Output
+pub fn sequence<T, Output>(values: T) -> Output
 where
     T: std::convert::Into<Vec<Micheline>>,
     Output: From<Sequence>,
 {
+    let values: Vec<Micheline> = values.into();
     let sequence: Sequence = values.into();
     sequence.into()
 }

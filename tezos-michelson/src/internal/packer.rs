@@ -29,7 +29,7 @@ pub trait Packer<T> {
 pub struct MichelinePacker;
 
 impl MichelinePacker {
-    fn pre_pack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
+    pub fn pre_pack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
         match schema {
             Micheline::PrimitiveApplication(primitive_application) => {
                 Self::pre_pack_primitive_application(value, primitive_application)
@@ -37,11 +37,11 @@ impl MichelinePacker {
             Micheline::Sequence(sequence) => {
                 Self::pre_pack_sequence(value.try_into()?, sequence).map(|value| value.into())
             }
-            _ => Err(Error::InvalidMicheline),
+            _ => Err(Error::InvalidMicheline { description: format!("Pre pack failed because provided schema ({:?}) is not a primitive application or sequence", schema) }),
         }
     }
 
-    fn post_unpack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
+    pub fn post_unpack(value: Micheline, schema: &Micheline) -> Result<Micheline> {
         match schema {
             Micheline::PrimitiveApplication(primitive_application) => {
                 Self::post_unpack_primitive_application(value, primitive_application)
@@ -49,7 +49,7 @@ impl MichelinePacker {
             Micheline::Sequence(sequence) => {
                 Self::post_unpack_sequence(value.try_into()?, sequence).map(|value| value.into())
             }
-            _ => Err(Error::InvalidMicheline),
+            _ => Err(Error::InvalidMicheline { description: format!("Post unpack failed because provided schema ({:?}) is not a primitive application or sequence", schema) }),
         }
     }
 
@@ -303,15 +303,15 @@ impl MichelinePacker {
     }
 
     fn pre_pack_pair(value: Micheline, schema: &PrimitiveApplication) -> Result<Micheline> {
-        if value.is_micheline_sequence() {
-            let args = value.into_micheline_sequence().unwrap().into_values();
+        if value.is_sequence() {
+            let args = value.into_sequence().unwrap().into_values();
             let pair = primitive_application(DataPrimitive::Pair)
                 .with_args(args)
                 .normalized();
             return Self::pre_pack_pair(pair.into(), schema);
         }
         let value = value
-            .into_micheline_primitive_application()
+            .into_primitive_application()
             .ok_or(Error::MichelineValueSchemaMismatch)?;
         let primitive = value.prim().parse::<DataPrimitive>()?;
         if let DataPrimitive::Pair = primitive {
@@ -331,7 +331,7 @@ impl MichelinePacker {
 
     fn post_unpack_pair(value: Micheline, schema: &PrimitiveApplication) -> Result<Micheline> {
         let value = value
-            .into_micheline_primitive_application()
+            .into_primitive_application()
             .ok_or(Error::MichelineValueSchemaMismatch)?;
         let primitive = value.prim().parse::<DataPrimitive>()?;
         if let DataPrimitive::Pair = primitive {
@@ -630,7 +630,7 @@ impl MichelinePacker {
             .into_iter()
             .map(|value| {
                 let value = value
-                    .into_micheline_primitive_application()
+                    .into_primitive_application()
                     .ok_or(Error::MichelineValueSchemaMismatch)?;
                 if value.args_count() != schema.args_count() {
                     return Err(Error::MichelineValueSchemaMismatch);
@@ -661,7 +661,7 @@ impl MichelinePacker {
             .into_iter()
             .map(|value| {
                 let value = value
-                    .into_micheline_primitive_application()
+                    .into_primitive_application()
                     .ok_or(Error::MichelineValueSchemaMismatch)?;
                 if value.args_count() != schema.args_count() {
                     return Err(Error::MichelineValueSchemaMismatch);

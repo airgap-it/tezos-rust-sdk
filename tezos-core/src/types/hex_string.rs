@@ -69,6 +69,12 @@ impl From<&[u8]> for HexString {
     }
 }
 
+impl From<HexString> for String {
+    fn from(value: HexString) -> Self {
+        value.0
+    }
+}
+
 impl TryFrom<String> for HexString {
     type Error = Error;
 

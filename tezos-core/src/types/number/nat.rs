@@ -31,11 +31,16 @@ lazy_static! {
 pub struct Nat(String);
 
 impl Nat {
-    pub fn from_string(value: String) -> Result<Self> {
+    pub fn from<S: Into<String>>(value: S) -> Result<Self> {
+        let value: String = value.into();
         if Self::is_valid(&value) {
-            return Ok(Nat(value));
+            return Ok(Self(value));
         }
-        Err(Error::InvalidUnsignedIntegerString)
+        Err(Error::InvalidIntegerString)
+    }
+
+    pub fn from_string(value: String) -> Result<Self> {
+        Self::from(value)
     }
 
     pub fn from_integer<I: Unsigned + ToString>(value: I) -> Self {
@@ -129,6 +134,12 @@ impl From<&Mutez> for Nat {
     }
 }
 
+impl From<Nat> for String {
+    fn from(value: Nat) -> Self {
+        value.0
+    }
+}
+
 impl TryFrom<String> for Nat {
     type Error = Error;
 
@@ -158,6 +169,12 @@ impl TryFrom<&Nat> for Vec<u8> {
 
     fn try_from(value: &Nat) -> Result<Self> {
         value.to_bytes()
+    }
+}
+
+impl From<Nat> for BigUint {
+    fn from(value: Nat) -> Self {
+        value.to_biguint().unwrap()
     }
 }
 

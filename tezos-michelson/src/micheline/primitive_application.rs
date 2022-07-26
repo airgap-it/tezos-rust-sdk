@@ -128,7 +128,9 @@ impl TryFrom<Micheline> for PrimitiveApplication {
             return Ok(value);
         }
 
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a PrimitiveApplication", value),
+        })
     }
 }
 

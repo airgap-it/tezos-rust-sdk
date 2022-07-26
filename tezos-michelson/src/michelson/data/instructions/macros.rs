@@ -22,14 +22,19 @@ macro_rules! make_instructions {
             $($name($name),)*
         }
 
-        impl From<Instruction> for Data {
+        impl From<Instruction> for Micheline {
             fn from(value: Instruction) -> Self {
-                Self::Instruction(value)
+                match value {
+                    Instruction::Sequence(value) => value.into(),
+                    $(
+                        Instruction::$name(value) => value.into(),
+                    )*
+                }
             }
         }
 
-        impl From<Instruction> for Micheline {
-            fn from(value: Instruction) -> Self {
+        impl From<&Instruction> for Micheline {
+            fn from(value: &Instruction) -> Self {
                 match value {
                     Instruction::Sequence(value) => value.into(),
                     $(
@@ -60,7 +65,7 @@ macro_rules! make_instructions {
             type Error = Error;
 
             fn try_from(value: Micheline) -> Result<Self> {
-                if value.is_micheline_sequence() {
+                if value.is_sequence() {
                     return Ok(Instruction::Sequence(value.try_into()?));
                 }
                 let primitive_application: PrimitiveApplication = value.try_into()?;
@@ -112,38 +117,20 @@ macro_rules! make_instruction {
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
                 $(
-                    $field_name: $field_type,
+                    pub $field_name: $field_type,
                 )*
                 $(
-                    $opt_field_name: Option<$opt_field_type>,
+                    pub $opt_field_name: Option<$opt_field_type>,
                 )*
                 $(
-                    $boxed_field_name: Box<$boxed_field_type>,
+                    pub $boxed_field_name: Box<$boxed_field_type>,
                 )*
                 $(
-                    metadata: $metadata_type,
+                    pub(crate) metadata: $metadata_type,
                 )?
             }
 
             impl $name {
-                $(
-                    pub fn $field_name(&self) -> &$field_type {
-                        &self.$field_name
-                    }
-                )*
-
-                $(
-                    pub fn $opt_field_name(&self) -> &Option<$opt_field_type> {
-                        &self.$opt_field_name
-                    }
-                )*
-
-                $(
-                    pub fn $boxed_field_name(&self) -> &Box<$boxed_field_type> {
-                        &self.$boxed_field_name
-                    }
-                )*
-
                 $(
                     pub fn metadata(&self) -> &$metadata_type {
                         &self.metadata
@@ -233,6 +220,32 @@ macro_rules! make_instruction {
                     let mut annots: Vec<String> = vec![];
                     $(
                         let metadata: $metadata_type = value.metadata;
+                        annots = metadata.annotations().into_iter().map(|annot| annot.value().into()).collect();
+                    )?
+                    let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));
+
+                    primitive_application.into()
+                }
+            }
+
+            impl From<&$name> for Micheline {
+                #[allow(unused)]
+                fn from(value: &$name) -> Self {
+                    let mut args: Vec<Micheline> = vec![];
+                    $(
+                        args.push((&value.$field_name).into());
+                    )*
+                    $(
+                        if let Some(value) = &value.$opt_field_name {
+                            args.push(value.into());
+                        }
+                    )*
+                    $(
+                        args.push((&*value.$boxed_field_name).into());
+                    )*
+                    let mut annots: Vec<String> = vec![];
+                    $(
+                        let metadata: &$metadata_type = &value.metadata;
                         annots = metadata.annotations().into_iter().map(|annot| annot.value().into()).collect();
                     )?
                     let primitive_application = PrimitiveApplication::new($name::prim_value().name().into(), Some(args), Some(annots));

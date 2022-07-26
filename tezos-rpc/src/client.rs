@@ -1,8 +1,14 @@
 use tezos_core::types::encoded::{Address, BlockHash, ChainId, Encoded, ScriptExprHash};
+use tezos_operation::operations::UnsignedOperation;
 
 #[cfg(feature = "http")]
 use crate::http::default::HttpClient;
-use crate::http::Http;
+use crate::{
+    http::Http,
+    internal::estimator::{FeeEstimator, OperationFeeEstimator},
+    models::limits::Limits,
+    Result,
+};
 
 use {
     crate::models::operation::Operation, crate::protocol_rpc, crate::shell_rpc,
@@ -105,6 +111,18 @@ impl TezosRpc<HttpClient> {
     /// ```
     pub fn new_with_chain_id(rpc_endpoint: String, chain_id: TezosRpcChainId) -> Self {
         Self::new_rpc_with_chain_id(rpc_endpoint, chain_id)
+    }
+
+    /// Estimates the minimum fee for the given `operation`. The returned operation has the fee, gas_limit and storage_limit values set accordingly.
+    pub async fn min_fee(
+        &self,
+        operation: UnsignedOperation,
+        limits: Option<&Limits>,
+    ) -> Result<UnsignedOperation> {
+        let estimator = OperationFeeEstimator::new(self);
+        estimator
+            .min_fee(operation, limits.unwrap_or(&Default::default()))
+            .await
     }
 }
 
@@ -282,6 +300,13 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     /// [`GET /chains/<chain_id>/blocks/<block_id>?[force_metadata]&[metadata=<metadata_rpc_arg>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id)
     pub fn get_block(&self) -> protocol_rpc::block::RpcRequestBuilder<HttpClient> {
         protocol_rpc::block::get(&self.context)
+    }
+
+    /// Get the block hash.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block_id>/hash]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-hash)
+    pub fn get_block_hash(&self) -> protocol_rpc::block::hash::RpcRequestBuilder<HttpClient> {
+        protocol_rpc::block::hash::get(&self.context)
     }
 
     /// Access the list of all constants.

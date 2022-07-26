@@ -24,8 +24,8 @@ use crate::{
         ActivateAccount, Ballot, BallotType, Delegation, DoubleBakingEvidence,
         DoubleEndorsementEvidence, DoublePreendorsementEvidence, Endorsement, Entrypoint,
         FailingNoop, InlinedEndorsement, InlinedPreendrosement, OperationContent,
-        OperationContentTag, Origination, Parameters, Preendorsement, PrimitiveEntrypoint,
-        Proposals, RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
+        OperationContentTag, Origination, Parameters, Preendorsement, Proposals,
+        RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
         TraitOperationConsensusContent, TraitOperationContent, TraitOperationManagerContent,
         Transaction,
     },
@@ -122,8 +122,8 @@ impl Encoder<OperationContent, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<SeedNonceRevelation, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &SeedNonceRevelation) -> Result<Vec<u8>> {
-        let level_bytes = utils::encode_i32(value.level());
-        let nonce_bytes = value.nonce().to_bytes();
+        let level_bytes = utils::encode_i32(value.level);
+        let nonce_bytes = value.nonce.to_bytes();
 
         let tag = SeedNonceRevelation::tag().to_bytes();
 
@@ -133,8 +133,8 @@ impl Encoder<SeedNonceRevelation, Vec<u8>, Error> for OperationContentBytesCoder
 
 impl Encoder<DoubleEndorsementEvidence, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &DoubleEndorsementEvidence) -> Result<Vec<u8>> {
-        let op1_bytes = utils::encode_bytes(&Self::encode(value.op1())?);
-        let op2_bytes = utils::encode_bytes(&Self::encode(value.op2())?);
+        let op1_bytes = utils::encode_bytes(&Self::encode(&value.op1)?);
+        let op2_bytes = utils::encode_bytes(&Self::encode(&value.op2)?);
 
         let tag = DoubleEndorsementEvidence::tag().to_bytes();
 
@@ -144,9 +144,9 @@ impl Encoder<DoubleEndorsementEvidence, Vec<u8>, Error> for OperationContentByte
 
 impl Encoder<InlinedEndorsement, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &InlinedEndorsement) -> Result<Vec<u8>> {
-        let branch_bytes = value.branch().to_bytes()?;
-        let operations_bytes = Self::encode(value.operations())?;
-        let signature_bytes = value.signature().to_bytes()?;
+        let branch_bytes = (&value).branch.to_bytes()?;
+        let operations_bytes = Self::encode(&value.operations)?;
+        let signature_bytes = value.signature.to_bytes()?;
 
         Ok([branch_bytes, operations_bytes, signature_bytes].concat())
     }
@@ -154,8 +154,8 @@ impl Encoder<InlinedEndorsement, Vec<u8>, Error> for OperationContentBytesCoder 
 
 impl Encoder<DoubleBakingEvidence, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &DoubleBakingEvidence) -> Result<Vec<u8>> {
-        let bh1 = utils::encode_bytes(&Self::encode(value.bh1())?);
-        let bh2 = utils::encode_bytes(&Self::encode(value.bh2())?);
+        let bh1 = utils::encode_bytes(&Self::encode(&value.bh1)?);
+        let bh2 = utils::encode_bytes(&Self::encode(&value.bh2)?);
 
         let tag = DoubleBakingEvidence::tag().to_bytes();
 
@@ -212,8 +212,8 @@ impl Encoder<BlockHeader, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<ActivateAccount, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &ActivateAccount) -> Result<Vec<u8>> {
-        let pkh_bytes = value.pkh().to_bytes()?;
-        let secret_bytes = value.secret().to_bytes();
+        let pkh_bytes = value.pkh.to_bytes()?;
+        let secret_bytes = value.secret.to_bytes();
 
         let tag = ActivateAccount::tag().to_bytes();
 
@@ -223,9 +223,9 @@ impl Encoder<ActivateAccount, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<Proposals, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Proposals) -> Result<Vec<u8>> {
-        let source_bytes = value.source().to_bytes()?;
-        let period_bytes = utils::encode_i32(value.period());
-        let proposals_bytes = utils::encode_list(value.proposals())?;
+        let source_bytes = (&value).source.to_bytes()?;
+        let period_bytes = utils::encode_i32((&value).period);
+        let proposals_bytes = utils::encode_list(&value.proposals)?;
 
         let tag = Proposals::tag().to_bytes();
 
@@ -241,10 +241,10 @@ impl Encoder<Proposals, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<Ballot, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Ballot) -> Result<Vec<u8>> {
-        let source_bytes = value.source().to_bytes()?;
-        let period_bytes = utils::encode_i32(value.period());
-        let proposal_bytes = value.proposal().to_bytes()?;
-        let ballot_bytes = value.ballot().value();
+        let source_bytes = value.source.to_bytes()?;
+        let period_bytes = utils::encode_i32(value.period);
+        let proposal_bytes = value.proposal.to_bytes()?;
+        let ballot_bytes = value.ballot.value();
 
         let tag = Ballot::tag().to_bytes();
 
@@ -261,8 +261,8 @@ impl Encoder<Ballot, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<DoublePreendorsementEvidence, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &DoublePreendorsementEvidence) -> Result<Vec<u8>> {
-        let op1_bytes = utils::encode_bytes(&Self::encode(value.op1())?);
-        let op2_bytes = utils::encode_bytes(&Self::encode(value.op2())?);
+        let op1_bytes = utils::encode_bytes(&Self::encode(&value.op1)?);
+        let op2_bytes = utils::encode_bytes(&Self::encode(&value.op2)?);
 
         let tag = DoublePreendorsementEvidence::tag().to_bytes();
 
@@ -272,9 +272,9 @@ impl Encoder<DoublePreendorsementEvidence, Vec<u8>, Error> for OperationContentB
 
 impl Encoder<InlinedPreendrosement, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &InlinedPreendrosement) -> Result<Vec<u8>> {
-        let branch_bytes = value.branch().to_bytes()?;
-        let operations_bytes = Self::encode(value.operations())?;
-        let signature_byte = value.signature().to_bytes()?;
+        let branch_bytes = (&value).branch.to_bytes()?;
+        let operations_bytes = Self::encode(&value.operations)?;
+        let signature_byte = value.signature.to_bytes()?;
 
         Ok([branch_bytes, operations_bytes, signature_byte].concat())
     }
@@ -282,7 +282,7 @@ impl Encoder<InlinedPreendrosement, Vec<u8>, Error> for OperationContentBytesCod
 
 impl Encoder<FailingNoop, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &FailingNoop) -> Result<Vec<u8>> {
-        let bytes = utils::encode_bytes(&value.arbitrary().to_bytes());
+        let bytes = utils::encode_bytes(&value.arbitrary.to_bytes());
 
         let tag = FailingNoop::tag().to_bytes();
 
@@ -315,7 +315,7 @@ impl<ConsensusOperation: TraitOperationContent + TraitOperationConsensusContent>
 impl Encoder<Reveal, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Reveal) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let public_key_bytes = value.public_key().to_bytes()?;
+        let public_key_bytes = value.public_key.to_bytes()?;
 
         let tag = Reveal::tag().to_bytes();
 
@@ -326,9 +326,9 @@ impl Encoder<Reveal, Vec<u8>, Error> for OperationContentBytesCoder {
 impl Encoder<Transaction, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Transaction) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let amount_bytes = value.amount().to_bytes()?;
-        let destination_bytes = value.destination().to_bytes()?;
-        let parameters_bytes = if let Some(parameters) = value.parameters() {
+        let amount_bytes = value.amount.to_bytes()?;
+        let destination_bytes = value.destination.to_bytes()?;
+        let parameters_bytes = if let Some(parameters) = &value.parameters {
             Self::encode(parameters)?
         } else {
             vec![]
@@ -351,8 +351,8 @@ impl Encoder<Transaction, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<Parameters, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Parameters) -> Result<Vec<u8>> {
-        let entrypoint_bytes = Self::encode(value.entrypoint())?;
-        let value_bytes = utils::encode_bytes(&value.value().to_bytes()?);
+        let entrypoint_bytes = Self::encode(&value.entrypoint)?;
+        let value_bytes = utils::encode_bytes(&value.value.to_bytes()?);
 
         Ok([entrypoint_bytes, value_bytes].concat())
     }
@@ -376,14 +376,14 @@ impl Encoder<Entrypoint, Vec<u8>, Error> for OperationContentBytesCoder {
 impl Encoder<Origination, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Origination) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let balance_bytes = value.balance().to_bytes()?;
-        let delegate_bytes = if let Some(delegate) = value.delegate() {
+        let balance_bytes = (&value.balance).to_bytes()?;
+        let delegate_bytes = if let Some(delegate) = &value.delegate {
             delegate.to_bytes()?
         } else {
             vec![]
         };
         let delegate_presence = utils::encode_bool(!delegate_bytes.is_empty());
-        let script_bytes = Self::encode(value.script())?;
+        let script_bytes = Self::encode(&value.script)?;
 
         let tag = Origination::tag().to_bytes();
 
@@ -401,8 +401,8 @@ impl Encoder<Origination, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<Script, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Script) -> Result<Vec<u8>> {
-        let code_bytes = utils::encode_bytes(&value.code().to_bytes()?);
-        let storage_bytes = utils::encode_bytes(&value.storage().to_bytes()?);
+        let code_bytes = utils::encode_bytes(&value.code.to_bytes()?);
+        let storage_bytes = utils::encode_bytes(&value.storage.to_bytes()?);
 
         Ok([code_bytes, storage_bytes].concat())
     }
@@ -411,7 +411,7 @@ impl Encoder<Script, Vec<u8>, Error> for OperationContentBytesCoder {
 impl Encoder<Delegation, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Delegation) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let delegate_bytes = if let Some(delegate) = value.delegate() {
+        let delegate_bytes = if let Some(delegate) = &value.delegate {
             delegate.to_bytes()?
         } else {
             vec![]
@@ -433,7 +433,7 @@ impl Encoder<Delegation, Vec<u8>, Error> for OperationContentBytesCoder {
 impl Encoder<RegisterGlobalConstant, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &RegisterGlobalConstant) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let value_bytes = utils::encode_bytes(&value.value().to_bytes()?);
+        let value_bytes = utils::encode_bytes(&value.value.to_bytes()?);
 
         let tag = RegisterGlobalConstant::tag().to_bytes();
 
@@ -444,7 +444,7 @@ impl Encoder<RegisterGlobalConstant, Vec<u8>, Error> for OperationContentBytesCo
 impl Encoder<SetDepositsLimit, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &SetDepositsLimit) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let limit_bytes = if let Some(limit) = value.limit() {
+        let limit_bytes = if let Some(limit) = value.limit {
             limit.to_bytes()?
         } else {
             vec![]
@@ -803,11 +803,9 @@ impl ConsumingDecoder<Parameters, u8, Error> for OperationContentBytesCoder {
 
 impl ConsumingDecoder<Entrypoint, u8, Error> for OperationContentBytesCoder {
     fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Entrypoint> {
-        use num_traits::FromPrimitive;
-
         let tag_byte = value.consume_first()?;
-        if let Some(common_entrypoint) = PrimitiveEntrypoint::from_u8(tag_byte) {
-            return Ok(Entrypoint::Primitive(common_entrypoint));
+        if let Some(entrypoint) = Entrypoint::from_tag(tag_byte) {
+            return Ok(entrypoint);
         }
         if tag_byte == Entrypoint::named_tag() {
             let name_length = value.consume_first()?;
@@ -855,7 +853,7 @@ impl ConsumingDecoder<Script, u8, Error> for OperationContentBytesCoder {
         let code = Micheline::from_bytes(&utils::decode_bytes(value)?)?;
         let storage = Micheline::from_bytes(&utils::decode_bytes(value)?)?;
 
-        Ok(Script::new(code, storage))
+        Ok(Script::new(code.try_into()?, storage))
     }
 }
 

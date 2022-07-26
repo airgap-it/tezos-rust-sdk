@@ -33,6 +33,12 @@ pub enum Error {
     TryFromInt {
         source: std::num::TryFromIntError,
     },
+    TryFromBigInt {
+        source: num_bigint::TryFromBigIntError<num_bigint::BigInt>,
+    },
+    TryFromBigUInt {
+        source: num_bigint::TryFromBigIntError<num_bigint::BigUint>,
+    },
     InvalidSecretKeyBytes,
     InvalidPublicKeyBytes,
     InvalidSignatureBytes,
@@ -41,6 +47,7 @@ pub enum Error {
     InvalidAddress,
     InvalidContractAddress,
     InvalidHexString,
+    CryptoProviderNotSet,
 }
 
 pub type Result<T> = result::Result<T, Error>;

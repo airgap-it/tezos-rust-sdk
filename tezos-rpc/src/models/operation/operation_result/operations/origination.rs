@@ -1,8 +1,7 @@
-use tezos_core::types::encoded::ContractAddress;
-
 use {
     crate::models::{
         balance_update::BalanceUpdate,
+        contract::ContractScript,
         error::RpcError,
         operation::kind::OperationKind,
         operation::operation_result::OperationResultStatus,
@@ -11,6 +10,7 @@ use {
         },
     },
     serde::{Deserialize, Serialize},
+    tezos_core::types::encoded::{Address, ContractAddress, ImplicitAddress},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -31,7 +31,7 @@ pub struct OriginationOperationResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub paid_storage_size_diff: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lazy_storage_diff: Option<LazyStorageDiff>,
+    pub lazy_storage_diff: Option<Vec<LazyStorageDiff>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RpcError>>,
 }
@@ -56,4 +56,22 @@ pub struct OriginationSuccessfulManagerOperationResult {
     pub paid_storage_size_diff: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lazy_storage_diff: Option<LazyStorageDiff>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct InternalOriginationOperationResult {
+    /// [OperationKind::Origination]
+    pub kind: OperationKind,
+    /// Public key hash (Base58Check-encoded)
+    pub source: Address,
+    /// integer ∈ [0, 2^16-1]
+    pub nonce: u16,
+    /// Mutez
+    pub balance: u64,
+    /// Address (Base58Check-encoded)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub delegate: Option<ImplicitAddress>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub script: Option<ContractScript>,
+    pub result: OriginationOperationResult,
 }

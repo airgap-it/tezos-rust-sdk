@@ -1,7 +1,6 @@
-use tezos_core::types::{
-    encoded::{Address, ImplicitAddress},
-    mutez::Mutez,
-};
+use tezos_core::types::{encoded::ImplicitAddress, mutez::Mutez};
+
+use crate::{Error, Result};
 
 use {
     crate::{
@@ -28,25 +27,39 @@ pub struct Delegation {
     pub metadata: Option<DelegationMetadata>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct DelegationMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_updates: Option<Vec<BalanceUpdate>>,
-    pub operation_result: DelegationOperationResult,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub internal_operation_results: Option<InternalDelegationOperationResult>,
+impl From<tezos_operation::operations::Delegation> for Delegation {
+    fn from(value: tezos_operation::operations::Delegation) -> Self {
+        Self {
+            kind: OperationKind::Delegation,
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.into(),
+            gas_limit: value.gas_limit.into(),
+            storage_limit: value.storage_limit.into(),
+            delegate: value.delegate,
+            metadata: None,
+        }
+    }
+}
+
+impl TryFrom<Delegation> for tezos_operation::operations::Delegation {
+    type Error = Error;
+
+    fn try_from(value: Delegation) -> Result<Self> {
+        Ok(Self {
+            source: value.source,
+            fee: value.fee,
+            counter: value.counter.try_into()?,
+            gas_limit: value.gas_limit.try_into()?,
+            storage_limit: value.storage_limit.try_into()?,
+            delegate: value.delegate,
+        })
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct InternalDelegationOperationResult {
-    /// [OperationKind::Delegation]
-    pub kind: OperationKind,
-    /// Public key hash (Base58Check-encoded)
-    pub source: Address,
-    /// integer ∈ [0, 2^16-1]
-    pub nonce: u16,
-    /// Address (Base58Check-encoded)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub delegate: Option<ImplicitAddress>,
-    pub result: DelegationOperationResult,
+pub struct DelegationMetadata {
+    #[serde(default)]
+    pub balance_updates: Vec<BalanceUpdate>,
+    pub operation_result: DelegationOperationResult,
 }

@@ -3,9 +3,9 @@ use tezos_michelson::micheline::Micheline;
 
 use crate::{client::TezosRpcChainId, http::Http};
 
-use {crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID};
+use {crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockId};
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S, entrypoint: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S, entrypoint: S) -> String {
     format!(
         "{}/{}",
         super::path(chain_id, block_id, contract),
@@ -18,7 +18,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S, entrypoint:
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     contract: &'a Address,
     entrypoint: &'a str,
     normalize_types: Option<bool>,
@@ -33,7 +33,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             contract,
             entrypoint,
             normalize_types: None,
@@ -41,14 +41,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -57,7 +57,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// Whether the types should be normalized or not.
     ///
     /// For this to work, an `unparsing_mode` also needs to be provided.
-    pub fn normalize_types(&mut self, normalize_types: bool) -> &mut Self {
+    pub fn normalize_types(mut self, normalize_types: bool) -> Self {
         self.normalize_types = Some(normalize_types);
 
         self
@@ -107,7 +107,7 @@ mod tests {
     use crate::client::TezosRpcChainId;
 
     use {
-        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockId},
         httpmock::prelude::*,
     };
 
@@ -118,7 +118,7 @@ mod tests {
 
         let contract_address: Address = "KT1HxgqnVjGy7KsSUTEsQ6LgpD5iKSGu7QpA".try_into().unwrap();
         let entrypoint = "settle_with_vault";
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
 
         server.mock(|when, then| {
             when.method(GET)
@@ -142,7 +142,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(entrypoints.is_micheline_primitive_application());
+        assert!(entrypoints.is_primitive_application());
 
         Ok(())
     }

@@ -34,21 +34,21 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Set the requested number of predecessors to return.
-    pub fn length(&mut self, length: &u32) -> &mut Self {
+    pub fn length(mut self, length: &u32) -> Self {
         self.length = Some(length.clone());
 
         self
     }
 
     /// Request blocks starting from a given block.
-    pub fn head(&mut self, head: &'a BlockHash) -> &mut Self {
+    pub fn head(mut self, head: &'a BlockHash) -> Self {
         self.head = Some(head);
 
         self
@@ -56,7 +56,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
-    pub fn min_date(&mut self, min_date: &u64) -> &mut Self {
+    pub fn min_date(mut self, min_date: &u64) -> Self {
         self.min_date = Some(min_date.clone());
 
         self

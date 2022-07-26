@@ -4,19 +4,15 @@ use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerCon
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SetDepositsLimit {
-    source: ImplicitAddress,
-    fee: Mutez,
-    counter: Nat,
-    gas_limit: Nat,
-    storage_limit: Nat,
-    limit: Option<Mutez>,
+    pub source: ImplicitAddress,
+    pub fee: Mutez,
+    pub counter: Nat,
+    pub gas_limit: Nat,
+    pub storage_limit: Nat,
+    pub limit: Option<Mutez>,
 }
 
 impl SetDepositsLimit {
-    pub fn limit(&self) -> Option<Mutez> {
-        self.limit
-    }
-
     pub fn new(
         source: ImplicitAddress,
         fee: Mutez,
