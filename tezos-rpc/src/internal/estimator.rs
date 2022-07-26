@@ -542,7 +542,7 @@ mod test {
 
         let result = client.min_fee(operation, None).await?;
 
-        assert_eq!(Mutez::from(503u32), result.contents[0].fee());
+        assert_eq!(Mutez::from(505u32), result.contents[0].fee());
 
         Ok(())
     }
