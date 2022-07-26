@@ -3,11 +3,11 @@ use crate::{client::TezosRpcChainId, http::Http};
 pub mod script_expr;
 
 use {
-    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
+    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockId,
     tezos_michelson::micheline::Micheline,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: u32) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, big_map_id: u32) -> String {
     format!("{}/{}", super::path(chain_id, block_id), big_map_id)
 }
 
@@ -16,7 +16,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, big_map_id: u32) -> Stri
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     big_map_id: u32,
     offset: Option<u32>,
     length: Option<u32>,
@@ -27,7 +27,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             big_map_id,
             offset: None,
             length: None,
@@ -35,28 +35,28 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
     }
 
     /// Configure request to skip the first `offset` values. Useful in combination with `length` for pagination.
-    pub fn offset(&mut self, offset: u32) -> &mut Self {
+    pub fn offset(mut self, offset: u32) -> Self {
         self.offset = Some(offset);
 
         self
     }
 
     /// Configure request to only retrieve `length` values. Useful in combination with `offset` for pagination.
-    pub fn length(&mut self, length: u32) -> &mut Self {
+    pub fn length(mut self, length: u32) -> Self {
         self.length = Some(length);
 
         self
@@ -103,7 +103,7 @@ mod tests {
     use crate::client::TezosRpcChainId;
 
     use {
-        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockID},
+        crate::{client::TezosRpc, error::Error, protocol_rpc::block::BlockId},
         httpmock::prelude::*,
     };
 
@@ -114,7 +114,7 @@ mod tests {
 
         let big_map = include_str!("__TEST_DATA__/mainnet_162771.json");
         let big_map_id: u32 = 162771;
-        let block_id = BlockID::Level(100);
+        let block_id = BlockId::Level(100);
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
@@ -136,7 +136,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(big_map.is_micheline_sequence());
+        assert!(big_map.is_sequence());
 
         Ok(())
     }

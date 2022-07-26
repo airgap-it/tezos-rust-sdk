@@ -189,6 +189,12 @@ macro_rules! make_encoded_struct {
 
             pub const META: MetaEncoded = MetaEncoded::new($b58_prefix, $b58_length, &[$($b_prefix, )+], $b_length);
 
+            impl From<$name> for String {
+                fn from(value: $name) -> Self {
+                    value.0
+                }
+            }
+
             impl TryFrom<&Vec<u8>> for $name {
                 type Error = Error;
 

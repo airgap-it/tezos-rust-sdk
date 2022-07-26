@@ -4,16 +4,17 @@ use crate::{client::TezosRpcChainId, http::Http};
 
 use {
     crate::client::TezosRpcContext, crate::error::Error, crate::models::contract::ContractScript,
-    crate::models::contract::UnparsingMode, crate::protocol_rpc::block::BlockID, serde::Serialize,
+    crate::models::contract::UnparsingMode, crate::protocol_rpc::block::BlockId, serde::Serialize,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S) -> String {
     format!("{}/script", super::path(chain_id, block_id, contract))
 }
 
 #[derive(Serialize)]
 struct NormalizedPayload {
     unparsing_mode: UnparsingMode,
+    #[serde(skip_serializing_if = "Option::is_none")]
     normalize_types: Option<bool>,
 }
 
@@ -22,7 +23,7 @@ struct NormalizedPayload {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     contract: &'a Address,
     unparsing_mode: Option<UnparsingMode>,
     normalize_types: Option<bool>,
@@ -33,7 +34,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             contract: contract,
             unparsing_mode: None,
             normalize_types: None,
@@ -41,14 +42,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -61,7 +62,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// * [UnparsingMode::Readable]
     /// * [UnparsingMode::Optimized]
     /// * [UnparsingMode::Optimized_legacy]
-    pub fn unparsing_mode(&mut self, parsing_mode: UnparsingMode) -> &mut Self {
+    pub fn unparsing_mode(mut self, parsing_mode: UnparsingMode) -> Self {
         self.unparsing_mode = Some(parsing_mode);
 
         self
@@ -70,7 +71,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// Whether the types should be normalized or not.
     ///
     /// For this to work, an `unparsing_mode` also needs to be provided.
-    pub fn normalize_types(&mut self, normalize_types: bool) -> &mut Self {
+    pub fn normalize_types(mut self, normalize_types: bool) -> Self {
         self.normalize_types = Some(normalize_types);
 
         self
@@ -123,7 +124,7 @@ mod tests {
     use {
         crate::{
             client::TezosRpc, error::Error, models::contract::UnparsingMode,
-            protocol_rpc::block::BlockID,
+            protocol_rpc::block::BlockId,
         },
         httpmock::prelude::*,
     };
@@ -134,7 +135,7 @@ mod tests {
         let rpc_url = server.base_url();
 
         let contract_address: Address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".try_into().unwrap();
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(
@@ -154,8 +155,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(script.code.is_micheline_sequence());
-        assert!(script.storage.is_micheline_sequence());
+        assert!(script.storage.is_sequence());
 
         Ok(())
     }
@@ -166,7 +166,7 @@ mod tests {
         let rpc_url = server.base_url();
 
         let contract_address: Address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".try_into().unwrap();
-        let block_id = BlockID::Level(1);
+        let block_id = BlockId::Level(1);
         let unparsing_mode = UnparsingMode::Readable;
         let normalize_types = true;
 
@@ -200,8 +200,7 @@ mod tests {
             .send()
             .await?;
 
-        assert!(script.code.is_micheline_sequence());
-        assert!(script.storage.is_micheline_sequence());
+        assert!(script.storage.is_sequence());
 
         Ok(())
     }

@@ -19,7 +19,7 @@ use crate::{
         normalizer::MichelineNormalizer,
         packer::{MichelinePacker, Packer},
     },
-    michelson::{types::Type, Michelson},
+    michelson::Michelson,
     Error, Result,
 };
 
@@ -48,42 +48,42 @@ impl Micheline {
         MichelineBytesCoder::decode(bytes)
     }
 
-    pub fn is_micheline_literal(&self) -> bool {
+    pub fn is_literal(&self) -> bool {
         if let Self::Literal(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn is_micheline_primitive_application(&self) -> bool {
+    pub fn is_primitive_application(&self) -> bool {
         if let Self::PrimitiveApplication(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn is_micheline_sequence(&self) -> bool {
+    pub fn is_sequence(&self) -> bool {
         if let Self::Sequence(_) = self {
             return true;
         }
         return false;
     }
 
-    pub fn into_micheline_literal(self) -> Option<Literal> {
+    pub fn into_literal(self) -> Option<Literal> {
         if let Self::Literal(value) = self {
             return Some(value);
         }
         return None;
     }
 
-    pub fn into_micheline_primitive_application(self) -> Option<PrimitiveApplication> {
+    pub fn into_primitive_application(self) -> Option<PrimitiveApplication> {
         if let Self::PrimitiveApplication(value) = self {
             return Some(value);
         }
         return None;
     }
 
-    pub fn into_micheline_sequence(self) -> Option<Sequence> {
+    pub fn into_sequence(self) -> Option<Sequence> {
         if let Self::Sequence(value) = self {
             return Some(value);
         }
@@ -139,30 +139,16 @@ impl From<Michelson> for Micheline {
     fn from(value: Michelson) -> Self {
         match value {
             Michelson::Data(value) => value.into(),
-            Michelson::Type(value) => match value {
-                Type::Comparable(value) => value.into(),
-                Type::Parameter(value) => value.into(),
-                Type::Storage(value) => value.into(),
-                Type::Code(value) => value.into(),
-                Type::Option(value) => value.into(),
-                Type::List(value) => value.into(),
-                Type::Set(value) => value.into(),
-                Type::Operation(value) => value.into(),
-                Type::Contract(value) => value.into(),
-                Type::Ticket(value) => value.into(),
-                Type::Pair(value) => value.into(),
-                Type::Or(value) => value.into(),
-                Type::Lambda(value) => value.into(),
-                Type::Map(value) => value.into(),
-                Type::BigMap(value) => value.into(),
-                Type::Bls12_381G1(value) => value.into(),
-                Type::Bls12_381G2(value) => value.into(),
-                Type::Bls12_381Fr(value) => value.into(),
-                Type::SaplingTransaction(value) => value.into(),
-                Type::SaplingState(value) => value.into(),
-                Type::Chest(value) => value.into(),
-                Type::ChestKey(value) => value.into(),
-            },
+            Michelson::Type(value) => value.into(),
+        }
+    }
+}
+
+impl From<&Michelson> for Micheline {
+    fn from(value: &Michelson) -> Self {
+        match value {
+            Michelson::Data(value) => value.into(),
+            Michelson::Type(value) => value.into(),
         }
     }
 }

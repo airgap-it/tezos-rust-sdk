@@ -35,3 +35,27 @@ impl Display for RpcError {
         )
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct RpcErrors(Vec<RpcError>);
+
+impl From<Vec<RpcError>> for RpcErrors {
+    fn from(value: Vec<RpcError>) -> Self {
+        Self(value)
+    }
+}
+
+impl Display for RpcErrors {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut first = true;
+        for item in &self.0 {
+            if !first {
+                write!(f, ", {}", item)?;
+            } else {
+                write!(f, "{}", item)?;
+            }
+            first = false;
+        }
+        Ok(())
+    }
+}

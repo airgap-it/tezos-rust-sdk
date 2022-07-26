@@ -13,6 +13,10 @@ impl Sequence {
         &self.0
     }
 
+    pub fn into_instructions(self) -> Vec<Instruction> {
+        self.0
+    }
+
     pub fn form(values: Vec<Instruction>) -> Self {
         Self(values)
     }
@@ -52,6 +56,17 @@ impl From<Sequence> for Micheline {
         value
             .0
             .into_iter()
+            .map(|value| value.into())
+            .collect::<Vec<Micheline>>()
+            .into()
+    }
+}
+
+impl From<&Sequence> for Micheline {
+    fn from(value: &Sequence) -> Self {
+        value
+            .0
+            .iter()
             .map(|value| value.into())
             .collect::<Vec<Micheline>>()
             .into()

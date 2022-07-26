@@ -271,20 +271,20 @@ pub enum TestChainStatusName {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum BlockID {
+pub enum BlockId {
     Head,
     Genesis,
     Hash(BlockHash),
     Level(i32),
 }
 
-impl Default for BlockID {
+impl Default for BlockId {
     fn default() -> Self {
-        BlockID::Head
+        BlockId::Head
     }
 }
 
-impl BlockID {
+impl BlockId {
     pub fn value(&self) -> String {
         match self {
             Self::Head => BLOCK_HEAD_ALIAS.into(),

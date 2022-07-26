@@ -23,6 +23,9 @@ make_types!(
     (Signature, signature, 103, super_enum: crate::michelson::types::Type, Comparable),
     (Timestamp, timestamp, 107, super_enum: crate::michelson::types::Type, Comparable),
     (Address, address, 110, super_enum: crate::michelson::types::Type, Comparable),
+    (Option, option, 99, super_enum: crate::michelson::types::Type, Comparable, boxed: (r#type: Type)),
+    (Or, or, 100, super_enum: crate::michelson::types::Type, Comparable, boxed: (lhs: Type), boxed: (rhs: Type)),
+    (Pair, pair, 101, super_enum: crate::michelson::types::Type, Comparable, vec: (types: Type)),
 );
 
 impl From<Type> for super::Type {

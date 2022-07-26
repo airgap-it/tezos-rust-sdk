@@ -147,15 +147,11 @@ impl From<String> for Entrypoint {
 impl From<tezos_operation::operations::Entrypoint> for Entrypoint {
     fn from(value: tezos_operation::operations::Entrypoint) -> Self {
         match value {
-            tezos_operation::operations::Entrypoint::Primitive(value) => match value {
-                tezos_operation::operations::PrimitiveEntrypoint::Default => Self::Default,
-                tezos_operation::operations::PrimitiveEntrypoint::Root => Self::Root,
-                tezos_operation::operations::PrimitiveEntrypoint::Do => Self::Do,
-                tezos_operation::operations::PrimitiveEntrypoint::SetDelegate => Self::SetDelegate,
-                tezos_operation::operations::PrimitiveEntrypoint::RemoveDelegate => {
-                    Self::RemoveDelegate
-                }
-            },
+            tezos_operation::operations::Entrypoint::Default => Self::Default,
+            tezos_operation::operations::Entrypoint::Root => Self::Root,
+            tezos_operation::operations::Entrypoint::Do => Self::Do,
+            tezos_operation::operations::Entrypoint::SetDelegate => Self::SetDelegate,
+            tezos_operation::operations::Entrypoint::RemoveDelegate => Self::RemoveDelegate,
             tezos_operation::operations::Entrypoint::Named(value) => Self::Named(value),
         }
     }
@@ -164,11 +160,11 @@ impl From<tezos_operation::operations::Entrypoint> for Entrypoint {
 impl From<Entrypoint> for tezos_operation::operations::Entrypoint {
     fn from(value: Entrypoint) -> Self {
         match value {
-            Entrypoint::Default => Self::default(),
-            Entrypoint::Root => Self::root(),
-            Entrypoint::Do => Self::r#do(),
-            Entrypoint::SetDelegate => Self::set_delegate(),
-            Entrypoint::RemoveDelegate => Self::remove_delegate(),
+            Entrypoint::Default => Self::Default,
+            Entrypoint::Root => Self::Root,
+            Entrypoint::Do => Self::Do,
+            Entrypoint::SetDelegate => Self::SetDelegate,
+            Entrypoint::RemoveDelegate => Self::RemoveDelegate,
             Entrypoint::Named(value) => Self::Named(value),
         }
     }

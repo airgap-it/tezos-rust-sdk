@@ -27,14 +27,14 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     /// Modify chain identifier to be used in the request.
     /// The `chain` query parameter can be used to specify whether to inject on the test chain or the main chain.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// If `async` query parameter is true, the function returns immediately. Otherwise, the block will be validated before the result is returned.
-    pub fn do_async(&mut self, do_async: bool) -> &mut Self {
+    pub fn do_async(mut self, do_async: bool) -> Self {
         self.do_async = Some(do_async);
 
         self

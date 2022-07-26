@@ -4,5 +4,6 @@ members = [
     "tezos-core",
     "tezos-michelson",
     "tezos-operation",
-    "tezos-rpc"
+    "tezos-rpc",
+    "tezos-contract"
 ]

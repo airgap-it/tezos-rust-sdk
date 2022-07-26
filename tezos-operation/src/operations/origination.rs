@@ -1,5 +1,5 @@
 use tezos_core::types::{encoded::ImplicitAddress, mutez::Mutez, number::Nat};
-use tezos_michelson::micheline::Micheline;
+use tezos_michelson::micheline::{sequence::Sequence, Micheline};
 
 use super::{OperationContentTag, TraitOperationContent, TraitOperationManagerContent};
 
@@ -69,12 +69,12 @@ impl TraitOperationManagerContent for Origination {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Script {
-    pub code: Micheline,
+    pub code: Sequence,
     pub storage: Micheline,
 }
 
 impl Script {
-    pub fn new(code: Micheline, storage: Micheline) -> Self {
+    pub fn new(code: Sequence, storage: Micheline) -> Self {
         Self { code, storage }
     }
 }

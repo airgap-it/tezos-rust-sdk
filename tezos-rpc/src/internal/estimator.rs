@@ -170,7 +170,7 @@ impl<O: TraitOperation> MaxLimits for O {
         let requires_estimation = self
             .contents()
             .iter()
-            .filter(|content| content.has_fee())
+            .filter(|content| !content.has_fee())
             .collect::<Vec<_>>()
             .len();
         let max_gas_limit_per_operation: BigUint = if requires_estimation > 0 {
@@ -412,9 +412,11 @@ trait RpcOperationResult {
     fn limits(&self) -> Result<OperationLimits> {
         if self.status() != OperationResultStatus::Applied {
             let error = if let Some(errors) = self.errors() {
-                Error::RpcErrors(errors.clone())
+                Error::RpcErrors(errors.clone().into())
             } else {
-                Error::RpcErrorPlain("Operation not applied".into())
+                Error::RpcErrorPlain {
+                    description: "Operation not applied".into(),
+                }
             };
             return Err(error);
         }
@@ -540,7 +542,7 @@ mod test {
 
         let result = client.min_fee(operation, None).await?;
 
-        assert_eq!(Mutez::from(503u32), result.contents[0].fee());
+        assert_eq!(Mutez::from(505u32), result.contents[0].fee());
 
         Ok(())
     }

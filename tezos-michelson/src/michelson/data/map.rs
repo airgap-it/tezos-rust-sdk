@@ -10,7 +10,7 @@ impl Map {
         &self.0
     }
 
-    pub fn to_values(self) -> Vec<Elt> {
+    pub fn into_values(self) -> Vec<Elt> {
         self.0
     }
 
@@ -31,29 +31,22 @@ impl From<Map> for Vec<Elt> {
     }
 }
 
-impl From<Map> for Data {
-    fn from(value: Map) -> Self {
-        Self::Map(value)
-    }
-}
-
-impl TryFrom<Data> for Map {
-    type Error = Error;
-
-    fn try_from(value: Data) -> Result<Self> {
-        if let Data::Map(value) = value {
-            return Ok(value);
-        }
-
-        Err(Error::InvalidMichelsonData)
-    }
-}
-
 impl From<Map> for Micheline {
     fn from(value: Map) -> Self {
         value
-            .to_values()
+            .into_values()
             .into_iter()
+            .map(|value| value.into())
+            .collect::<Vec<Micheline>>()
+            .into()
+    }
+}
+
+impl From<&Map> for Micheline {
+    fn from(value: &Map) -> Self {
+        value
+            .values()
+            .iter()
             .map(|value| value.into())
             .collect::<Vec<Micheline>>()
             .into()
