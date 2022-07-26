@@ -5,6 +5,7 @@ pub mod micheline;
 pub mod michelson;
 
 pub use error::{Error, Result};
+pub use internal::packer::MichelinePacker;
 
 #[cfg(test)]
 mod test {

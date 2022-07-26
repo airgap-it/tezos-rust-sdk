@@ -40,6 +40,8 @@ pub trait Http {
 
 #[cfg(feature = "http")]
 pub mod default {
+    use crate::models::error::RpcError;
+
     use super::*;
     use reqwest::{Client, Response};
 
@@ -61,9 +63,12 @@ pub mod default {
             if response.status() != 200 {
                 // Do not parse JSON when the content type is `plain/text`
                 if response.headers()["content-type"] == "application/json" {
-                    return Err(Error::RpcErrors(response.json().await?));
+                    let errors: Vec<RpcError> = response.json().await?;
+                    return Err(Error::RpcErrors(errors.into()));
                 }
-                return Err(Error::RpcErrorPlain(response.text().await?));
+                return Err(Error::RpcErrorPlain {
+                    description: response.text().await?,
+                });
             }
 
             Ok(response.json().await?)

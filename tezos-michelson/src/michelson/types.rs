@@ -2,10 +2,15 @@ mod comparables;
 mod macros;
 
 use macros::{make_type, make_types};
+use tezos_core::internal::normalizer::Normalizer;
 
 use super::Michelson;
-use crate::{Error, Result};
-pub use comparables::{Primitive as ComparableTypePrimitive, Type as ComparableType, *};
+use crate::{internal::normalizer::MichelsonNormalizer, Error, Result};
+pub use comparables::{
+    option as comparable_option, or as comparable_or, pair as comparable_pair,
+    Option as ComparableOption, Or as ComparableOr, Pair as ComparablePair,
+    Primitive as ComparableTypePrimitive, Type as ComparableType, *,
+};
 
 make_types!(
     type_enum: Comparable(crate::michelson::types::ComparableType),
@@ -77,6 +82,12 @@ make_types!(
     (Chest, chest, 141),
     (ChestKey, chest_key, 142),
 );
+
+impl Type {
+    pub fn normalized(self) -> Self {
+        MichelsonNormalizer::normalize(self)
+    }
+}
 
 impl From<Type> for Michelson {
     fn from(value: Type) -> Self {

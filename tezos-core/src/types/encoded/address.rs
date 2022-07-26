@@ -50,6 +50,15 @@ impl Encoded for Address {
     }
 }
 
+impl From<Address> for String {
+    fn from(value: Address) -> Self {
+        match value {
+            Address::Implicit(value) => value.into(),
+            Address::Originated(_) => value.into(),
+        }
+    }
+}
+
 impl TryFrom<&Vec<u8>> for Address {
     type Error = Error;
 
@@ -91,6 +100,34 @@ impl From<ImplicitAddress> for Address {
 impl From<ContractAddress> for Address {
     fn from(value: ContractAddress) -> Self {
         Self::Originated(value)
+    }
+}
+
+impl From<&ContractHash> for Address {
+    fn from(value: &ContractHash) -> Self {
+        let contract_address = ContractAddress::from_components(value, None);
+        contract_address.into()
+    }
+}
+
+impl TryFrom<Address> for ContractAddress {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        if let Address::Originated(value) = value {
+            return Ok(value);
+        }
+
+        Err(Error::InvalidAddress)
+    }
+}
+
+impl TryFrom<Address> for ContractHash {
+    type Error = Error;
+
+    fn try_from(value: Address) -> Result<Self> {
+        let contract_address: ContractAddress = value.try_into()?;
+        contract_address.contract_hash().try_into()
     }
 }
 
@@ -150,6 +187,16 @@ impl Encoded for ImplicitAddress {
             return Ok(Self::TZ3(P256PublicKeyHash::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData { description: value })
+    }
+}
+
+impl From<ImplicitAddress> for String {
+    fn from(value: ImplicitAddress) -> Self {
+        match value {
+            ImplicitAddress::TZ1(value) => value.into(),
+            ImplicitAddress::TZ2(value) => value.into(),
+            ImplicitAddress::TZ3(value) => value.into(),
+        }
     }
 }
 
@@ -299,6 +346,12 @@ impl Encoded for ContractAddress {
 impl TraitMetaEncoded for ContractAddress {
     fn meta_value() -> &'static MetaEncoded {
         ContractHash::meta_value()
+    }
+}
+
+impl From<ContractAddress> for String {
+    fn from(value: ContractAddress) -> Self {
+        value.0
     }
 }
 

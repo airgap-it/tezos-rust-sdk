@@ -28,7 +28,7 @@ impl<'a, HttpClient: Http> GetRPCRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
@@ -59,7 +59,7 @@ impl<'a, HttpClient: Http> DeleteRPCRequestBuilder<'a, HttpClient> {
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self

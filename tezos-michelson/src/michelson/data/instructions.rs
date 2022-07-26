@@ -131,7 +131,7 @@ make_instructions!(
         DIP,
         dip,
         31,
-        (instruction: crate::michelson::data::Sequence),
+        (instruction: crate::michelson::data::instructions::Sequence),
         optional: (n: crate::michelson::data::Nat)
     ),
     (
@@ -181,32 +181,32 @@ make_instructions!(
         IF_CONS,
         if_cons,
         45,
-        (if_branch: crate::michelson::data::Sequence),
-        (else_branch: crate::michelson::data::Sequence)
+        (if_branch: crate::michelson::data::instructions::Sequence),
+        (else_branch: crate::michelson::data::instructions::Sequence)
     ),
     (
         IfLeft,
         IF_LEFT,
         if_left,
         46,
-        (if_branch: crate::michelson::data::Sequence),
-        (else_branch: crate::michelson::data::Sequence)
+        (if_branch: crate::michelson::data::instructions::Sequence),
+        (else_branch: crate::michelson::data::instructions::Sequence)
     ),
     (
         IfNone,
         IF_NONE,
         if_none,
         47,
-        (if_branch: crate::michelson::data::Sequence),
-        (else_branch: crate::michelson::data::Sequence)
+        (if_branch: crate::michelson::data::instructions::Sequence),
+        (else_branch: crate::michelson::data::instructions::Sequence)
     ),
     (
         If,
         IF,
         r#if,
         44,
-        (if_branch: crate::michelson::data::Sequence),
-        (else_branch: crate::michelson::data::Sequence)
+        (if_branch: crate::michelson::data::instructions::Sequence),
+        (else_branch: crate::michelson::data::instructions::Sequence)
     ),
     (
         Lambda,
@@ -216,7 +216,7 @@ make_instructions!(
         metadata_type: crate::michelson::metadata::VariableMetadata,
         (parameter_type: crate::michelson::types::Type),
         (return_type: crate::michelson::types::Type),
-        (body: crate::michelson::data::Sequence)
+        (body: crate::michelson::data::instructions::Sequence)
     ),
     (
         Left,
@@ -240,7 +240,7 @@ make_instructions!(
         map,
         56,
         metadata_type: crate::michelson::metadata::VariableMetadata,
-        (expression: crate::michelson::data::Sequence)
+        (expression: crate::michelson::data::instructions::Sequence)
     ),
     (
         Nil,
@@ -469,7 +469,7 @@ make_instructions!(
         metadata_type: crate::michelson::metadata::TwoVariableMetadata,
         (parameter_type: crate::michelson::types::Type),
         (storage_type: crate::michelson::types::Type),
-        (code: crate::michelson::data::Sequence)
+        (code: crate::michelson::data::instructions::Sequence)
     ),
     (
         ImplicitAccount,

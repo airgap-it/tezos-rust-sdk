@@ -5,12 +5,12 @@ use {
     num_bigint::BigInt,
     serde::{Deserialize, Serialize},
     std::collections::HashMap,
-    tezos_michelson::micheline::Micheline,
+    tezos_michelson::micheline::{sequence::Sequence, Micheline},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ContractScript {
-    pub code: Micheline,
+    pub code: Sequence,
     pub storage: Micheline,
 }
 

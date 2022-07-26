@@ -41,29 +41,22 @@ impl From<Sequence> for Vec<Data> {
     }
 }
 
-impl From<Sequence> for Data {
-    fn from(value: Sequence) -> Self {
-        Self::Sequence(value)
-    }
-}
-
-impl TryFrom<Data> for Sequence {
-    type Error = Error;
-
-    fn try_from(value: Data) -> Result<Self> {
-        if let Data::Sequence(value) = value {
-            return Ok(value);
-        }
-
-        Err(Error::InvalidMichelsonData)
-    }
-}
-
 impl From<Sequence> for Micheline {
     fn from(value: Sequence) -> Self {
         value
             .into_values()
             .into_iter()
+            .map(|value| value.into())
+            .collect::<Vec<Micheline>>()
+            .into()
+    }
+}
+
+impl From<&Sequence> for Micheline {
+    fn from(value: &Sequence) -> Self {
+        value
+            .values()
+            .iter()
             .map(|value| value.into())
             .collect::<Vec<Micheline>>()
             .into()

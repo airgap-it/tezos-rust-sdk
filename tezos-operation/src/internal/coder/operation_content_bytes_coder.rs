@@ -24,8 +24,8 @@ use crate::{
         ActivateAccount, Ballot, BallotType, Delegation, DoubleBakingEvidence,
         DoubleEndorsementEvidence, DoublePreendorsementEvidence, Endorsement, Entrypoint,
         FailingNoop, InlinedEndorsement, InlinedPreendrosement, OperationContent,
-        OperationContentTag, Origination, Parameters, Preendorsement, PrimitiveEntrypoint,
-        Proposals, RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
+        OperationContentTag, Origination, Parameters, Preendorsement, Proposals,
+        RegisterGlobalConstant, Reveal, Script, SeedNonceRevelation, SetDepositsLimit,
         TraitOperationConsensusContent, TraitOperationContent, TraitOperationManagerContent,
         Transaction,
     },
@@ -803,11 +803,9 @@ impl ConsumingDecoder<Parameters, u8, Error> for OperationContentBytesCoder {
 
 impl ConsumingDecoder<Entrypoint, u8, Error> for OperationContentBytesCoder {
     fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<Entrypoint> {
-        use num_traits::FromPrimitive;
-
         let tag_byte = value.consume_first()?;
-        if let Some(common_entrypoint) = PrimitiveEntrypoint::from_u8(tag_byte) {
-            return Ok(Entrypoint::Primitive(common_entrypoint));
+        if let Some(entrypoint) = Entrypoint::from_tag(tag_byte) {
+            return Ok(entrypoint);
         }
         if tag_byte == Entrypoint::named_tag() {
             let name_length = value.consume_first()?;
@@ -855,7 +853,7 @@ impl ConsumingDecoder<Script, u8, Error> for OperationContentBytesCoder {
         let code = Micheline::from_bytes(&utils::decode_bytes(value)?)?;
         let storage = Micheline::from_bytes(&utils::decode_bytes(value)?)?;
 
-        Ok(Script::new(code, storage))
+        Ok(Script::new(code.try_into()?, storage))
     }
 }
 

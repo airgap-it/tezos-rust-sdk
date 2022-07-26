@@ -71,7 +71,9 @@ impl TryFrom<Micheline> for Literal {
         if let Micheline::Literal(value) = value {
             return Ok(value);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Micheline Literal", value),
+        })
     }
 }
 
@@ -81,8 +83,21 @@ impl From<Int> for Literal {
     }
 }
 
+impl From<&Int> for Literal {
+    fn from(value: &Int) -> Self {
+        Literal::Int(value.clone())
+    }
+}
+
 impl From<Int> for Micheline {
     fn from(value: Int) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
+impl From<&Int> for Micheline {
+    fn from(value: &Int) -> Self {
         let literal: Literal = value.into();
         literal.into()
     }
@@ -94,6 +109,12 @@ impl From<Nat> for Micheline {
     }
 }
 
+impl From<&Nat> for Micheline {
+    fn from(value: &Nat) -> Self {
+        Literal::Int(value.into()).into()
+    }
+}
+
 impl TryFrom<Micheline> for Nat {
     type Error = Error;
 
@@ -101,7 +122,9 @@ impl TryFrom<Micheline> for Nat {
         if let Micheline::Literal(Literal::Int(value)) = value {
             return Ok(value.to_string().try_into()?);
         }
-        Err(Error::InvalidMicheline)
+        Err(Error::InvalidMicheline {
+            description: format!("Cannot convert {:?} to a Nat", value),
+        })
     }
 }
 
@@ -122,8 +145,21 @@ impl From<String> for Literal {
     }
 }
 
+impl From<&String> for Literal {
+    fn from(value: &String) -> Self {
+        Literal::String(value.clone())
+    }
+}
+
 impl From<String> for Micheline {
     fn from(value: String) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
+impl From<&String> for Micheline {
+    fn from(value: &String) -> Self {
         let literal: Literal = value.into();
         literal.into()
     }
@@ -145,8 +181,21 @@ impl From<Bytes> for Literal {
     }
 }
 
+impl From<&Bytes> for Literal {
+    fn from(value: &Bytes) -> Self {
+        Literal::Bytes(value.clone())
+    }
+}
+
 impl From<Bytes> for Micheline {
     fn from(value: Bytes) -> Self {
+        let literal: Literal = value.into();
+        literal.into()
+    }
+}
+
+impl From<&Bytes> for Micheline {
+    fn from(value: &Bytes) -> Self {
         let literal: Literal = value.into();
         literal.into()
     }

@@ -66,6 +66,15 @@ impl Encoded for Key {
     }
 }
 
+impl From<Key> for String {
+    fn from(value: Key) -> Self {
+        match value {
+            Key::Secret(value) => value.into(),
+            Key::Public(value) => value.into(),
+        }
+    }
+}
+
 impl TryFrom<&Vec<u8>> for Key {
     type Error = Error;
 
@@ -167,6 +176,16 @@ impl Encoded for SecretKey {
             return Ok(Self::P256(P256SecretKey::from_bytes(bytes)?));
         }
         Err(Error::InvalidBytes)
+    }
+}
+
+impl From<SecretKey> for String {
+    fn from(value: SecretKey) -> Self {
+        match value {
+            SecretKey::Ed25519(value) => value.into(),
+            SecretKey::Secp256K1(value) => value.into(),
+            SecretKey::P256(value) => value.into(),
+        }
     }
 }
 
@@ -276,6 +295,16 @@ impl Encoded for PublicKey {
             return Ok(Self::P256(P256PublicKey::new(value)?));
         }
         Err(Error::InvalidBase58EncodedData { description: value })
+    }
+}
+
+impl From<PublicKey> for String {
+    fn from(value: PublicKey) -> Self {
+        match value {
+            PublicKey::Ed25519(value) => value.into(),
+            PublicKey::Secp256K1(value) => value.into(),
+            PublicKey::P256(value) => value.into(),
+        }
     }
 }
 

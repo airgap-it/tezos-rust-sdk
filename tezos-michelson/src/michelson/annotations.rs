@@ -48,6 +48,15 @@ impl Annotation {
         &self.value
     }
 
+    pub fn value_without_prefix(&self) -> &str {
+        let prefix = self.kind.prefix();
+        if self.value.starts_with(prefix) {
+            &self.value[prefix.len()..]
+        } else {
+            &self.value
+        }
+    }
+
     pub fn kind(&self) -> Kind {
         self.kind
     }

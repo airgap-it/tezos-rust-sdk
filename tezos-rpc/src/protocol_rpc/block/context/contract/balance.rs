@@ -3,11 +3,11 @@ use tezos_core::types::encoded::{Address, Encoded};
 use crate::{client::TezosRpcChainId, http::Http};
 
 use {
-    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockID,
+    crate::client::TezosRpcContext, crate::error::Error, crate::protocol_rpc::block::BlockId,
     num_bigint::BigInt,
 };
 
-fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
+fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockId, contract: S) -> String {
     format!("{}/balance", super::path(chain_id, block_id, contract))
 }
 
@@ -16,7 +16,7 @@ fn path<S: AsRef<str>>(chain_id: S, block_id: &BlockID, contract: S) -> String {
 pub struct RpcRequestBuilder<'a, HttpClient: Http> {
     ctx: &'a TezosRpcContext<HttpClient>,
     chain_id: &'a TezosRpcChainId,
-    block_id: &'a BlockID,
+    block_id: &'a BlockId,
     contract: &'a Address,
 }
 
@@ -25,20 +25,20 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         RpcRequestBuilder {
             ctx,
             chain_id: ctx.chain_id(),
-            block_id: &BlockID::Head,
+            block_id: &BlockId::Head,
             contract,
         }
     }
 
     /// Modify chain identifier to be used in the request.
-    pub fn chain_id(&mut self, chain_id: &'a TezosRpcChainId) -> &mut Self {
+    pub fn chain_id(mut self, chain_id: &'a TezosRpcChainId) -> Self {
         self.chain_id = chain_id;
 
         self
     }
 
     /// Modify the block identifier to be used in the request.
-    pub fn block_id(&mut self, block_id: &'a BlockID) -> &mut Self {
+    pub fn block_id(mut self, block_id: &'a BlockId) -> Self {
         self.block_id = block_id;
 
         self
@@ -70,7 +70,7 @@ mod tests {
     use crate::client::TezosRpcChainId;
 
     use {
-        crate::client::TezosRpc, crate::error::Error, crate::protocol_rpc::block::BlockID,
+        crate::client::TezosRpc, crate::error::Error, crate::protocol_rpc::block::BlockId,
         httpmock::prelude::*, num_bigint::BigInt,
     };
 
@@ -81,7 +81,7 @@ mod tests {
 
         let contract_address: Address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".try_into().unwrap();
         let expected_balance = BigInt::from(9999999999999999999 as u64);
-        let block_id = BlockID::Head;
+        let block_id = BlockId::Head;
 
         server.mock(|when, then| {
             when.method(GET).path(super::path(

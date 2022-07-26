@@ -4,10 +4,7 @@ use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::{
-    michelson::data::Data as MichelsonData,
-    {Error, Result},
-};
+use crate::{Error, Result};
 
 lazy_static! {
     static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
@@ -80,23 +77,6 @@ impl From<Vec<u8>> for Bytes {
 impl From<&Bytes> for Vec<u8> {
     fn from(value: &Bytes) -> Self {
         hex::decode(&value.0[2..]).unwrap()
-    }
-}
-
-impl From<Bytes> for MichelsonData {
-    fn from(value: Bytes) -> Self {
-        Self::Bytes(value)
-    }
-}
-
-impl TryFrom<MichelsonData> for Bytes {
-    type Error = Error;
-
-    fn try_from(value: MichelsonData) -> Result<Self> {
-        if let MichelsonData::Bytes(value) = value {
-            return Ok(value);
-        }
-        Err(Error::InvalidMichelsonData)
     }
 }
 
