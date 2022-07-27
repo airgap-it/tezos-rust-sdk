@@ -25,7 +25,7 @@ pub enum OperationKind {
     TxRollupOrigination,
     TxRollupSubmitBatch,
     TxRollupCommit,
-    TxRollupRreturnBond,
+    TxRollupReturnBond,
     TxRollupFinalizeCommitment,
     TxRollupRemoveCommitment,
     TxRollupRejection,
