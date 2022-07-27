@@ -9,6 +9,7 @@ lazy_static! {
     static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
 }
 
+/// Hexadecimal [String] type-safe representation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",

@@ -21,25 +21,31 @@ use crate::{
 
 use macros::{make_encoded_struct, make_encoded_structs};
 
+/// Trait implemented by all the values that can be represented as base58 encoded strings.
 pub trait Encoded: Sized {
+    /// The type used to encode and decode the value.
     type Coder: Encoder<Self, Vec<u8>, Error> + Decoder<Self, [u8], Error>;
-
+    /// Returns the base58 string slice value.
     fn value(&self) -> &str;
+    /// Returns the metadata.
     fn meta(&self) -> &'static MetaEncoded;
+    /// Creates a new instance for the given value.
+    ///
+    /// Returns an error of the provided value is not a valid base58 string for the type being created.
     fn new(value: String) -> Result<Self>;
-
+    /// Returns the base58 string value.
     fn into_string(&self) -> String {
         self.value().into()
     }
-
+    /// Encodes the value to its bytes representation
     fn to_bytes(&self) -> Result<Vec<u8>> {
         Self::Coder::encode(self)
     }
-
+    /// Creates an instance from the given bytes.
     fn from_bytes(bytes: &[u8]) -> Result<Self> {
         Self::Coder::decode(bytes)
     }
-
+    /// Creates an instance from the given consumable bytes.
     fn from_consumable_bytes<CL: ConsumableList<u8>>(bytes: &mut CL) -> Result<Self>
     where
         Self::Coder: ConsumingDecoder<Self, u8, Error>,

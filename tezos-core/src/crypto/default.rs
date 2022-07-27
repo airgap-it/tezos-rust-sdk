@@ -1,6 +1,9 @@
 #[cfg(any(feature = "ed25519", feature = "secp256_k1", feature = "p256"))]
 use crate::{CryptoProvider, Error, Result};
 
+/// Default implementation for the ed25519 crypto provider. It is activated by enabling the `ed25519` feature.
+///
+/// This implemntation internally uses [sodiumoxide](https://github.com/sodiumoxide/sodiumoxide).
 #[cfg(feature = "ed25519")]
 #[derive(Debug)]
 pub struct DefaultEd25519CryptoProvider;
@@ -25,6 +28,9 @@ impl CryptoProvider for DefaultEd25519CryptoProvider {
     }
 }
 
+/// Default implementation for the secp256_k1 crypto provider. It is activated by enabling the `secp256_k1` feature.
+///
+/// This implemntation internally uses [k256](https://github.com/RustCrypto/elliptic-curves/tree/master/k256).
 #[cfg(feature = "secp256_k1")]
 #[derive(Debug)]
 pub struct DefaultSecp256K1CryptoProvider;
@@ -53,6 +59,9 @@ impl CryptoProvider for DefaultSecp256K1CryptoProvider {
     }
 }
 
+/// Default implementation for the p256 crypto provider. It is activated by enabling the `p256` feature.
+///
+/// This implemntation internally uses [p256](https://github.com/RustCrypto/elliptic-curves/tree/master/p256).
 #[cfg(feature = "p256")]
 #[derive(Debug)]
 pub struct DefaultP256CryptoProvider;

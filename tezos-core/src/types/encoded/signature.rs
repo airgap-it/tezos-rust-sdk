@@ -14,6 +14,13 @@ use crate::{
     Error, Result,
 };
 
+/// Group of base58 encoded signatures.
+///
+/// See:
+/// - [GenericSignature]
+/// - [Ed25519Signature]
+/// - [Secp256K1Signature]
+/// - [P256Signature]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",

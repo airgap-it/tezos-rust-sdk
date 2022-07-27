@@ -33,7 +33,7 @@ use crate::{
 /// The easiest way to create `Michelson` instances is to use the constructor functions defined in the
 /// above mentioned modules. For example, to construct a `Pair` of `Int`s:
 ///
-/// ```
+/// ```rust
 /// use tezos_michelson::michelson::{data, Michelson};
 ///
 /// let michelson: Michelson = data::pair(vec![data::int(0), data::int(2)]);
@@ -74,7 +74,7 @@ impl Michelson {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```rust
     /// use tezos_michelson::michelson::{data, Michelson, types};
     /// use hex_literal::hex;
     ///
@@ -87,6 +87,10 @@ impl Michelson {
         micheline.try_into()
     }
 
+    /// Normalizes the Michelson structure.
+    ///
+    /// Normalization means that `pair` structures with more then 2 elements are re-organized into a pair of pairs structure
+    /// with each pair having exactly 2 elements.
     pub fn normalized(self) -> Self {
         MichelsonNormalizer::normalize(self)
     }
