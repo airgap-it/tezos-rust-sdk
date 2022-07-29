@@ -22,15 +22,15 @@ use crate::{
     Error, Result,
 };
 
-/// Tezos `Michelson` types as defined in [the documentation](https://tezos.gitlab.io/active/michelson.html#full-grammar).
+/// Tezos [Michelson] types as defined in [the documentation](https://tezos.gitlab.io/active/michelson.html#full-grammar).
 ///
 /// See also: [Michelson Reference](https://tezos.gitlab.io/michelson-reference/).
 ///
-/// `Michelson` is an enum with each case having a payload of the various Michelson types.
+/// [Michelson] is an enum with each case having a payload of the various [Michelson] types.
 /// All data types are defined in the `tezos_michelson::michelson::data` module and all the
 /// types are defined in the `tezos_michelson::michelson::types` module.
 ///
-/// The easiest way to create `Michelson` instances is to use the constructor functions defined in the
+/// The easiest way to create [Michelson] instances is to use the constructor functions defined in the
 /// above mentioned modules. For example, to construct a `Pair` of `Int`s:
 ///
 /// ```rust
@@ -45,7 +45,7 @@ pub enum Michelson {
 }
 
 impl Michelson {
-    /// Packs the `Michelson` structure into bytes.
+    /// Packs the [Michelson] structure into bytes.
     ///
     /// # Arguments
     ///
@@ -53,7 +53,7 @@ impl Michelson {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```rust
     /// use tezos_michelson::michelson::{data, Michelson, types};
     ///
     /// let michelson: Michelson = data::int(128);

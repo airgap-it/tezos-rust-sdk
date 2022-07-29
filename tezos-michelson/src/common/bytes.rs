@@ -10,6 +10,7 @@ lazy_static! {
     static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
 }
 
+/// A structure representing bytes.
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Bytes(
@@ -24,10 +25,12 @@ pub struct Bytes(
 );
 
 impl Bytes {
+    /// Returns the bytes as an hex string.
     pub fn value(&self) -> &str {
         &self.0
     }
 
+    /// Returns true if the provided value represents a valid hex string, with or without 0x prefix.
     pub fn is_valid(value: &str) -> bool {
         REGEX.is_match(value)
     }
