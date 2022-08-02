@@ -194,12 +194,11 @@ fn operation_limits<O: TraitOperation>(operation: &O) -> OperationLimits {
     operation
         .contents()
         .iter()
-        .fold(OperationLimits::zero(), |acc, operation_content| {
+        .fold(OperationLimits::zero(), |mut acc, operation_content| {
             let limit = operation_content_limits(operation_content);
-            OperationLimits {
-                gas: acc.gas + limit.gas,
-                storage: acc.storage + limit.storage,
-            }
+            acc.gas += limit.gas;
+            acc.storage += limit.storage;
+            acc
         })
 }
 
@@ -373,13 +372,11 @@ trait RpcMetadata<OperationResult: RpcOperationResult> {
 
             results
                 .into_iter()
-                .try_fold(operation_result_limits, |acc, result| {
+                .try_fold(operation_result_limits, |mut acc, result| {
                     let limits = result.limits()?;
-
-                    Ok(OperationLimits {
-                        gas: acc.gas + limits.gas,
-                        storage: acc.storage + limits.storage,
-                    })
+                    acc.gas += limits.gas;
+                    acc.storage += limits.storage;
+                    Ok(acc)
                 })
         } else {
             self.operation_result().limits()

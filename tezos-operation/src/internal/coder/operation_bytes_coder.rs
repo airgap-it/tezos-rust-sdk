@@ -20,9 +20,9 @@ impl<O: Operation> Encoder<O, Vec<u8>, Error> for OperationBytesCoder {
         let branch_bytes = value.branch().to_bytes()?;
         let content_bytes = value.contents().into_iter().try_fold::<_, _, Result<_>>(
             Vec::<u8>::new(),
-            |acc, value| {
-                let bytes = OperationContentBytesCoder::encode(value)?;
-                Ok([acc, bytes].concat())
+            |mut acc, value| {
+                acc.append(&mut OperationContentBytesCoder::encode(value)?);
+                Ok(acc)
             },
         )?;
         Ok([branch_bytes, content_bytes].concat())
