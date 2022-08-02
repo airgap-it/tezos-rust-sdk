@@ -100,8 +100,9 @@ pub fn decode_consuming_bool<CL: ConsumableList<u8>>(value: &mut CL) -> Result<b
 pub fn encode_list<Item: Encoded>(list: &[Item]) -> Result<Vec<u8>> {
     let bytes = list
         .iter()
-        .try_fold::<_, _, Result<_>>(Vec::<u8>::new(), |acc, item| {
-            Ok([acc, item.to_bytes()?].concat())
+        .try_fold::<_, _, Result<_>>(Vec::<u8>::new(), |mut acc, item| {
+            acc.append(&mut item.to_bytes()?);
+            Ok(acc)
         })?;
 
     Ok(encode_bytes(&bytes))
