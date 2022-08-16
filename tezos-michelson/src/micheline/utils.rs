@@ -11,9 +11,9 @@ use crate::micheline::{
 /// use tezos_michelson::{micheline::{Micheline, try_string, literals::String as TezosString}, michelson::Michelson, Result};
 ///
 /// fn create_tezos_string() -> Result<()> {
-///     let value: TezosString = try_string("string".to_owned())?;
-///     let value: Micheline = try_string("string".to_owned())?;
-///     let value: Michelson = try_string("string".to_owned())?;
+///     let value: TezosString = try_string("string")?;
+///     let value: Micheline = try_string("string")?;
+///     let value: Michelson = try_string("string")?;
 ///
 ///     Ok(())
 /// }

@@ -37,6 +37,29 @@ pub use self::{
     storage::Storage,
 };
 
+/// The [Contract] structure represents a tezos contract.
+///
+/// It allows to retrieve values from its storage, retrieve big map values,
+/// and easily create tezos operation representing contract calls.
+///
+/// # Example
+///
+/// ```rust
+/// use tezos_contract::{Contract, ContractFetcher};
+/// use tezos_rpc::client::TezosRpc;
+/// use tezos_core::types::{encoded::ContractHash, number::Nat};
+/// use tezos_michelson::michelson::data::{pair, try_string};
+///
+/// async fn get_big_map_value() {
+///     let rpc_url = "https://testnet-tezos.giganode.io";
+///     let rpc = TezosRpc::new(rpc_url.into());
+///     let contract_address: ContractHash = "KT1J4CiyWPmtFPXAjpgBezM5hoVHXHNzWBHK".try_into().unwrap();
+///     let contract = rpc.contract_at(contract_address, None).await.unwrap();
+///     let ledger = contract.storage().big_maps().get_by_name("ledger").unwrap();
+///     let balance: Nat = ledger.get_value(pair(vec![try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f").unwrap(), 0u8.into()]), None).await.unwrap().try_into().unwrap();
+/// }
+///
+/// ```
 #[derive(Debug, Clone)]
 pub struct Contract<'a, HttpClient: Http> {
     address: ContractHash,

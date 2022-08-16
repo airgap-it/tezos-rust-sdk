@@ -21,6 +21,9 @@ serde = { version = "1", features = ["derive"], optional = true }
 blake2 = "0.10"
 cfg-if = "1"
 
+[dev-dependencies]
+rand_core = "0.6"
+
 [features]
 full_crypto = ["ed25519", "secp256_k1", "p256"]
 ed25519 = ["dep:sodiumoxide"]

@@ -15,7 +15,7 @@ serde = { version = "1", features = ["derive"], optional = true }
 chrono = "0.4"
 lazy_static = "1"
 
-tezos-core = { path = "../tezos-core" }
+tezos-core = { path = "../tezos-core", version = "0.1.0" }
 
 [dev-dependencies]
 hex-literal = "0.3"
