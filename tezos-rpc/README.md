@@ -6,7 +6,7 @@
 
 ### http
 
-Enables the default http provider. This features is enabled by default and uses the `reqwest` crate as the http client.
+Enables the default http provider. This features is enabled by default and uses the [reqwest](https://github.com/seanmonstar/reqwest) crate as the http client.
 If you want to provide your own http client, disable the default features and provide an implementation of the `Http` trait.
 
 ## Shell RPC's
