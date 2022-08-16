@@ -8,6 +8,7 @@ pub use tezos_core::types::number::Int;
 
 use super::Micheline;
 
+/// `Micheline` literals as defined in [the documentation](https://tezos.gitlab.io/shell/micheline.html#bnf-grammar).
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(
     feature = "serde",

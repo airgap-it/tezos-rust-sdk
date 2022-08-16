@@ -11,6 +11,11 @@ use crate::{
     Error, Result,
 };
 
+/// Group of base58 encoded Tezos account addresses, either implicit or originated.
+///
+/// See:
+/// - [ImplicitAddress]
+/// - [ContractAddress]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -131,6 +136,12 @@ impl TryFrom<Address> for ContractHash {
     }
 }
 
+/// Group of base58 encoded implicit Tezos account addresses.
+///
+/// See:
+/// - [Ed25519PublicKeyHash]
+/// - [Secp256K1PublicKeyHash]
+/// - [P256PublicKeyHash]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -261,6 +272,9 @@ impl From<P256PublicKeyHash> for ImplicitAddress {
     }
 }
 
+/// A base58 encoded contract address with optianally an entrypoint.
+///
+/// See also: [ContractHash].
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -270,16 +284,19 @@ impl From<P256PublicKeyHash> for ImplicitAddress {
 pub struct ContractAddress(String);
 
 impl ContractAddress {
+    /// Returns only the base58 encoded portion of the contract address without the entrypoint.
     pub fn contract_hash(&self) -> &str {
         let (address, _) = Self::split_to_components(&self.0).unwrap();
         address
     }
 
+    /// Returns only the entrypoint if any.
     pub fn entrypoint(&self) -> Option<&str> {
         let (_, entrypoint) = Self::split_to_components(&self.0).unwrap();
         entrypoint
     }
 
+    /// Creates a `ContractAddress` from a `ContractHash` and an entrypoint.
     pub fn from_components(contract_hash: &ContractHash, entrypoint: Option<&str>) -> Self {
         let tail = entrypoint
             .map(|entrypoint| format!("%{}", entrypoint))
@@ -288,6 +305,7 @@ impl ContractAddress {
         Self(value)
     }
 
+    /// Returns true if the provided value is a valid contract address, false otherwise.
     pub fn is_valid_base58(value: &str) -> bool {
         if let Ok((value, _)) = Self::split_to_components(value) {
             return ContractHash::is_valid_base58(value);
@@ -295,6 +313,7 @@ impl ContractAddress {
         false
     }
 
+    /// Returns true if the provided value is a valid contract address, false otherwise.
     pub fn is_valid_bytes(value: &[u8]) -> bool {
         let meta = Self::meta_value();
         let bytes = if value.len() > meta.prefixed_bytes_length() {

@@ -60,10 +60,14 @@ pub use self::{
     transaction::{Entrypoint, Parameters, Transaction},
 };
 
+/// The [Operation] trait defines common methods for [UnsignedOperation] and [SignedOperation].
 pub trait Operation {
+    /// Returns the operation's branch.
     fn branch(&self) -> &BlockHash;
+    /// Returns the operation's content.
     fn contents(&self) -> &[OperationContent];
 
+    /// Returns the operation forged bytes.
     fn to_forged_bytes(&self) -> Result<Vec<u8>>
     where
         Self: Sized,
@@ -72,21 +76,42 @@ pub trait Operation {
     }
 }
 
+/// The [UnsignedOperation] struct represent an unsigned tezos operation that can be signed with a [SecretKey].
+///
+/// # Example
+///
+/// ```rust
+/// use tezos_operation::operations::UnsignedOperation;
+/// use tezos_operation::operations::Delegation;
+/// use tezos_core::types::encoded::SecretKey;
+///
+/// let secret_key: SecretKey = "edskRv7VyXGVZb8EsrR7D9XKUbbAQNQGtALP6QeB16ZCD7SmmJpzyeneJVg3Mq56YLbxRA1kSdAXiswwPiaVfR3NHGMCXCziuZ".try_into().unwrap();
+/// let unsigned_operation = UnsignedOperation::new("BLyKu3tnc9NCuiFfCqfeVGPCoZTyW63dYh2XAYxkM7fQYKCqsju".try_into().unwrap(), vec![
+///     Delegation::new("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f".try_into().unwrap(), 1000u32.into(), 1u8.into(), 1000u32.into(), 1000u32.into(), Some("tz1bQMn5xYFbX6geRxqvuAiTywsCtNywawxH".try_into().unwrap())).into(),
+/// ]);
+/// let signed_operation = unsigned_operation.into_signed_operation(&secret_key);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnsignedOperation {
+    /// The operation branch.
     pub branch: BlockHash,
+    /// The operation contents.
     pub contents: Vec<OperationContent>,
 }
 
 impl UnsignedOperation {
+    /// Creates a new [UnsignedOperation].
     pub fn new(branch: BlockHash, contents: Vec<OperationContent>) -> Self {
         Self { branch, contents }
     }
 
+    /// Creates a new [UnsignedOperation] from the forged bytes.
     pub fn from_forged_bytes<T: AsRef<[u8]>>(bytes: T) -> Result<Self> {
         OperationBytesCoder::decode(bytes.as_ref())
     }
 
+    /// Creates a [SignedOperation] by signing the [UnsignedOperation] with the given secret key and using
+    /// the crypto providers configured in the fiven [Tezos] instance.
     pub fn into_signed_operation_with(
         self,
         key: &SecretKey,
@@ -98,6 +123,7 @@ impl UnsignedOperation {
         Ok(SignedOperation::new(self.branch, self.contents, signature))
     }
 
+    /// Creates a [SignedOperation] by signing the [UnsignedOperation] with the given secret key.
     pub fn into_signed_operation(self, key: &SecretKey) -> Result<SignedOperation> {
         let tezos: Tezos = Default::default();
         let signer = OperationSigner::new(tezos.get_crypto());
@@ -123,6 +149,8 @@ impl From<SignedOperation> for UnsignedOperation {
     }
 }
 
+/// The [SignedOperation] struct represent a signed tezos operation. It can be torned to an injectable string,
+/// which can be injected into the Tezos blockchain using the `tezos-rpc` crate.
 #[derive(Debug, Clone)]
 pub struct SignedOperation {
     pub branch: BlockHash,
@@ -131,23 +159,29 @@ pub struct SignedOperation {
 }
 
 impl SignedOperation {
+    /// Verifies the operation signature with the given public key and using
+    /// the crypto providers configured in the fiven [Tezos] instance.
     pub fn verify_with(&self, key: &PublicKey, tezos: &Tezos) -> Result<bool> {
         let signer = OperationSigner::new(tezos.get_crypto());
         signer.verify(self, key)
     }
 
+    /// Verifies the operation signature with the given public key.
     pub fn verify(&self, key: &PublicKey) -> Result<bool> {
         let tezos: Tezos = Default::default();
         let signer = OperationSigner::new(tezos.get_crypto());
         signer.verify(self, key)
     }
 
+    /// Returns an injectable string that can be used to inject the operation into the Tezos blockchain
+    /// using the `tezos-rpc` crate.
     pub fn to_injectable_string(&self) -> Result<String> {
         let forged_bytes = self.to_forged_bytes()?;
         let signature_bytes = self.signature.to_bytes()?;
         Ok(hex::encode([forged_bytes, signature_bytes].concat()))
     }
 
+    /// Creates a new instance of [SignedOperation].
     pub fn new(branch: BlockHash, contents: Vec<OperationContent>, signature: Signature) -> Self {
         Self {
             branch,
@@ -156,6 +190,8 @@ impl SignedOperation {
         }
     }
 
+    /// Creates a new instance of [SignedOperation] from an [UnsignedOperation] and a [Signature].
+    /// No validation of the signature is performed.
     pub fn from(operation: UnsignedOperation, signature: Signature) -> Self {
         Self::new(operation.branch, operation.contents, signature)
     }

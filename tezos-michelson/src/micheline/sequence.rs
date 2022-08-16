@@ -10,6 +10,7 @@ use crate::{
     Error, Result,
 };
 
+/// `Micheline` sequence types as defined in [the documentation](https://tezos.gitlab.io/shell/micheline.html#bnf-grammar).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sequence(Vec<Micheline>);

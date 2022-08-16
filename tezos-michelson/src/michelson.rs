@@ -22,6 +22,22 @@ use crate::{
     Error, Result,
 };
 
+/// Tezos [Michelson] types as defined in [the documentation](https://tezos.gitlab.io/active/michelson.html#full-grammar).
+///
+/// See also: [Michelson Reference](https://tezos.gitlab.io/michelson-reference/).
+///
+/// [Michelson] is an enum with each case having a payload of the various [Michelson] types.
+/// All data types are defined in the `tezos_michelson::michelson::data` module and all the
+/// types are defined in the `tezos_michelson::michelson::types` module.
+///
+/// The easiest way to create [Michelson] instances is to use the constructor functions defined in the
+/// above mentioned modules. For example, to construct a `Pair` of `Int`s:
+///
+/// ```rust
+/// use tezos_michelson::michelson::{data, Michelson};
+///
+/// let michelson: Michelson = data::pair(vec![data::int(0), data::int(2)]);
+/// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum Michelson {
     Data(Data),
@@ -29,18 +45,52 @@ pub enum Michelson {
 }
 
 impl Michelson {
+    /// Packs the [Michelson] structure into bytes.
+    ///
+    /// # Arguments
+    ///
+    /// * `schema` - An optional schema describing the type of the michelson structure
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tezos_michelson::michelson::{data, Michelson, types};
+    ///
+    /// let michelson: Michelson = data::int(128);
+    /// let packed = michelson.pack(Some(&types::nat()));
+    /// ```
     pub fn pack(self, schema: Option<&Type>) -> Result<Vec<u8>> {
         let micheline: Micheline = self.into();
         let schema: Option<Micheline> = schema.map(|schema| schema.into());
         micheline.pack(schema.as_ref())
     }
 
+    /// Creates a `Michelson` structure by unpacking the provided data.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - The bytes to unpack
+    /// * `schema` - An optional schema describing the expected Michelson structure type
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tezos_michelson::michelson::{data, Michelson, types};
+    /// use hex_literal::hex;
+    ///
+    /// let bytes = hex!("05002a");
+    /// let michelson = Michelson::unpack(&bytes, Some(&types::int()));
+    /// ```
     pub fn unpack(bytes: &[u8], schema: Option<&Type>) -> Result<Self> {
         let schema: Option<Micheline> = schema.map(|value| value.into());
         let micheline = Micheline::unpack(bytes, schema.as_ref())?;
         micheline.try_into()
     }
 
+    /// Normalizes the Michelson structure.
+    ///
+    /// Normalization means that `pair` structures with more then 2 elements are re-organized into a pair of pairs structure
+    /// with each pair having exactly 2 elements.
     pub fn normalized(self) -> Self {
         MichelsonNormalizer::normalize(self)
     }
