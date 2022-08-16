@@ -2,6 +2,15 @@
 
 `tezos-rpc` provides a Tezos RPC client which can be used to interact with Tezos nodes.
 
+## Setup
+
+Add the following dependency to your Cargo manifest:
+
+```toml
+[dependencies]
+tezos-rpc = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.0" }
+```
+
 ## Features
 
 ### http
