@@ -10,7 +10,7 @@ use tezos_core::internal::{
 };
 
 pub use self::utils::{
-    bytes, int, primitive_application, sequence, string, try_bytes, try_int, try_string,
+    bytes, int, primitive_application, sequence, try_bytes, try_int, try_string,
 };
 use self::{literals::Literal, primitive_application::PrimitiveApplication, sequence::Sequence};
 use crate::{
@@ -23,6 +23,7 @@ use crate::{
     Error, Result,
 };
 
+/// Tezos `Micheline` types as defined in [the documentation](https://tezos.gitlab.io/shell/micheline.html#bnf-grammar).
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(untagged))]
 pub enum Micheline {
@@ -32,18 +33,56 @@ pub enum Micheline {
 }
 
 impl Micheline {
+    /// Packs the [Micheline] value using the provide schema.
+    ///
+    /// # Arguments
+    ///
+    /// * `schema` - An optional schema describing the type of the michelson structure
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tezos_michelson::{micheline::{Micheline, primitive_application, int}, michelson::ComparableTypePrimitive};
+    ///
+    /// let schema: Micheline = primitive_application(ComparableTypePrimitive::Nat).into();
+    /// let value: Micheline = int(100);
+    ///
+    /// let packed = value.pack(Some(&schema));
+    /// ```
     pub fn pack(self, schema: Option<&Micheline>) -> Result<Vec<u8>> {
         MichelinePacker::pack(self, schema)
     }
 
+    /// Unpacks the provided bytes into a [Micheline] value using the provided schema.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - The bytes to unpack
+    /// * `schema` - An optional schema describing the type of the michelson structure
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use tezos_michelson::{micheline::{Micheline, primitive_application, int}, michelson::ComparableTypePrimitive};
+    ///
+    /// let schema: Micheline = primitive_application(ComparableTypePrimitive::Nat).into();
+    /// let bytes: Vec<u8> = vec![5, 0, 10];
+    /// let micheline = Micheline::unpack(&bytes, Some(&schema));
+    /// ```
     pub fn unpack(bytes: &[u8], schema: Option<&Micheline>) -> Result<Self> {
         MichelinePacker::unpack(bytes, schema)
     }
 
+    /// Encodes the [Micheline] value to bytes.
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MichelineBytesCoder::encode(self)
     }
 
+    /// Decodes the given bytes into a [Micheline] value.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - The bytes to decode
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
         MichelineBytesCoder::decode(bytes)
     }
@@ -90,6 +129,10 @@ impl Micheline {
         return None;
     }
 
+    /// Normalizes the Michelson structure.
+    ///
+    /// Normalization means that `pair` primitive application values with more then 2 elements are re-organized
+    /// into a pair of pairs structure with each pair having exactly 2 elements.
     pub fn normalized(self) -> Self {
         MichelineNormalizer::normalize(self)
     }

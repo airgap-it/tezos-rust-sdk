@@ -19,33 +19,77 @@ pub use crate::{
     error::{Error, Result},
 };
 
-pub trait Config {
-    fn get_ed25519_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
-    fn get_secp256_k1_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
-    fn get_p256_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
-}
-
+/// A structure used to provide configurations to other tezos crates.
+///
+/// So far, the only configurable aspect is the crypto primitives implementation defined the the `CryptoConfig` trait.
+///
+/// [Tezos] implements the [Default] trait providing a defeault implementation of the crypto primitives provided the corresponding features are enabled (`ed25519`, `secp256_k1`, `p256`).
+///
+/// # Example
+///
+/// The following example shows how to provide your own crypto providers:
+///
+/// ```rust
+/// use tezos_core::{Tezos, CryptoProvider, CryptoConfig};
+///
+/// struct MyCryptoConfig;
+///
+/// impl CryptoConfig for MyCryptoConfig {
+///     fn get_ed25519_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>> {
+///         todo!()
+///     }
+///
+///     fn get_secp256_k1_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>> {
+///         todo!()
+///     }
+///
+///     fn get_p256_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>> {
+///         todo!()
+///     }
+/// }
+///
+/// let tezos = Tezos::new(Box::new(MyCryptoConfig));
+/// ```
 pub struct Tezos {
-    config: Box<dyn Config>,
+    crypto_config: Box<dyn CryptoConfig>,
 }
 
 impl Tezos {
-    pub fn new(config: Box<dyn Config>) -> Self {
-        Tezos { config }
+    /// Creates a new instance with the given crypto config.
+    pub fn new(crypto_config: Box<dyn CryptoConfig>) -> Self {
+        Tezos { crypto_config }
     }
 
+    /// Returns a `Crypto` instance providing access to the various crypto providers.
     pub fn get_crypto(&self) -> Crypto {
         Crypto::new(
-            self.config.get_ed25519_crypto_provider(),
-            self.config.get_secp256_k1_crypto_provider(),
-            self.config.get_p256_crypto_provider(),
+            self.crypto_config.get_ed25519_crypto_provider(),
+            self.crypto_config.get_secp256_k1_crypto_provider(),
+            self.crypto_config.get_p256_crypto_provider(),
         )
     }
 }
 
-pub struct DefaultConfig;
+/// Config trait used to provide the various crypto provider. See the description for `Tezos`.
+pub trait CryptoConfig {
+    /// Should provide an instance of a structure implementing the [CryptoProvider] trait that implements the trait for ed25519 curve.
+    /// If `None` is returned, then the functionality is considered not available.
+    fn get_ed25519_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
+    /// Should provide an instance of a structure implementing the [CryptoProvider] trait that implements the trait for secp256_k1 curve.
+    /// If `None` is returned, then the functionality is considered not available.
+    fn get_secp256_k1_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
+    /// Should provide an instance of a structure implementing the [CryptoProvider] trait that implements the trait for p256 curve.
+    /// If `None` is returned, then the functionality is considered not available.
+    fn get_p256_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>>;
+}
 
-impl Config for DefaultConfig {
+/// A structure providing the default implementation of [CryptoConfig].
+///
+/// This structure will provide default implementations for the
+/// various crypto provider if the correspoding feature is enabled (`ed25519`, `secp256_k1`, `p256` or `full_crypto` for all of them).
+pub struct DefaultCryptoConfig;
+
+impl CryptoConfig for DefaultCryptoConfig {
     fn get_ed25519_crypto_provider(&self) -> Option<Box<dyn CryptoProvider>> {
         {
             cfg_if! {
@@ -85,6 +129,6 @@ impl Config for DefaultConfig {
 
 impl Default for Tezos {
     fn default() -> Self {
-        Self::new(Box::new(DefaultConfig))
+        Self::new(Box::new(DefaultCryptoConfig))
     }
 }

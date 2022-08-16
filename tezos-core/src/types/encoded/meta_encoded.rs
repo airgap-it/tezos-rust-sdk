@@ -1,6 +1,7 @@
 use super::META_ENCODED_VALUES;
 use crate::{Error, Result};
 
+/// A structure providing metadata for encoded values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MetaEncoded {
     pub base58_prefix: &'static str,

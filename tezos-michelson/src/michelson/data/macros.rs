@@ -20,6 +20,9 @@ macro_rules! make_all_data {
             $($mod_name::{$name, $mod_name},)*
         };
 
+        /// Tezos Michelson data types as defined in [the documentation](https://tezos.gitlab.io/active/michelson.html#full-grammar).
+        ///
+        /// See also: [Michelson Reference](https://tezos.gitlab.io/michelson-reference/).
         #[derive(Debug, Clone, PartialEq)]
         pub enum Data {
             $($($enum_case_name($enum_case_type),)*)+
