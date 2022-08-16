@@ -1,3 +1,14 @@
+# Tezos Rust SDK: RPC
+
+`tezos-rpc` provides a Tezos RPC client which can be used to interact with Tezos nodes.
+
+## Features
+
+### http
+
+Enables the default http provider. This features is enabled by default and uses the [reqwest](https://github.com/seanmonstar/reqwest) crate as the http client.
+If you want to provide your own http client, disable the default features and provide an implementation of the `Http` trait.
+
 ## Shell RPC's
 
 [rpc-openapi.json](https://gitlab.com/tezos/tezos/-/blob/master/docs/api/rpc-openapi.json)
