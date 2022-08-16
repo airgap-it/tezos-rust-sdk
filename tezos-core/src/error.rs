@@ -1,6 +1,7 @@
 use derive_more::{Display, Error as DError, From};
 use std::{result, string::FromUtf8Error};
 
+/// Errors returned by this crate.
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
     Internal {

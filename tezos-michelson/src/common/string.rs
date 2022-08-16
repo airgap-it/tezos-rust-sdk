@@ -11,6 +11,7 @@ lazy_static! {
     static ref REGEX: Regex = Regex::new("^(\"|\r|\n|\t|\\b|\\\\|[^\"\\\\])*$").unwrap();
 }
 
+/// A valid tezos String.
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct String(std::string::String);

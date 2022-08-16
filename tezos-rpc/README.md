@@ -1,3 +1,23 @@
+# Tezos Rust SDK: RPC
+
+`tezos-rpc` provides a Tezos RPC client which can be used to interact with Tezos nodes.
+
+## Setup
+
+Add the following dependency to your Cargo manifest:
+
+```toml
+[dependencies]
+tezos-rpc = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.0" }
+```
+
+## Features
+
+### http
+
+Enables the default http provider. This features is enabled by default and uses the [reqwest](https://github.com/seanmonstar/reqwest) crate as the http client.
+If you want to provide your own http client, disable the default features and provide an implementation of the `Http` trait.
+
 ## Shell RPC's
 
 [rpc-openapi.json](https://gitlab.com/tezos/tezos/-/blob/master/docs/api/rpc-openapi.json)

@@ -22,6 +22,7 @@ lazy_static! {
     static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
 }
 
+/// An unsigned integer that can be encoded to a Zarith number
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(
     feature = "serde",

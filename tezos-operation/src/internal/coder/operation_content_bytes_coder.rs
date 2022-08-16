@@ -171,10 +171,13 @@ impl Encoder<BlockHeader, Vec<u8>, Error> for OperationContentBytesCoder {
         let timestamp_bytes = utils::encode_i64(value.timestamp.timestamp_millis());
         let validation_pass_bytes = [value.validation_pass];
         let operation_hash_bytes = value.operations_hash.to_bytes()?;
-        let fitness_bytes =
-            utils::encode_bytes(&value.fitness.iter().fold(Vec::<u8>::new(), |acc, item| {
-                [acc, utils::encode_bytes(&item.to_bytes())].concat()
-            }));
+        let fitness_bytes = utils::encode_bytes(&value.fitness.iter().fold(
+            Vec::<u8>::new(),
+            |mut acc, item| {
+                acc.append(&mut utils::encode_bytes(&item.to_bytes()));
+                acc
+            },
+        ));
         let context_bytes = value.context.to_bytes()?;
         let payload_hash_bytes = value.payload_hash.to_bytes()?;
         let payload_round_bytes = utils::encode_i32(value.payload_round);

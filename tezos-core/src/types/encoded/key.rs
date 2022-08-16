@@ -10,6 +10,11 @@ use crate::{
     Error, Result,
 };
 
+/// Group of base58 encoded cryptographic keys, either secret or public.
+///
+/// See:
+/// - [SecretKey]
+/// - [PublicKey]
 #[derive(Debug, Clone)]
 #[cfg_attr(
     feature = "serde",
@@ -107,6 +112,12 @@ impl TryFrom<&Key> for Vec<u8> {
     }
 }
 
+/// Group of base58 encoded secret keys.
+///
+/// See:
+/// - [Ed25519SecretKey]
+/// - [Secp256K1SecretKey]
+/// - [P256SecretKey]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -239,6 +250,12 @@ impl From<P256SecretKey> for SecretKey {
     }
 }
 
+/// Group of base58 encoded public keys.
+///
+/// See:
+/// - [Ed25519PublicKey]
+/// - [Secp256K1PublicKey]
+/// - [P256PublicKey]
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",

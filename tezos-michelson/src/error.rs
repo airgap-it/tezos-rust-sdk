@@ -2,6 +2,7 @@ use std::result;
 
 use derive_more::{Display, Error as DError, From};
 
+/// Errors returned by this crate.
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
     Internal {
