@@ -132,7 +132,7 @@ pub struct Constants {
     pub liquidity_baking_sunset_level: Option<i32>,
     /// integer ∈ [-2^31-1, 2^31]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub liquidity_baking_escape_ema_threshold: Option<i32>,
+    pub liquidity_baking_toggle_ema_threshold: Option<i32>,
     /// integer ∈ [-2^15, 2^15-1]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_operations_time_to_live: Option<i16>,
@@ -287,6 +287,8 @@ pub struct Constants {
         deserialize_with = "serde_utils::option_number_vec_of_option_string_vec"
     )]
     pub time_between_blocks: Option<Vec<u8>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub liquidity_baking_escape_ema_threshold: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
