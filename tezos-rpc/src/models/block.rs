@@ -49,6 +49,8 @@ pub struct Header {
     pub seed_nonce_hash: Option<NonceHash>,
     #[serde(default)]
     pub liquidity_baking_escape_vote: bool,
+    #[serde(default)]
+    pub liquidity_baking_toggle_vote: LiquidityBakingToggleVote,
     pub signature: Option<Signature>,
 }
 
@@ -72,7 +74,8 @@ impl From<tezos_operation::block_header::BlockHeader> for Header {
             priority: 0,
             proof_of_work_nonce: value.proof_of_work_nonce.into(),
             seed_nonce_hash: value.seed_nonce_hash,
-            liquidity_baking_escape_vote: value.liquidity_baking_escape_vote,
+            liquidity_baking_escape_vote: Default::default(),
+            liquidity_baking_toggle_vote: value.liquidity_baking_toggle_vote.into(),
             signature: Some(value.signature),
         }
     }
@@ -99,9 +102,43 @@ impl TryFrom<Header> for tezos_operation::block_header::BlockHeader {
             payload_round: value.payload_round,
             proof_of_work_nonce: value.proof_of_work_nonce.try_into()?,
             seed_nonce_hash: value.seed_nonce_hash,
-            liquidity_baking_escape_vote: value.liquidity_baking_escape_vote,
+            liquidity_baking_toggle_vote: value.liquidity_baking_toggle_vote.into(),
             signature: value.signature.ok_or(Error::InvalidConversion)?,
         })
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum LiquidityBakingToggleVote {
+    On,
+    Off,
+    Pass,
+}
+
+impl Default for LiquidityBakingToggleVote {
+    fn default() -> Self {
+        Self::Pass
+    }
+}
+
+impl From<tezos_operation::block_header::LiquidityBakingToggleVote> for LiquidityBakingToggleVote {
+    fn from(value: tezos_operation::block_header::LiquidityBakingToggleVote) -> Self {
+        match value {
+            tezos_operation::block_header::LiquidityBakingToggleVote::On => Self::On,
+            tezos_operation::block_header::LiquidityBakingToggleVote::Off => Self::Off,
+            tezos_operation::block_header::LiquidityBakingToggleVote::Pass => Self::Pass,
+        }
+    }
+}
+
+impl From<LiquidityBakingToggleVote> for tezos_operation::block_header::LiquidityBakingToggleVote {
+    fn from(value: LiquidityBakingToggleVote) -> Self {
+        match value {
+            LiquidityBakingToggleVote::On => Self::On,
+            LiquidityBakingToggleVote::Off => Self::Off,
+            LiquidityBakingToggleVote::Pass => Self::Pass,
+        }
     }
 }
 
@@ -165,6 +202,8 @@ pub struct Metadata {
     /// integer ∈ [-2^31-1, 2^31]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub liquidity_baking_escape_ema: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub liquidity_baking_toggle_ema: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub implicit_operations_results: Option<Vec<SuccessfulManagerOperationResult>>,
 }
