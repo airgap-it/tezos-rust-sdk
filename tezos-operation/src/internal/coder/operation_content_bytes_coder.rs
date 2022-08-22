@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use num_traits::{FromPrimitive, ToPrimitive};
 use tezos_core::{
     internal::{
         coder::{ConsumingDecoder, Decoder, Encoder},
@@ -19,7 +20,7 @@ use tezos_core::{
 use tezos_michelson::micheline::Micheline;
 
 use crate::{
-    block_header::BlockHeader,
+    block_header::{BlockHeader, LiquidityBakingToggleVote},
     operations::{
         ActivateAccount, Ballot, BallotType, Delegation, DoubleBakingEvidence,
         DoubleEndorsementEvidence, DoublePreendorsementEvidence, Endorsement, Entrypoint,
@@ -189,7 +190,7 @@ impl Encoder<BlockHeader, Vec<u8>, Error> for OperationContentBytesCoder {
         };
         let seed_nonce_hash_presence = utils::encode_bool(!seed_nonce_hash_bytes.is_empty());
         let liquidity_baking_escape_vote_bytes =
-            utils::encode_bool(value.liquidity_baking_escape_vote);
+            [value.liquidity_baking_toggle_vote.to_u8().unwrap()];
         let signature_bytes = value.signature.to_bytes()?;
 
         Ok([
@@ -474,8 +475,6 @@ impl Decoder<OperationContent, [u8], Error> for OperationContentBytesCoder {
 
 impl ConsumingDecoder<OperationContent, u8, Error> for OperationContentBytesCoder {
     fn decode_consuming<CL: ConsumableList<u8>>(value: &mut CL) -> Result<OperationContent> {
-        use num_traits::FromPrimitive;
-
         let tag_byte = *value.inner_value().first().ok_or(Error::InvalidBytes)?;
         let tag =
             OperationContentTag::from_u8(tag_byte).ok_or(Error::InvalidOperationContentTag)?;
@@ -629,7 +628,9 @@ impl ConsumingDecoder<BlockHeader, u8, Error> for OperationContentBytesCoder {
             None
         };
 
-        let liquidity_baking_escape_vote = utils::decode_consuming_bool(value)?;
+        let liquidity_baking_toggle_vote =
+            LiquidityBakingToggleVote::from_u8(value.consume_first()?)
+                .ok_or(Error::InvalidBytes)?;
         let signature = Signature::from_consumable_bytes(value)?;
 
         Ok(BlockHeader {
@@ -645,7 +646,7 @@ impl ConsumingDecoder<BlockHeader, u8, Error> for OperationContentBytesCoder {
             payload_round,
             proof_of_work_nonce,
             seed_nonce_hash,
-            liquidity_baking_escape_vote,
+            liquidity_baking_toggle_vote,
             signature,
         })
     }
