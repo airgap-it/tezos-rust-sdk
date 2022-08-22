@@ -8,7 +8,7 @@ Add the following dependency to your Cargo manifest:
 
 ```toml
 [dependencies]
-tezos-core = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.0" }
+tezos-core = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.1" }
 ```
 
 ## Features

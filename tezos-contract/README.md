@@ -8,5 +8,5 @@ Add the following dependency to your Cargo manifest:
 
 ```toml
 [dependencies]
-tezos-contract = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.0" }
+tezos-contract = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.1" }
 ```
