@@ -1,7 +1,7 @@
 use crate::{client::TezosRpcChainId, http::Http};
 
-use {crate::client::TezosRpcContext, crate::error::Error};
 use tezos_core::types::encoded::OperationHash;
+use {crate::client::TezosRpcContext, crate::error::Error};
 
 fn path() -> String {
     format!("{}/operation", super::path())
@@ -51,7 +51,8 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
         // Add `chain` query parameter
         query.push(("chain", self.ctx.chain_id().value().into()));
 
-        let operaton_hash: String = self.ctx
+        let operaton_hash: String = self
+            .ctx
             .http_client()
             .post(self::path().as_str(), &self.payload, Some(&query))
             .await?;
@@ -84,15 +85,17 @@ pub fn post<'a, HttpClient: Http>(
 
 #[cfg(all(test, feature = "http"))]
 mod tests {
-    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
     use tezos_core::types::encoded::{Encoded, OperationHash};
+    use {crate::client::TezosRpc, crate::error::Error, httpmock::prelude::*};
 
     #[tokio::test]
     async fn test_operation_injection() -> Result<(), Error> {
         let server = MockServer::start();
         let rpc_url = server.base_url();
 
-        let operation_hash: OperationHash = "ooG169iWhv7vQccPGcB2EWeAjFWvxcrmQVCi4eWCviUTHeQuH24".try_into().unwrap();
+        let operation_hash: OperationHash = "ooG169iWhv7vQccPGcB2EWeAjFWvxcrmQVCi4eWCviUTHeQuH24"
+            .try_into()
+            .unwrap();
         let signed_operation_contents = "fcd40228f821b0183a73fc0553a69095a319858e718cbd636cd28fde99c14cad6d009f7f36d0241d3e6a82254216d7de5780aa67d8f9a205ee8f0b8f0bb0030000000000570200000052050107610362036205000764046200000004256164640462000000072572656d6f766505020200000028037a072e020000000803210346034c0350020000000c034c053e0362057000020350053d036d0342000000050200000000efaf7b675fdb1488c778efa72a3288a768c622601c6cda306056a86a2074f61951b8071d3ab75e09064dc0697457a2371cd0e27ffb6a7d868fbe51007e7d9f0f";
 
         server.mock(|when, then| {
