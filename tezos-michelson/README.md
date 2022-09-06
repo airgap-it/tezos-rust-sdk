@@ -2,6 +2,14 @@
 
 `tezos-michelson` provides [Michelson](https://tezos.gitlab.io/active/michelson.html) and [Micheline](https://tezos.gitlab.io/shell/micheline.html) types and actions, e.g. `pack`/`unpack`.
 
+## Rust Documentation
+
+To generate and open the Rust documentation for this crate, use the following command at the root of the crate:
+
+```shell
+crago doc --open
+```
+
 ## Setup
 
 Add the following dependency to your Cargo manifest:

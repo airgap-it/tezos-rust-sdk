@@ -65,3 +65,14 @@ impl From<Primitive> for crate::michelson::Primitive {
         Self::ComparableType(value)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_annots() {
+        let n: Nat = nat::<Nat>().with_type_annotation::<Nat>("nat".into()).with_field_annotation("nat".into());
+        assert_eq!(n.annotations().len(), 2);
+    }
+}

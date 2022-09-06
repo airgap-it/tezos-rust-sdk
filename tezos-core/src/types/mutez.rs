@@ -1,3 +1,5 @@
+//! Tezos Mutez type.
+
 use std::{fmt::Debug, str::FromStr};
 
 use derive_more;
@@ -23,6 +25,18 @@ lazy_static! {
     static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
 }
 
+/// Tezos Mutez type. It can be encoded into and initialized from bytes and many other number
+/// representations.
+///
+/// # Example
+///
+/// ```
+/// use tezos_core::types::mutez::Mutez;
+/// let amount_1: Mutez = "24".try_into().expect("valid number string can be converted to Mutez");
+/// let amount_2: Mutez = 42u8.into();
+/// ```
+///
+/// Internally the number is represented with an [i64], but negative values are invalid.
 #[derive(
     Add,
     AddAssign,
@@ -76,11 +90,11 @@ impl Mutez {
     pub(super) fn value(&self) -> u64 {
         self.0.to_u64().unwrap()
     }
-
+    /// Encodes the [Mutez] value to bytes.
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         MutezBytesCoder::encode(self)
     }
-
+    /// Creates the [Mutez] value from bytes that were previously generated using [Mutez::to_bytes].
     pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
         MutezBytesCoder::decode(bytes)
     }
