@@ -33,7 +33,19 @@ The Tezos Swift SDK ships with tools that can be used to:
 
 Rust 1.60.0 or above.
 
-Install the `rustc` compiler and the `cargo` command line tool through [rustup](https://rustup.rs). 
+Install the `rustc` compiler and the `cargo` command line tool through [rustup](https://rustup.rs).
+
+## Build
+
+```shell
+cargo build --release
+```
+
+## Test
+
+```shell
+cargo test
+```
 
 ## Rust Documentation
 
