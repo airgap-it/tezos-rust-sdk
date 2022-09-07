@@ -118,9 +118,9 @@
 //! ```rust
 //! use tezos_core::types::encoded::{BlockHash, ChainId, Ed25519PublicKey, Encoded};
 //!
-//! let blockHash = BlockHash::new("BLrUSnmhoWczorTYG8utWTLcD8yup6MX1MCehXG8f8QWew8t1N8".into()).unwrap();
-//! let chainID = ChainId::new("NetXPduhFKtb9SG".into()).unwrap();
-//! let ed25519PublicKey = Ed25519PublicKey::new("edpktmJqEE79FtfdWse1gqnUey1vNBkB3zNV99Pi95SRAs8NMatczG".into());
+//! let block_hash = BlockHash::new("BLrUSnmhoWczorTYG8utWTLcD8yup6MX1MCehXG8f8QWew8t1N8".into()).unwrap();
+//! let chain_id = ChainId::new("NetXPduhFKtb9SG".into()).unwrap();
+//! let ed25519_public_key = Ed25519PublicKey::new("edpktmJqEE79FtfdWse1gqnUey1vNBkB3zNV99Pi95SRAs8NMatczG".into());
 //! ```
 
 pub mod crypto;
