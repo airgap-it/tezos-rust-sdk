@@ -358,3 +358,18 @@ where
     let value: Bytes = value.try_into()?;
     Ok(value.into())
 }
+
+impl Pair {
+    pub fn flatten(self) -> Self {
+        let mut new_values = Vec::<Data>::new();
+        for value in self.values {
+            if let Data::Pair(pair) = value {
+                new_values.append(&mut pair.flatten().values);
+            } else {
+                new_values.push(value)
+            }
+        }
+
+        Self { values: new_values }
+    }
+}

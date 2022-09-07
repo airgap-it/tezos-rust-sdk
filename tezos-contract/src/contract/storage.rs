@@ -94,16 +94,16 @@ impl MappedStorage {
                         mapped_values.insert(name.into(), data);
                     }
                 }
-            } else {
-                let value_pair: Option<&DataPair> = current_value.inner_value_ref();
-                let type_pair: Option<&TypePair> = current_type.inner_value_ref();
-                match (value_pair, type_pair) {
-                    (Some(value_pair), Some(type_pair)) => {
-                        to_visit_types.extend(type_pair.types.iter().rev());
-                        to_visit_values.extend(value_pair.values.iter().rev());
-                    }
-                    _ => {}
+            }
+
+            let value_pair: Option<&DataPair> = current_value.inner_value_ref();
+            let type_pair: Option<&TypePair> = current_type.inner_value_ref();
+            match (value_pair, type_pair) {
+                (Some(value_pair), Some(type_pair)) => {
+                    to_visit_types.extend(type_pair.types.iter().rev());
+                    to_visit_values.extend(value_pair.values.iter().rev());
                 }
+                _ => {}
             }
         }
 
