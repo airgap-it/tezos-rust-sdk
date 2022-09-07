@@ -26,7 +26,7 @@ The Tezos Swift SDK ships with tools that can be used to:
 
 *Contract*
 - read a contract's storage
-- read BigMaps
+- read BigMap values
 - prepare contract calls
 
 ## Requirements

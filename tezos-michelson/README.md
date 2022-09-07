@@ -1,6 +1,31 @@
 # Tezos Rust SDK: Michelson
 
-`tezos-michelson` provides [Michelson](https://tezos.gitlab.io/active/michelson.html) and [Micheline](https://tezos.gitlab.io/shell/micheline.html) types and actions, e.g. `pack`/`unpack`.
+`tezos-michelson` provides [Michelson](https://tezos.gitlab.io/active/michelson.html) and [Micheline](https://tezos.gitlab.io/shell/micheline.html) types and actions.
+
+It allowes to:
+
+- parse or create Micheline structures
+- convert Micheline from/to JSON
+- pack and unpack Micheline
+- convert Micheline to typed Michelson and vice versa
+
+## Requirements
+
+Rust 1.60.0 or above.
+
+Install the `rustc` compiler and the `cargo` command line tool through [rustup](https://rustup.rs).
+
+## Build
+
+```shell
+cargo build --release
+```
+
+## Test
+
+```shell
+cargo test
+```
 
 ## Rust Documentation
 
@@ -16,7 +41,7 @@ Add the following dependency to your Cargo manifest:
 
 ```toml
 [dependencies]
-tezos-michelson = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.1" }
+tezos-michelson = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.2" }
 ```
 
 ## Features
