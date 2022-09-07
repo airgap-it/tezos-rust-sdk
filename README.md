@@ -43,6 +43,13 @@ Use the following command from the root folder of one of the crates to generate 
 cargo doc --open
 ```
 
+For example, run the above command inside [tezos-core](tezos-core) to generate the documentation for the `tezos-core`
+crate and open it in the browser.
+
+## Samples
+
+See the sample projects in [samples](samples) to see how the various crates can be used.
+
 ## Packages
 
 Tezos Rust SDK is a multi-crate project. It has been designed to allow its users to use only the required minimum of functionality that meets their needs, thus optimizing the amount of redundant and unwanted code and dependencies.
