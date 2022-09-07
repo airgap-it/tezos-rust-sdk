@@ -1,3 +1,5 @@
+//! Crypto module exposed the [CryptoProvider] trait and a default implementation.
+
 pub mod default;
 
 use crate::Result;

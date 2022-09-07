@@ -111,14 +111,13 @@ impl UnsignedOperation {
     }
 
     /// Creates a [SignedOperation] by signing the [UnsignedOperation] with the given secret key and using
-    /// the crypto providers configured in the fiven [Tezos] instance.
+    /// the crypto providers configured in the given [Tezos] instance.
     pub fn into_signed_operation_with(
         self,
         key: &SecretKey,
         tezos: &Tezos,
     ) -> Result<SignedOperation> {
-        let signer = OperationSigner::new(tezos.get_crypto());
-        let signature = signer.sign(&self, key)?;
+        let signature = self.sign_with(key, &tezos)?;
 
         Ok(SignedOperation::new(self.branch, self.contents, signature))
     }
@@ -126,10 +125,23 @@ impl UnsignedOperation {
     /// Creates a [SignedOperation] by signing the [UnsignedOperation] with the given secret key.
     pub fn into_signed_operation(self, key: &SecretKey) -> Result<SignedOperation> {
         let tezos: Tezos = Default::default();
-        let signer = OperationSigner::new(tezos.get_crypto());
-        let signature = signer.sign(&self, key)?;
 
-        Ok(SignedOperation::new(self.branch, self.contents, signature))
+        self.into_signed_operation_with(key, &tezos)
+    }
+
+    /// Creates a [Signature] by signing the [UnsignedOperation] with the given secret key and using
+    /// the crypto providers configured in the given [Tezos] instance.
+    pub fn sign_with(&self, key: &SecretKey, tezos: &Tezos) -> Result<Signature> {
+        let signer = OperationSigner::new(tezos.get_crypto());
+
+        signer.sign(self, key)
+    }
+
+    /// Creates a [Signature] by signing the [UnsignedOperation] with the given secret key.
+    pub fn sign(&self, key: &SecretKey) -> Result<Signature> {
+        let tezos: Tezos = Default::default();
+
+        self.sign_with(key, &tezos)
     }
 }
 

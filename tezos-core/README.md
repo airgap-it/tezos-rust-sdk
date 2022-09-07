@@ -2,6 +2,14 @@
 
 `tezos-core` provides base Tezos types and actions that can be performed on them.
 
+## Rust Documentation
+
+To generate and open the Rust documentation for this crate, use the following command at the root of the crate:
+
+```shell
+crago doc --open
+```
+
 ## Setup
 
 Add the following dependency to your Cargo manifest:
