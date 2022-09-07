@@ -1,6 +1,37 @@
 # Tezos Rust SDK: Operation
 
-`tezos-operation` provides Tezos Operation structures as defined in [the P2P message format](https://tezos.gitlab.io/shell/p2p_api.html) and actions that can be performed on them, e.g. `forge`/`unforge` and `sign`/`verify`.
+`tezos-operation` provides Tezos Operation structures as defined in [the P2P message format](https://tezos.gitlab.io/shell/p2p_api.html) and actions that can be performed on them.
+
+It allowes to:
+- create an unsigned or signed Tezos operation
+- forge and unforge an operation
+- sign an operation and verify the signature
+
+## Requirements
+
+Rust 1.60.0 or above.
+
+Install the `rustc` compiler and the `cargo` command line tool through [rustup](https://rustup.rs).
+
+## Build
+
+```shell
+cargo build --release
+```
+
+## Test
+
+```shell
+cargo test
+```
+
+## Rust Documentation
+
+To generate and open the Rust documentation for this crate, use the following command at the root of the crate:
+
+```shell
+crago doc --open
+```
 
 ## Setup
 
@@ -8,7 +39,7 @@ Add the following dependency to your Cargo manifest:
 
 ```toml
 [dependencies]
-tezos-operation = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.1" }
+tezos-operation = { git = "https://github.com/airgap-it/tezos-rust-sdk.git", tag = "0.1.2" }
 ```
 
 ## Features

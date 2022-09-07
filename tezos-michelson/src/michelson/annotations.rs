@@ -44,6 +44,15 @@ impl Annotation {
         Ok(Self { kind, value })
     }
 
+    pub fn new_with_kind(kind: Kind, value: String) -> Self {
+        let mut value = value;
+        if !value.starts_with(kind.prefix()) {
+            value = format!("{}{}", kind.prefix(), value);
+        }
+
+        Self { kind, value }
+    }
+
     pub fn value(&self) -> &str {
         &self.value
     }
