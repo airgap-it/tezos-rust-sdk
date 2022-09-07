@@ -1,3 +1,5 @@
+//! Hex String type.
+
 use lazy_static::lazy_static;
 use regex::Regex;
 #[cfg(feature = "serde")]

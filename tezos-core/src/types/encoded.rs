@@ -1,3 +1,5 @@
+//! All the Tezos basic types that can be encoded/decoded to base58 bytes.
+
 mod address;
 mod key;
 mod macros;

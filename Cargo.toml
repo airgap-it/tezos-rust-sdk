@@ -7,3 +7,9 @@ members = [
     "tezos-rpc",
     "tezos-contract"
 ]
+
+exclude = [
+    "samples/michelson-sample",
+    "samples/operation-sample",
+    "samples/contract-sample",
+]

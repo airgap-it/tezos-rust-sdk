@@ -167,6 +167,18 @@ macro_rules! make_type {
                         metadata: metadata.unwrap_or_default()
                     }
                 }
+
+                pub fn with_type_annotation<Output>(mut self, annotation: std::string::String) -> Output where Output: From<$name> {
+                    self.metadata = self.metadata.with_type_name(annotation);
+
+                    self.into()
+                }
+
+                pub fn with_field_annotation<Output>(mut self, annotation: std::string::String) -> Output where Output: From<$name> {
+                    self.metadata = self.metadata.with_field_name(annotation);
+
+                    self.into()
+                }
             }
 
             impl PrimType for $name {

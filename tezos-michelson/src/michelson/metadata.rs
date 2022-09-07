@@ -40,6 +40,18 @@ impl TypeFieldMetadata {
         })
     }
 
+    pub fn with_type_name(mut self, name: String) -> Self {
+        self.type_name = Some(Annotation::new_with_kind(Kind::Type, name));
+
+        self
+    }
+
+    pub fn with_field_name(mut self, name: String) -> Self {
+        self.field_name = Some(Annotation::new_with_kind(Kind::Field, name));
+
+        self
+    }
+
     fn is_valid_type_name(annotation: &Annotation) -> bool {
         annotation.kind() == Kind::Type
     }
