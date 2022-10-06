@@ -63,10 +63,10 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     pub async fn send(&self) -> Result<Block, Error> {
         let path = self::path(self.chain_id.value(), self.block_id);
 
-        let mut query: Vec<(&str, String)> = vec![];
+        let mut query: Vec<(&str, &'static str)> = vec![];
 
         // Add `metadata` query parameter
-        query.push(("metadata", self.metadata.to_string()));
+        query.push(("metadata", self.metadata.to_str()));
 
         self.ctx
             .http_client()
@@ -82,6 +82,15 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 pub enum MetadataArg {
     Always,
     Never,
+}
+
+impl MetadataArg {
+    fn to_str(&self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::Never => "never",
+        }
+    }
 }
 
 /// Get all the information about a block.
