@@ -418,7 +418,7 @@ trait RpcOperationResult {
             return Err(error);
         }
         Ok(OperationLimits {
-            gas: self.consumed_gas() + GAS_SAFETY_MARGIN,
+            gas: (self.consumed_milligas() / 1000u32) + GAS_SAFETY_MARGIN,
             storage: self.paid_storage_size_diff().unwrap_or(0u8.into())
                 + STORAGE_SAFETY_MARGIN
                 + self.burn_fee(),
@@ -513,7 +513,7 @@ mod test {
                             ]),
                             originated_contracts: None,
                             consumed_gas: Some("1421".into()),
-                            consumed_milligas: Some("1420040".into()),
+                            consumed_milligas: Some("1421040".into()),
                             storage_size: None,
                             paid_storage_size_diff: None,
                             allocated_destination_contract: None,
