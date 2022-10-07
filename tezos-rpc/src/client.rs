@@ -482,4 +482,15 @@ impl<HttpClient: Http> TezosRpc<HttpClient> {
     {
         protocol_rpc::block::helpers::scripts::run_operation::post(&self.context, operation)
     }
+
+    /// Returns the delegate info (e.g. voting power) found in the listings of the current voting period.
+    ///
+    /// [`GET /chains/<chain_id>/blocks/<block>/context/delegates/<pkh>/voting_info`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-delegates-pkh-voting-info)
+    pub fn voting_power<'a>(
+        &'a self,
+        address: &'a Address,
+    ) -> protocol_rpc::block::context::delegates::voting_info::RpcRequestBuilder<'a, HttpClient>
+    {
+        protocol_rpc::block::context::delegates::voting_info::get(&self.context, address)
+    }
 }
