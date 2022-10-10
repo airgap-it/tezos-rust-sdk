@@ -165,6 +165,7 @@ If you want to provide your own http client, disable the default features and pr
 | `/chains/<chain_id>/blocks/<block_id>/context/delegates/{pkh}/grace_period` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/delegates/{pkh}/participation` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/delegates/{pkh}/staking_balance` | `get` | |
+| `/chains/<chain_id>/blocks/<block_id>/context/delegates/{pkh}/voting_info` | `get` | :heavy_check_mark: |
 | `/chains/<chain_id>/blocks/<block_id>/context/delegates/{pkh}/voting_power` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/liquidity_baking/cpmm_address` | `get` | |
 | `/chains/<chain_id>/blocks/<block_id>/context/merkle_tree` | `get` | |
