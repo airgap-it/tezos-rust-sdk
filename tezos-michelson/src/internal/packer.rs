@@ -753,7 +753,7 @@ impl MichelinePacker {
                 let ts_secs = value / 1000;
                 let ts_ns = (value % 1000) * 1_000_000;
                 let dt = DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp(ts_secs, ts_ns as u32),
+                    NaiveDateTime::from_timestamp_opt(ts_secs, ts_ns as u32).unwrap(),
                     Utc,
                 );
                 Ok(
