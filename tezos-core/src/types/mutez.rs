@@ -41,6 +41,7 @@ lazy_static! {
     Add,
     AddAssign,
     PartialEq,
+    PartialOrd,
     Debug,
     Eq,
     Clone,
@@ -343,6 +344,16 @@ mod test {
         let v2: Mutez = 2u8.into();
 
         assert_eq!(v1 + v2, 3u32.into());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_cmp() -> Result<()> {
+        let v1: Mutez = 1u8.into();
+        let v2: Mutez = 2u8.into();
+
+        assert!(v1 < v2);
 
         Ok(())
     }
