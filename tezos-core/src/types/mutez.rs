@@ -6,7 +6,7 @@ use derive_more;
 use derive_more::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Display, Div,
     DivAssign, Mul, MulAssign, Not, Octal, Product, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign,
-    Sub, SubAssign, Sum
+    Sub, SubAssign, Sum,
 };
 use lazy_static::lazy_static;
 use num_bigint::BigUint;
