@@ -603,7 +603,8 @@ impl ConsumingDecoder<BlockHeader, u8, Error> for OperationContentBytesCoder {
 
         let ts_secs = timestamp_millis / 1000;
         let ts_ns = (timestamp_millis % 1000) * 1_000_000;
-        let timestamp = NaiveDateTime::from_timestamp(ts_secs, ts_ns as u32);
+        let timestamp = NaiveDateTime::from_timestamp_opt(ts_secs, ts_ns as u32)
+            .expect("out-of-range number of seconds and/or invalid nanosecond");
 
         let validation_pass = value.consume_first()?;
         let operations_hash = OperationListListHash::from_consumable_bytes(value)?;
