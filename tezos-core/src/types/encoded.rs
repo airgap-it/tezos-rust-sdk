@@ -753,4 +753,24 @@ make_encoded_structs!(
             bytes_length: 32,
         }
     },
+    {
+        use {
+            internal::coder::EncodedBytesCoder,
+        }
+        struct sc_rollup_reveal_hash::ScRollupRevealHash;
+        coder: EncodedBytesCoder;
+        meta {
+            base58_prefix: "scrrh1",
+            base58_length: 56,
+            bytes_prefix: [230, 206, 128, 200, 196,],
+            bytes_length: 32,
+        }
+        test {
+            string_value: "scrrh1387HMYSHbCvWaLrRsTP9Ndh68xGEMRb37bh6mZgUn1oyZ5sfbS",
+            bytes_value: [
+                52, 142, 195, 75, 199, 253, 40, 202, 117, 54, 126, 155, 18, 69, 127, 11,
+                31, 31, 206, 127, 26, 125, 36, 5, 88, 47, 191, 145, 24, 83, 28, 27,
+            ],
+        }
+    },
 );
