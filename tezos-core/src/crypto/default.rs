@@ -3,7 +3,7 @@ use crate::{CryptoProvider, Error, Result};
 
 /// Default implementation for the ed25519 crypto provider. It is activated by enabling the `ed25519` feature.
 ///
-/// This implementation internally uses [sodiumoxide](https://github.com/sodiumoxide/sodiumoxide).
+/// This implementation internally uses [ed25519-dalek](https://github.com/dalek-cryptography/ed25519-dalek).
 #[cfg(feature = "ed25519")]
 #[derive(Debug)]
 pub struct DefaultEd25519CryptoProvider;
@@ -11,20 +11,28 @@ pub struct DefaultEd25519CryptoProvider;
 #[cfg(feature = "ed25519")]
 impl CryptoProvider for DefaultEd25519CryptoProvider {
     fn sign(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
-        use sodiumoxide::crypto::sign;
+        use ed25519_dalek::{Keypair, Signer};
 
-        let secret = sign::SecretKey::from_slice(secret).ok_or(Error::InvalidSecretKeyBytes)?;
-        let signature = sign::sign_detached(message, &secret);
-        return Ok(signature.to_bytes().to_vec());
+        let keypair = Keypair::from_bytes(secret).map_err(|_| Error::InvalidSecretKeyBytes)?;
+        let signature = keypair.sign(message);
+
+        Ok(signature.to_bytes().to_vec())
     }
 
-    fn verify(&self, message: &[u8], signature: &[u8], public_key: &[u8]) -> Result<bool> {
-        use sodiumoxide::crypto::sign;
+    fn verify(
+        &self,
+        message: &[u8],
+        signature_bytes: &[u8],
+        public_key_bytes: &[u8],
+    ) -> Result<bool> {
+        use ed25519_dalek::{PublicKey, Signature, Verifier};
 
-        let key = sign::PublicKey::from_slice(public_key).ok_or(Error::InvalidPublicKeyBytes)?;
-        let signature = sign::ed25519::Signature::from_bytes(&signature)
-            .map_err(|_error| Error::InvalidSignatureBytes)?;
-        Ok(sign::verify_detached(&signature, &message, &key))
+        let public_key =
+            PublicKey::from_bytes(public_key_bytes).map_err(|_| Error::InvalidPublicKeyBytes)?;
+        let signature =
+            Signature::from_bytes(signature_bytes).map_err(|_| Error::InvalidSignatureBytes)?;
+
+        Ok(public_key.verify(message, &signature).is_ok())
     }
 }
 
