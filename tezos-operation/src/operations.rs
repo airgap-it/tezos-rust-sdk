@@ -16,7 +16,6 @@ mod set_deposit_limit;
 mod transaction;
 
 use num_derive::FromPrimitive;
-use num_traits::Signed;
 use tezos_core::{
     internal::{
         crypto::Crypto,
