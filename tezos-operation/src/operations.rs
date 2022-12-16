@@ -18,11 +18,11 @@ mod transaction;
 use num_derive::FromPrimitive;
 use tezos_core::{
     internal::{
-        crypto::Crypto,
         coder::{Decoder, Encoder},
+        crypto::Crypto,
     },
     types::{
-        encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature, OperationHash},
+        encoded::{BlockHash, Encoded, OperationHash, PublicKey, SecretKey, Signature},
         mutez::Mutez,
     },
     Tezos,
@@ -783,7 +783,9 @@ mod test {
             ],
             "sigw1WNdYweqz1c7zKcvZFHQ18swSv4HBWje5quRmixxitPk7z8jtY63qXgKLPVfTM6XGxExPatBWJP44Bknyu3hDHDKJZgY".try_into().unwrap()
         );
-        let expected: OperationHash = "onpLA98fWzC1xEhfJ19PvvAn4NireAKGvzXZbdCgQyRvbxRjFuD".try_into().unwrap();
+        let expected: OperationHash = "onpLA98fWzC1xEhfJ19PvvAn4NireAKGvzXZbdCgQyRvbxRjFuD"
+            .try_into()
+            .unwrap();
         let actual = opg.hash()?;
         assert_eq!(expected, actual);
         Ok(())
