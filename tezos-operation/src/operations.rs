@@ -221,7 +221,7 @@ impl SignedOperation {
     /// Calculates operation hash
     pub fn hash(&self) -> Result<OperationHash> {
         let payload = [self.to_forged_bytes()?, self.signature.to_bytes()?].concat();
-        SignedOperation::operation_hash(payload.as_slice())
+        Self::operation_hash(payload.as_slice())
     }
 }
 
