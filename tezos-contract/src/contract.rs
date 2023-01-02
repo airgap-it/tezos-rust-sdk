@@ -363,7 +363,7 @@ impl CompatibleWith<Type> for DataSequence {
                 let element_type = &value.r#type;
                 self.values()
                     .iter()
-                    .all(|item| item.is_compatible_with(&element_type.clone().into()))
+                    .all(|item| item.is_compatible_with(&element_type))
             }
             Type::Pair(_) => {
                 let pair: Data = Pair::new(self.clone().into_values()).into();
