@@ -12,7 +12,7 @@ num-bigint = "0.4"
 num-integer = "0.1"
 num-traits = { version = "0.2", features = ["i128"] }
 regex = "1"
-sodiumoxide = { version = "0.2", optional = true }
+ed25519-dalek = { version = "1.0.1", optional = true }
 k256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
 p256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
 hex = "0.4"
@@ -23,7 +23,7 @@ cfg-if = "1"
 
 [features]
 full_crypto = ["ed25519", "secp256_k1", "p256"]
-ed25519 = ["dep:sodiumoxide"]
+ed25519 = ["dep:ed25519-dalek"]
 secp256_k1 = ["dep:k256"]
 p256 = ["dep:p256"]
 serde = ["dep:serde"]

@@ -3,8 +3,13 @@ use std::convert::TryInto;
 use derive_more::{Display, Error as DError, From};
 
 use tezos_contract::ContractFetcher;
-use tezos_michelson::michelson::{data, data::bytes, Michelson};
-use tezos_rpc::client::TezosRpc;
+use tezos_core::types::{encoded::Address, number::Nat};
+use tezos_michelson::michelson::{data, Michelson};
+use tezos_operation::operations::UnsignedOperation;
+use tezos_rpc::{
+    client::TezosRpc,
+    models::{block::BlockId, operation::Operation},
+};
 
 #[derive(DError, Display, Debug, From)]
 pub enum Error {
@@ -16,6 +21,8 @@ pub enum Error {
     Utf8 { source: std::string::FromUtf8Error },
     Unknonw,
 }
+
+const PLACEHOLDER_SIGNATURE: &'static str = "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q";
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -31,7 +38,7 @@ async fn main() -> Result<(), Error> {
         .get_by_name("records")
         .unwrap();
     let record_micheline = records
-        .get_value(bytes("lab-void.ith".as_bytes()), None)
+        .get_value(data::bytes("lab-void.ith".as_bytes()), None)
         .await?;
 
     let record_michelson: Michelson = record_micheline.try_into()?;
@@ -72,6 +79,64 @@ async fn main() -> Result<(), Error> {
     let name = String::from_utf8(reverse_record_name_bytes)?;
 
     println!("Name: {}", name);
+
+    let partial_transaction = tezos_domains.call(
+        "transfer".into(),
+        vec![
+            (
+                "from_",
+                data::try_string("tz1UA6Neo7pu6qvUveZQq1ZWwV1YuNgoip4m")?,
+            ),
+            (
+                "txs",
+                data::sequence(vec![data::pair(vec![
+                    data::try_string("tz1UA6Neo7pu6qvUveZQq1ZWwV1YuNgoip4m")?,
+                    data::nat(53u8),
+                    data::nat(100u8),
+                ])]),
+            ),
+        ],
+    )?;
+
+    let source: Address = "tz1UA6Neo7pu6qvUveZQq1ZWwV1YuNgoip4m".try_into()?;
+    let counter: Nat = (tezos_domains
+        .client()
+        .get_contract_counter(&source)
+        .send()
+        .await?
+        + 1u8)
+        .into();
+    let branch = tezos_domains
+        .client()
+        .get_block_hash()
+        .block_id(&BlockId::Level(-2))
+        .send()
+        .await?;
+
+    let transaction = partial_transaction.complete_with(
+        "tz1UA6Neo7pu6qvUveZQq1ZWwV1YuNgoip4m".try_into()?,
+        counter,
+        None,
+        None,
+    );
+
+    println!("Transaction: {:?}", transaction);
+
+    let unsigned_operation = UnsignedOperation::new(branch, vec![transaction.into()]);
+    let estimated_operation = tezos_domains
+        .client()
+        .min_fee(unsigned_operation, None)
+        .await?;
+    let mut operation: Operation = estimated_operation.into();
+    operation.signature = Some(PLACEHOLDER_SIGNATURE.try_into()?);
+
+    let result = tezos_domains
+        .client()
+        .run_operation(&operation)
+        .send()
+        .await?;
+
+    print!("result: {:?}", result);
 
     Ok(())
 }

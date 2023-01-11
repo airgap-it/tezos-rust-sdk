@@ -1,6 +1,7 @@
 pub mod big_maps;
 pub mod constants;
 pub mod contract;
+pub mod delegates;
 
 use super::BlockId;
 

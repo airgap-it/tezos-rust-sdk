@@ -1,0 +1,49 @@
+name: Test Code
+
+on:
+  pull_request:
+    branches:
+    - main
+    - develop
+  push:
+    branches:
+    - main
+    - develop
+    
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Tezos Rust SDK
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          components: rustfmt, clippy
+          target: wasm32-unknown-unknown
+          override: true
+          default: true
+
+      # Uncomment once linting issues have been fixed
+      # Enable this for clippy linting.
+      # - name: Check and Lint Code
+      #   run: cargo clippy -- -D warnings
+
+      - name: Run cargo check
+        run: cargo check --locked
+
+      - name: Run cargo build
+        run: cargo build --release
+
+      - name: Run cargo test
+        run: cargo test
+
+      - name: Run cargo fmt
+        run: cargo fmt --check

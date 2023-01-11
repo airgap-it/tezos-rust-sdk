@@ -17,9 +17,12 @@ mod transaction;
 
 use num_derive::FromPrimitive;
 use tezos_core::{
-    internal::coder::{Decoder, Encoder},
+    internal::{
+        coder::{Decoder, Encoder},
+        crypto::Crypto,
+    },
     types::{
-        encoded::{BlockHash, Encoded, PublicKey, SecretKey, Signature},
+        encoded::{BlockHash, Encoded, OperationHash, PublicKey, SecretKey, Signature},
         mutez::Mutez,
     },
     Tezos,
@@ -206,6 +209,19 @@ impl SignedOperation {
     /// No validation of the signature is performed.
     pub fn from(operation: UnsignedOperation, signature: Signature) -> Self {
         Self::new(operation.branch, operation.contents, signature)
+    }
+
+    /// Static method that calculates and encodes operation hash given its forged bytes (including signature)
+    pub fn operation_hash(payload: &[u8]) -> Result<OperationHash> {
+        let crypto = Crypto::new(None, None, None);
+        let hash = crypto.blake2b(payload, 32)?;
+        OperationHash::from_bytes(&hash).map_err(|e| e.into())
+    }
+
+    /// Calculates operation hash
+    pub fn hash(&self) -> Result<OperationHash> {
+        let payload = [self.to_forged_bytes()?, self.signature.to_bytes()?].concat();
+        Self::operation_hash(payload.as_slice())
     }
 }
 
@@ -747,5 +763,31 @@ mod test {
                 &hex!("7000e9dcc1a4a82c49aeec327b15e9ed457dc22a1ebcfba3089a01fbb801e88a02fffa04"),
             ),
         ]
+    }
+
+    #[test]
+    fn test_operation_hash() -> Result<()> {
+        let opg = SignedOperation::new(
+            "BMNvSHmWUkdonkG2oFwwQKxHUdrYQhUXqxLaSRX9wjMGfLddURC".try_into().unwrap(),
+            vec![
+                Transaction::new(
+                    "tz1V3dHSCJnWPRdzDmZGCZaTMuiTmbtPakmU".try_into().unwrap(),
+                    417u32.into(),
+                    2336132u32.into(),
+                    1527u32.into(),
+                    357u32.into(),
+                    498719u32.into(),
+                    "tz1d5Dr3gjsxQo5XNbjAj558mLy3nGGQgMFA".try_into().unwrap(),
+                    None
+                ).into()
+            ],
+            "sigw1WNdYweqz1c7zKcvZFHQ18swSv4HBWje5quRmixxitPk7z8jtY63qXgKLPVfTM6XGxExPatBWJP44Bknyu3hDHDKJZgY".try_into().unwrap()
+        );
+        let expected: OperationHash = "onpLA98fWzC1xEhfJ19PvvAn4NireAKGvzXZbdCgQyRvbxRjFuD"
+            .try_into()
+            .unwrap();
+        let actual = opg.hash()?;
+        assert_eq!(expected, actual);
+        Ok(())
     }
 }

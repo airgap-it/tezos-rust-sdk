@@ -9,6 +9,7 @@ edition = "2021"
 tezos-core = { path = "../../tezos-core", features = ["full_crypto"] }
 tezos-contract = { path = "../../tezos-contract" }
 tezos-rpc = { path = "../../tezos-rpc" }
+tezos-operation = { path = "../../tezos-operation" }
 tezos-michelson = { path = "../../tezos-michelson" }
 
 tokio = { version = "1.19", features = ["macros", "rt-multi-thread"] }
