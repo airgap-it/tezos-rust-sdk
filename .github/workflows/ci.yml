@@ -9,6 +9,9 @@ on:
     branches:
     - main
     - develop
+    
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   test:
@@ -16,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
@@ -34,21 +37,13 @@ jobs:
       #   run: cargo clippy -- -D warnings
 
       - name: Run cargo check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check --locked
+        run: cargo check --locked
 
       - name: Run cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build --release
+        run: cargo build --release
 
       - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt --check
+        run: cargo fmt --check
