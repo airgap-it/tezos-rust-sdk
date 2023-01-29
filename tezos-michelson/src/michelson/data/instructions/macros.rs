@@ -117,10 +117,10 @@ macro_rules! make_instruction {
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
                 $(
-                    pub $field_name: $field_type,
+                    pub $opt_field_name: Option<$opt_field_type>,
                 )*
                 $(
-                    pub $opt_field_name: Option<$opt_field_type>,
+                    pub $field_name: $field_type,
                 )*
                 $(
                     pub $boxed_field_name: Box<$boxed_field_type>,
@@ -141,10 +141,10 @@ macro_rules! make_instruction {
                     }
                 )?
 
-                pub fn new($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)* $(metadata: $metadata_type)?) -> Self {
+                pub fn new($($opt_field_name: Option<$opt_field_type>,)* $($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)* $(metadata: $metadata_type)?) -> Self {
                     Self {
-                        $($field_name,)*
                         $($opt_field_name,)*
+                        $($field_name,)*
                         $($boxed_field_name: Box::new($boxed_field_name),)*
                         $(
                             metadata: metadata as $metadata_type
@@ -207,12 +207,12 @@ macro_rules! make_instruction {
                 fn from(value: $name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
                     $(
-                        args.push(value.$field_name.into());
-                    )*
-                    $(
                         if let Some(value) = value.$opt_field_name {
                             args.push(value.into());
                         }
+                    )*
+                    $(
+                        args.push(value.$field_name.into());
                     )*
                     $(
                         args.push((*value.$boxed_field_name).into());
@@ -233,12 +233,12 @@ macro_rules! make_instruction {
                 fn from(value: &$name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
                     $(
-                        args.push((&value.$field_name).into());
-                    )*
-                    $(
                         if let Some(value) = &value.$opt_field_name {
                             args.push(value.into());
                         }
+                    )*
+                    $(
+                        args.push((&value.$field_name).into());
                     )*
                     $(
                         args.push((&*value.$boxed_field_name).into());
@@ -268,10 +268,14 @@ macro_rules! make_instruction {
                     let mut args = value.into_args().unwrap_or(vec![]);
                     Ok(Self {
                         $(
-                            $field_name: if !args.is_empty() { args.remove(0).try_into()? } else { Err(Error::InvalidPrimitiveApplication)? },
+                            $opt_field_name: match args.get(0) {
+                                Some(Micheline::Literal(_)) => Some(args.remove(0).try_into()?),
+                                Some(_) => None,
+                                None => None
+                            },
                         )*
                         $(
-                            $opt_field_name: if !args.is_empty() { Some(args.remove(0).try_into()?) } else { None },
+                            $field_name: if !args.is_empty() { args.remove(0).try_into()? } else { Err(Error::InvalidPrimitiveApplication)? },
                         )*
                         $(
                             $boxed_field_name: if !args.is_empty() { Box::new(args.remove(0).try_into()?) } else { Err(Error::InvalidPrimitiveApplication)? },
@@ -283,10 +287,10 @@ macro_rules! make_instruction {
                 }
             }
 
-            pub fn $mod_name<Output>($($field_name: $field_type,)* $($opt_field_name: Option<$opt_field_type>,)* $($boxed_field_name: $boxed_field_type,)*) -> Output where Output: From<$name> {
+            pub fn $mod_name<Output>($($opt_field_name: Option<$opt_field_type>,)* $($field_name: $field_type,)* $($boxed_field_name: $boxed_field_type,)*) -> Output where Output: From<$name> {
                 $name::new(
-                    $($field_name, )*
                     $($opt_field_name, )*
+                    $($field_name, )*
                     $($boxed_field_name,)*
                     $(<$metadata_type>::default(), )?
                 ).into()

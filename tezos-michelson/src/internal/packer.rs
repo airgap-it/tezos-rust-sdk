@@ -1150,8 +1150,8 @@ mod test {
             (
                 &hex!("050200000009051f0200000002034f"),
                 vec![data::instructions::dip(
-                    vec![data::instructions::unit()].into(),
                     None,
+                    vec![data::instructions::unit()].into(),
                 )]
                 .into(),
                 Some(types::lambda(types::unit(), types::unit())),
