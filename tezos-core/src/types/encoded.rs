@@ -777,19 +777,6 @@ make_encoded_structs!(
         use {
             internal::coder::EncodedBytesCoder,
         }
-        struct sc_rollup_address::ScRollupAddress;
-        coder: EncodedBytesCoder;
-        meta {
-            base58_prefix: "scr1",
-            base58_length: 37,
-            bytes_prefix: [1, 118, 132, 217,],
-            bytes_length: 20,
-        }
-    },
-    {
-        use {
-            internal::coder::EncodedBytesCoder,
-        }
         struct smart_rollup_address::SmartRollupAddress;
         coder: EncodedBytesCoder;
         meta {
@@ -797,6 +784,12 @@ make_encoded_structs!(
             base58_length: 36,
             bytes_prefix: [6, 124, 117,],
             bytes_length: 20,
+        }
+        test {
+            string_value: "sr1AqF5LDHZKeVyeNTCXueErVDi1S61PzTRD",
+            bytes_value: [
+                52, 142, 195, 75, 199, 253, 40, 202, 117, 54, 126, 155, 18, 69, 127, 11,31, 31, 206, 127,
+            ],
         }
     },
 );
