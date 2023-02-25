@@ -1,0 +1,74 @@
+{
+    "contents": [
+        {
+            "kind": "transaction",
+            "source": "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb",
+            "fee": "0",
+            "counter": "727",
+            "gas_limit": "1040000",
+            "storage_limit": "60000",
+            "amount": "1000",
+            "destination": "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb",
+            "metadata": {
+                "operation_result": {
+                    "status": "applied",
+                    "balance_updates": [
+                        {
+                            "kind": "contract",
+                            "change": "-1000",
+                            "contract": "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb",
+                            "origin": "block"
+                        },
+                        {
+                            "kind": "contract",
+                            "change": "1000",
+                            "contract": "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb",
+                            "origin": "block"
+                        }
+                    ],
+                    "consumed_gas": "1421",
+                    "consumed_milligas": "1421040"
+                },
+                "balance_updates": [],
+                "internal_operation_results": [
+                    {
+                        "kind": "event",
+                        "source": "KT1M1ynE3YXkM7qLZoMppq6szMbBvxX9yQVL",
+                        "nonce": 0,
+                        "type": {
+                            "prim": "or",
+                            "args": [
+                                {
+                                    "prim": "nat",
+                                    "annots": [
+                                        "%int"
+                                    ]
+                                },
+                                {
+                                    "prim": "string",
+                                    "annots": [
+                                        "%str"
+                                    ]
+                                }
+                            ]
+                        },
+                        "tag": "notify_client",
+                        "payload": {
+                            "prim": "Right",
+                            "args": [
+                                {
+                                    "string": "right"
+                                }
+                            ]
+                        },
+                        "result": {
+                            "status": "applied",
+                            "consumed_milligas": "1000000"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "signature": "sigVBPQhHL3begDeF25s73Drqo381HvC6AVW1nAa5bZYGhBRjHduQtdLa11uFJoQRS8ccYGYZxPYFBdGzFxiRszzS9uV9qbk"
+}

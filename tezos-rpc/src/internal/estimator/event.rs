@@ -1,18 +1,9 @@
 use crate::models::{
     error::RpcError,
-    operation::{
-        operation_contents_and_result::transaction::TransactionMetadata,
-        operation_result::{
-            operations::{
-                event::EventOperationResult, transaction::TransactionOperationResult,
-                InternalOperationResult,
-            },
-            OperationResultStatus,
-        },
-    },
+    operation::operation_result::{operations::event::EventOperationResult, OperationResultStatus},
 };
 
-use super::{RpcMetadata, RpcOperationResult};
+use super::RpcOperationResult;
 
 impl RpcOperationResult for EventOperationResult {
     fn status(&self) -> OperationResultStatus {
@@ -47,4 +38,3 @@ impl RpcOperationResult for EventOperationResult {
         None
     }
 }
-

@@ -447,18 +447,6 @@ mod test {
     use tezos_core::types::encoded::BlockHash;
     use tezos_operation::operations::Transaction;
 
-    use crate::models::{
-        balance_update::{BalanceUpdate, Contract, Kind, Origin},
-        operation::{
-            kind::OperationKind,
-            operation_contents_and_result::transaction::{
-                Transaction as RpcTransaction, TransactionMetadata,
-            },
-            operation_result::operations::transaction::TransactionOperationResult,
-            OperationWithMetadata,
-        },
-    };
-
     use super::*;
 
     #[tokio::test]
@@ -482,53 +470,7 @@ mod test {
             .into()],
         );
 
-        let response = serde_json::to_string(&OperationWithMetadata {
-            contents: vec![
-                OperationContent::Transaction(RpcTransaction {
-                    kind: OperationKind::Transaction,
-                    source: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
-                    fee: 0u8.into(),
-                    counter: "727".into(),
-                    gas_limit: "1040000".into(),
-                    storage_limit: "60000".into(),
-                    amount: 1000u32.into(),
-                    destination: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".try_into()?,
-                    parameters: None,
-                    metadata: Some(TransactionMetadata {
-                        operation_result: TransactionOperationResult {
-                            status: OperationResultStatus::Applied,
-                            storage: None,
-                            big_map_diff: None,
-                            balance_updates: Some(vec![
-                                BalanceUpdate::Contract(Contract {
-                                    kind: Kind::Contract,
-                                    change: "-1000".into(),
-                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(),
-                                    origin: Some(Origin::Block)
-                                }),
-                                BalanceUpdate::Contract(Contract {
-                                    kind: Kind::Contract,
-                                    change: "1000".into(),
-                                    contract: "tz1gru9Tsz1X7GaYnsKR2YeGJLTVm4NwMhvb".into(),
-                                    origin: Some(Origin::Block)
-                                }),
-                            ]),
-                            originated_contracts: None,
-                            consumed_gas: Some("1421".into()),
-                            consumed_milligas: Some("1421040".into()),
-                            storage_size: None,
-                            paid_storage_size_diff: None,
-                            allocated_destination_contract: None,
-                            lazy_storage_diff: None,
-                            errors: None
-                        },
-                        balance_updates: vec![],
-                        internal_operation_results: vec![],
-                    }),
-                })
-            ],
-            signature: Some("sigVBPQhHL3begDeF25s73Drqo381HvC6AVW1nAa5bZYGhBRjHduQtdLa11uFJoQRS8ccYGYZxPYFBdGzFxiRszzS9uV9qbk".try_into()?),
-        })?;
+        let response = include_str!("__TEST_DATA__/run_operation_result.json");
 
         server.mock(|when, then| {
             when.method(POST)
@@ -541,7 +483,7 @@ mod test {
 
         let result = client.min_fee(operation, None).await?;
 
-        assert_eq!(Mutez::from(505u32), result.contents[0].fee());
+        assert_eq!(Mutez::from(615u32), result.contents[0].fee());
 
         Ok(())
     }

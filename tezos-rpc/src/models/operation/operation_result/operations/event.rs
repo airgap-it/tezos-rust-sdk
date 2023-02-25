@@ -24,7 +24,7 @@ pub struct InternalEventOperationResult {
     pub nonce: u16,
     /// Type
     #[serde(rename = "type")]
-    pub type_micheline: Micheline,
+    pub r#type: Micheline,
     /// Tag
     pub tag: String,
     /// Payload
