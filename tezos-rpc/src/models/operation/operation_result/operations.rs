@@ -1,4 +1,5 @@
 pub mod delegation;
+pub mod event;
 pub mod origination;
 pub mod register_global_constant;
 pub mod reveal;
@@ -19,6 +20,7 @@ use {
         DelegationOperationResult, DelegationSuccessfulManagerOperationResult,
         InternalDelegationOperationResult,
     },
+    self::event::{EventOperationResult, InternalEventOperationResult},
     self::origination::{
         InternalOriginationOperationResult, OriginationOperationResult,
         OriginationSuccessfulManagerOperationResult,
@@ -40,6 +42,7 @@ use {
 pub enum OperationResult {
     Reveal(RevealOperationResult),
     Transaction(TransactionOperationResult),
+    Event(EventOperationResult),
     Origination(OriginationOperationResult),
     Delegation(DelegationOperationResult),
     RegisterGlobalConstant(RegisterGlobalConstantOperationResult),
@@ -60,6 +63,7 @@ pub enum SuccessfulManagerOperationResult {
 #[serde(untagged)]
 pub enum InternalOperationResult {
     Transaction(InternalTransactionOperationResult),
+    Event(InternalEventOperationResult),
     Origination(InternalOriginationOperationResult),
     Delegation(InternalDelegationOperationResult),
 }

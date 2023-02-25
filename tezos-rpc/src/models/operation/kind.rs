@@ -17,6 +17,7 @@ pub enum OperationKind {
     Ballot,
     Reveal,
     Transaction,
+    Event,
     Origination,
     Delegation,
     RegisterGlobalConstant,

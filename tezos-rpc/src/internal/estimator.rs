@@ -1,4 +1,5 @@
 mod delegation;
+mod event;
 mod origination;
 mod register_global_constant;
 mod reveal;
@@ -393,6 +394,7 @@ impl InternalOperationResult {
                 .map_or(Ok(OperationLimits::zero()), |result| result.limits()),
             Self::Origination(value) => value.result.limits(),
             Self::Delegation(value) => value.result.limits(),
+            Self::Event(value) => value.result.limits(),
         }
     }
 }
