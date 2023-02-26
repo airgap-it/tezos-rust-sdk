@@ -8,7 +8,7 @@ make_instructions!(
     (Swap, SWAP, swap, 76),
     (GetAndUpdate, GET_AND_UPDATE, get_and_update, 140),
     (Apply, APPLY, apply, 115),
-    (FailWith, FAIL_WITH, fail_with, 39),
+    (FailWith, FAILWITH, failwith, 39),
     (
         Rename,
         RENAME,
@@ -28,7 +28,8 @@ make_instructions!(
         CAST,
         cast,
         87,
-        metadata_type: crate::michelson::metadata::VariableMetadata
+        metadata_type: crate::michelson::metadata::VariableMetadata,
+        (r#type: crate::michelson::types::Type)
     ),
     (
         Cdr,
@@ -118,7 +119,14 @@ make_instructions!(
     ),
     (Slice, SLICE, slice, 111),
     (Pack, PACK, pack, 12),
-    (Unpack, UNPACK, unpack, 13),
+    (
+        Unpack,
+        UNPACK,
+        unpack,
+        13,
+        metadata_type: crate::michelson::metadata::TypeVariableMetadata,
+        (r#type: crate::michelson::types::Type)
+    ),
     (
         Add,
         ADD,
@@ -299,6 +307,13 @@ make_instructions!(
         metadata_type: crate::michelson::metadata::VariableMetadata
     ),
     (
+        SubMutez,
+        SUB_MUTEZ,
+        sub_mutez,
+        147,
+        metadata_type: crate::michelson::metadata::VariableMetadata
+    ),
+    (
         Mul,
         MUL,
         mul,
@@ -436,7 +451,7 @@ make_instructions!(
         SELF,
         self_,
         73,
-        metadata_type: crate::michelson::metadata::VariableMetadata
+        metadata_type: crate::michelson::metadata::FieldMetadata
     ),
     (
         SelfAddress,
@@ -450,7 +465,7 @@ make_instructions!(
         CONTRACT,
         contract,
         85,
-        metadata_type: crate::michelson::metadata::VariableMetadata,
+        metadata_type: crate::michelson::metadata::FieldMetadata,
         (r#type: crate::michelson::types::Type)
     ),
     (TransferTokens, TRANSFER_TOKENS, transfer_tokens, 77),

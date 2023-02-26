@@ -2,6 +2,57 @@ use super::annotations::{Annotation, Kind};
 use crate::{micheline::primitive_application::PrimitiveApplication, Error, Result};
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FieldMetadata {
+    field_name: Option<Annotation>,
+}
+
+impl FieldMetadata {
+    pub fn field_name(&self) -> &Option<Annotation> {
+        &self.field_name
+    }
+
+    pub fn annotations(&self) -> Vec<&Annotation> {
+        vec![self.field_name()]
+            .into_iter()
+            .flat_map(|annot| annot)
+            .collect::<Vec<&Annotation>>()
+    }
+
+    pub fn new(field_name: Option<Annotation>) -> Result<Self> {
+        if let Some(field_name) = &field_name {
+            if !Self::is_valid_field_name(&field_name) {
+                return Err(Error::InvalidAnnotation);
+            }
+        }
+        Ok(Self { field_name })
+    }
+
+    pub fn with_field_name(mut self, name: String) -> Self {
+        self.field_name = Some(Annotation::new_with_kind(Kind::Field, name));
+
+        self
+    }
+
+    fn is_valid_field_name(annotation: &Annotation) -> bool {
+        annotation.kind() == Kind::Field
+    }
+}
+
+impl Default for FieldMetadata {
+    fn default() -> Self {
+        Self { field_name: None }
+    }
+}
+
+impl TryFrom<&PrimitiveApplication> for FieldMetadata {
+    type Error = Error;
+
+    fn try_from(value: &PrimitiveApplication) -> Result<Self> {
+        Self::new(value.first_annot(Kind::Field)?)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct TypeFieldMetadata {
     type_name: Option<Annotation>,
     field_name: Option<Annotation>,

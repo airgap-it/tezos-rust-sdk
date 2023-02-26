@@ -123,7 +123,7 @@ impl Normalizer<Type> for MichelsonNormalizer {
                 types::List::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
             }
             Type::Set(value) => {
-                types::Set::new(Self::normalize(value.r#type), Some(value.metadata)).into()
+                types::Set::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
             }
             Type::Contract(value) => {
                 types::Contract::new(Self::normalize(*value.r#type), Some(value.metadata)).into()
@@ -269,7 +269,7 @@ impl Normalizer<Instruction> for MichelsonNormalizer {
             }
             Instruction::Loop(value) => instructions::Loop::new(Self::normalize(value.body)).into(),
             Instruction::Dip(value) => {
-                instructions::Dip::new(Self::normalize(value.instruction), value.n).into()
+                instructions::Dip::new(value.n, Self::normalize(value.instruction)).into()
             }
             Instruction::EmptyBigMap(value) => instructions::EmptyBigMap::new(
                 Self::normalize(value.key_type),

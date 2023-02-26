@@ -38,12 +38,7 @@ make_types!(
     ),
     (Option, option, 99, boxed: (r#type: Type)),
     (List, list, 95, boxed: (r#type: Type)),
-    (
-        Set,
-        set,
-        102,
-        (r#type: crate::michelson::types::comparables::Type)
-    ),
+    (Set, set, 102, boxed: (r#type: Type)),
     (Operation, operation, 109),
     (Contract, contract, 90, boxed: (r#type: Type)),
     (Ticket, ticket, 135, boxed: (r#type: Type)),
@@ -56,7 +51,13 @@ make_types!(
         boxed: (parameter_type: Type),
         boxed: (return_type: Type)
     ),
-    (Map, map, 96, boxed: (key_type: Type), boxed: (value_type: Type)),
+    (
+        Map,
+        map,
+        96,
+        boxed: (key_type: Type),
+        boxed: (value_type: Type)
+    ),
     (
         BigMap,
         big_map,
