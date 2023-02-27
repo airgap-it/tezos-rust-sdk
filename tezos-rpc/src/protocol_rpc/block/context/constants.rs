@@ -66,6 +66,7 @@ mod tests {
     };
 
     use httpmock::prelude::*;
+    use num_bigint::BigInt;
 
     #[tokio::test]
     async fn test_get_genesis_constants() -> Result<(), Error> {
@@ -140,8 +141,43 @@ mod tests {
 
         let constants = client.get_constants().block_id(&block_id).send().await?;
 
+        assert_eq!(
+            constants.tokens_per_roll,
+            Some(BigInt::from(6_000_000_000u64))
+        );
+        assert_eq!(constants.minimal_stake, None);
         assert_eq!(constants.tx_rollup_sunset_level, Some(3473409));
         assert_eq!(constants.time_between_blocks, None);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_lima_constants() -> Result<(), Error> {
+        let server = MockServer::start();
+        let rpc_url = server.base_url();
+
+        let block_id = BlockId::Head;
+
+        server.mock(|when, then| {
+            when.method(GET)
+                .path(super::path(TezosRpcChainId::Main.value(), &block_id));
+            then.status(200)
+                .header("content-type", "application/json")
+                .body(include_str!("constants/__TEST_DATA__/lima_constants.json"));
+        });
+        let client = TezosRpc::new(rpc_url);
+
+        let constants = client.get_constants().block_id(&block_id).send().await?;
+
+        assert_eq!(constants.tokens_per_roll, None);
+        assert_eq!(
+            constants.minimal_stake,
+            Some(BigInt::from(6_000_000_000u64))
+        );
+        assert_eq!(constants.zk_rollup_enable, Some(false));
+        assert_eq!(constants.zk_rollup_origination_size, Some(4_000));
+        assert_eq!(constants.zk_rollup_min_pending_to_process, Some(10));
 
         Ok(())
     }
