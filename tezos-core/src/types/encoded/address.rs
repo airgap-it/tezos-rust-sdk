@@ -59,7 +59,7 @@ impl From<Address> for String {
     fn from(value: Address) -> Self {
         match value {
             Address::Implicit(value) => value.into(),
-            Address::Originated(_) => value.into(),
+            Address::Originated(value) => value.into(),
         }
     }
 }
@@ -444,6 +444,16 @@ mod test {
             return Ok(());
         }
         Err(Error::InvalidConversion)
+    }
+
+    #[test]
+    fn test_kt1_address_to_string() -> Result<()> {
+        let address: Address = "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo".try_into()?;
+        assert_eq!(
+            String::from(address),
+            "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo"
+        );
+        return Ok(());
     }
 
     #[test]
