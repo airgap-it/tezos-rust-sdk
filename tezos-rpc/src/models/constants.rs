@@ -54,29 +54,23 @@ pub struct Constants {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blocks_per_voting_period: Option<i32>,
     #[serde(
-        skip_serializing_if = "Option::is_none",
+        default,
         deserialize_with = "serde_utils::option_number_of_option_string"
     )]
     pub hard_gas_limit_per_operation: Option<BigInt>,
     #[serde(
-        skip_serializing_if = "Option::is_none",
+        default,
         deserialize_with = "serde_utils::option_number_of_option_string"
     )]
     pub hard_gas_limit_per_block: Option<BigInt>,
     #[serde(
-        skip_serializing_if = "Option::is_none",
+        default,
         deserialize_with = "serde_utils::option_number_of_option_string"
     )]
     pub proof_of_work_threshold: Option<i64>,
     /// Mutez
     #[serde(
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "serde_utils::option_number_of_option_string"
-    )]
-    pub tokens_per_roll: Option<BigInt>,
-    /// Mutez
-    #[serde(
-        skip_serializing_if = "Option::is_none",
+        default,
         deserialize_with = "serde_utils::option_number_of_option_string"
     )]
     pub seed_nonce_revelation_tip: Option<BigInt>,
@@ -235,9 +229,20 @@ pub struct Constants {
     /// integer ∈ [-2^30, 2^30]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sc_rollup_challenge_window_in_blocks: Option<i32>,
-    /// integer ∈ [-2^30, 2^30]
+
+    // Added in Lima protocol
+    /// Mutez
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
+    pub minimal_stake: Option<BigInt>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sc_rollup_max_available_messages: Option<i32>,
+    pub zk_rollup_enable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zk_rollup_origination_size: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zk_rollup_min_pending_to_process: Option<i32>,
 
     // ===========================
     // Removed in recent protocols
@@ -289,6 +294,14 @@ pub struct Constants {
     pub time_between_blocks: Option<Vec<u8>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub liquidity_baking_escape_ema_threshold: Option<i32>,
+    // Removed in Lima protocol
+    #[serde(
+        default,
+        deserialize_with = "serde_utils::option_number_of_option_string"
+    )]
+    pub tokens_per_roll: Option<BigInt>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sc_rollup_max_available_messages: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
