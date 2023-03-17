@@ -1,7 +1,5 @@
-use lazy_static::lazy_static;
 use num_bigint::{BigUint, ToBigUint};
 use num_traits::{Num, Unsigned};
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{
@@ -9,6 +7,7 @@ use std::{
     str::FromStr,
 };
 
+use crate::validation::is_uint;
 use crate::{
     internal::{
         coder::{ConsumingDecoder, Decoder, Encoder, NaturalBytesCoder},
@@ -17,10 +16,6 @@ use crate::{
     types::mutez::Mutez,
     Error, Result,
 };
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
-}
 
 /// An unsigned integer that can be encoded to a Zarith number
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -59,7 +54,7 @@ impl Nat {
     }
 
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_uint(value)
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {

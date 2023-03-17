@@ -9,11 +9,9 @@ edition = "2021"
 derive_more = "0.99.17"
 num-traits = { version = "0.2", features = ["i128"] }
 num-integer = "0.1"
-regex = "1"
 hex = "0.4"
 serde = { version = "1", features = ["derive"], optional = true }
 chrono = { version = "0.4", features = ["std"], default-features = false }
-lazy_static = "1"
 
 tezos-core = { path = "../tezos-core" }
 

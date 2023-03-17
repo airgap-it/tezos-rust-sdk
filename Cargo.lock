@@ -2102,12 +2102,10 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "k256",
- "lazy_static",
  "num-bigint",
  "num-integer",
  "num-traits",
  "p256",
- "regex",
  "serde",
 ]
 
@@ -2119,10 +2117,8 @@ dependencies = [
  "derive_more",
  "hex",
  "hex-literal",
- "lazy_static",
  "num-integer",
  "num-traits",
- "regex",
  "serde",
  "serde_json",
  "tezos-core",

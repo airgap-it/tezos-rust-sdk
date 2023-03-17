@@ -78,7 +78,6 @@ impl Michelson {
     /// use tezos_michelson::michelson::{data, Michelson, types};
     /// use hex_literal::hex;
     ///
-    /// let bytes = hex!("05002a");
     /// let michelson = Michelson::unpack(&bytes, Some(&types::int()));
     /// ```
     pub fn unpack(bytes: &[u8], schema: Option<&Type>) -> Result<Self> {

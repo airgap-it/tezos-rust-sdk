@@ -8,22 +8,17 @@ use derive_more::{
     DivAssign, Mul, MulAssign, Not, Octal, Product, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign,
     Sub, SubAssign, Sum,
 };
-use lazy_static::lazy_static;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::internal::coder::{ConsumingDecoder, Decoder, Encoder, MutezBytesCoder};
 use crate::internal::consumable_list::ConsumableList;
+use crate::validation::is_uint;
 use crate::{Error, Result};
 
 use super::number::Nat;
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new(r"^[0-9]+$").unwrap();
-}
 
 /// Tezos Mutez type. It can be encoded into and initialized from bytes and many other number
 /// representations.
@@ -85,7 +80,7 @@ pub struct Mutez(#[cfg_attr(feature = "serde", serde(serialize_with = "i64_to_st
 
 impl Mutez {
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_uint(value)
     }
 
     pub(super) fn value(&self) -> u64 {

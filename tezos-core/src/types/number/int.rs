@@ -1,8 +1,6 @@
-use lazy_static::lazy_static;
 use num_bigint::{BigInt, ToBigInt};
 use num_integer::Integer;
 use num_traits::{Num, ToPrimitive};
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::{
@@ -10,16 +8,13 @@ use std::{
     str::FromStr,
 };
 
+use crate::validation::is_int;
 use crate::{
     internal::coder::{Decoder, Encoder, IntegerBytesCoder},
     Error, Result,
 };
 
 use super::Nat;
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new(r"^-?[0-9]+$").unwrap();
-}
 
 /// An integer that can be encoded to a Zarith number
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -58,7 +53,7 @@ impl Int {
     }
 
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_int(value)
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {

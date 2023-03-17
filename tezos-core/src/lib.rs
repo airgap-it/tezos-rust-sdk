@@ -127,6 +127,7 @@ pub mod crypto;
 mod error;
 pub mod internal;
 pub mod types;
+pub mod validation;
 
 use cfg_if::cfg_if;
 

@@ -1,14 +1,9 @@
 use hex;
-use lazy_static::lazy_static;
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use tezos_core::validation::is_hex_str;
 
 use crate::{Error, Result};
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
-}
 
 /// A structure representing bytes.
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -32,7 +27,7 @@ impl Bytes {
 
     /// Returns true if the provided value represents a valid hex string, with or without 0x prefix.
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_hex_str(value)
     }
 
     pub fn from_string(value: String) -> Result<Self> {

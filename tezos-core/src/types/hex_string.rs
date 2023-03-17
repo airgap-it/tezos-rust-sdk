@@ -1,15 +1,10 @@
 //! Hex String type.
 
-use lazy_static::lazy_static;
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::validation::is_hex_str;
 use crate::{Error, Result};
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new("^(0x)?([0-9a-fA-F]{2})*$").unwrap();
-}
 
 /// Hexadecimal [String] type-safe representation.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -62,7 +57,7 @@ impl HexString {
     }
 
     fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_hex_str(value)
     }
 }
 

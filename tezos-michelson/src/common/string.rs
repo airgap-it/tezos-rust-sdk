@@ -1,15 +1,10 @@
 use std::str::FromStr;
 
-use lazy_static::lazy_static;
-use regex::Regex;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use tezos_core::validation::is_str;
 
 use crate::{Error, Result};
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new("^(\"|\r|\n|\t|\\b|\\\\|[^\"\\\\])*$").unwrap();
-}
 
 /// A valid tezos String.
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -18,7 +13,7 @@ pub struct String(std::string::String);
 
 impl String {
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_str(value)
     }
 
     pub fn from_string(value: std::string::String) -> Result<Self> {
