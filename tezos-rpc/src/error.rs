@@ -1,9 +1,12 @@
+#[cfg(feature = "std")]
+use derive_more::Error as DError;
 use {
     crate::models::error::RpcErrors,
-    derive_more::{Display, Error, From},
+    derive_more::{Display, From},
 };
 
-#[derive(Debug, From, Display, Error)]
+#[derive(Debug, From, Display)]
+#[cfg_attr(feature = "std", derive(DError))]
 pub enum Error {
     Core {
         source: tezos_core::Error,
@@ -27,7 +30,7 @@ pub enum Error {
     RpcErrorPlain {
         description: String,
     },
-    RpcErrors(#[error(not(source))] RpcErrors),
+    RpcErrors(#[cfg_attr(feature = "std", error(not(source)))] RpcErrors),
     InvalidConversion,
     OperationNotSupported,
 }

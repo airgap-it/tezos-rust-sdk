@@ -1,9 +1,13 @@
 use std::result;
 
-use derive_more::{Display, Error as DError, From};
+use derive_more::{Display, From};
+
+#[cfg(feature = "std")]
+use derive_more::Error as DError;
 
 /// Errors returned by this crate.
-#[derive(DError, Display, Debug, From)]
+#[derive(Display, Debug, From)]
+#[cfg_attr(feature = "std", derive(DError))]
 pub enum Error {
     Internal {
         description: String,
