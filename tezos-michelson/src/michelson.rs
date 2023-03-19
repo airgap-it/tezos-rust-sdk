@@ -82,7 +82,7 @@ impl Michelson {
     /// use tezos_michelson::michelson::{data, Michelson, types};
     /// use hex_literal::hex;
     ///
-    /// let michelson = Michelson::unpack(&bytes, Some(&types::int()));
+    /// let michelson = Michelson::unpack(&hex!("A3"), Some(&types::int()));
     /// ```
     pub fn unpack(bytes: &[u8], schema: Option<&Type>) -> Result<Self> {
         let schema: Option<Micheline> = schema.map(|value| value.into());
