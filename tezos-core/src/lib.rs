@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 //! The `tezos-core` crate defines many common types and basic crypto primitives used by
 //! the `tezos-michelson`, `tezos-operation`, `tezos-rpc` and `tezos-contract` crates.
@@ -122,6 +122,7 @@
 //! let chain_id = ChainId::new("NetXPduhFKtb9SG".into()).unwrap();
 //! let ed25519_public_key = Ed25519PublicKey::new("edpktmJqEE79FtfdWse1gqnUey1vNBkB3zNV99Pi95SRAs8NMatczG".into());
 //! ```
+extern crate alloc;
 
 pub mod crypto;
 mod error;
@@ -142,6 +143,7 @@ pub use crate::{
     crypto::CryptoProvider,
     error::{Error, Result},
 };
+use alloc::boxed::Box;
 
 /// A structure used to provide configurations to other tezos crates.
 ///

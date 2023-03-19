@@ -1,6 +1,7 @@
 use num_bigint::{BigInt, BigUint, ToBigUint};
 use num_traits::{Signed, ToPrimitive, Zero};
 
+use super::natural::NaturalBytesCoder;
 use crate::{
     internal::{
         coder::{ConsumingDecoder, Decoder, Encoder},
@@ -9,8 +10,7 @@ use crate::{
     types::number::Int,
     Error, Result,
 };
-
-use super::natural::NaturalBytesCoder;
+use alloc::{vec, vec::Vec};
 
 pub struct IntegerBytesCoder;
 

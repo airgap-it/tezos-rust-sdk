@@ -1,7 +1,9 @@
 use crate::{internal::consumable_list::ConsumableList, types::encoded::Encoded};
-use num_traits::ToPrimitive;
-
 use crate::{Error, Result};
+use alloc::borrow::ToOwned;
+use alloc::string::String;
+use alloc::vec::Vec;
+use num_traits::ToPrimitive;
 
 use super::{coder::ConsumingDecoder, consumable_list::ConsumableBytes};
 

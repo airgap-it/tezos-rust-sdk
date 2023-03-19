@@ -1,4 +1,4 @@
-use std::ops::Add;
+use core::ops::Add;
 
 use crate::{
     internal::{
@@ -12,6 +12,7 @@ use crate::{
     },
     Error, Result,
 };
+use alloc::vec::Vec;
 
 use super::encoded_group_bytes_coder::{EncodedGroupBytesCoder, TagProvider};
 

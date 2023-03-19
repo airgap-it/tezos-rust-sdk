@@ -1,5 +1,6 @@
-use std::result;
+use core::result;
 
+use alloc::string::String;
 use derive_more::{Display, From};
 
 #[cfg(feature = "std")]

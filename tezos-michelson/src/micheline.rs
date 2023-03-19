@@ -2,6 +2,7 @@ pub mod literals;
 pub mod primitive_application;
 pub mod sequence;
 mod utils;
+use alloc::vec::Vec;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use tezos_core::internal::{

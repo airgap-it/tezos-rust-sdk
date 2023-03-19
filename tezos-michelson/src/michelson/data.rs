@@ -11,6 +11,8 @@ pub use sequence::{sequence, Sequence};
 use tezos_core::internal::normalizer::Normalizer;
 pub use tezos_core::types::number::{Int, Nat};
 
+use alloc::vec::Vec;
+
 make_all_data!(
     custom_cases: {
         Int(Int),
@@ -69,10 +71,10 @@ impl From<i8> for Data {
     }
 }
 
-impl TryFrom<std::string::String> for Data {
+impl TryFrom<alloc::string::String> for Data {
     type Error = Error;
 
-    fn try_from(value: std::string::String) -> Result<Self> {
+    fn try_from(value: alloc::string::String) -> Result<Self> {
         let value: String = value.try_into()?;
         Ok(value.into())
     }
@@ -289,16 +291,16 @@ impl From<Primitive> for crate::michelson::Primitive {
 
 pub fn int<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<Int>,
+    T: core::convert::Into<Int>,
     Output: From<Int>,
 {
     let value: Int = value.into();
     value.into()
 }
 
-pub fn try_int<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_int<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<Int, Error = Error>,
+    T: core::convert::TryInto<Int, Error = Error>,
     Output: From<Int>,
 {
     let value: Int = value.try_into()?;
@@ -307,16 +309,16 @@ where
 
 pub fn nat<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<Nat>,
+    T: core::convert::Into<Nat>,
     Output: From<Nat>,
 {
     let value: Nat = value.into();
     value.into()
 }
 
-pub fn try_nat<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_nat<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<Nat, Error = Error>,
+    T: core::convert::TryInto<Nat, Error = Error>,
     Output: From<Nat>,
 {
     let value: Nat = value.try_into()?;
@@ -325,16 +327,16 @@ where
 
 pub fn string<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<String>,
+    T: core::convert::Into<String>,
     Output: From<String>,
 {
     let value: String = value.into();
     value.into()
 }
 
-pub fn try_string<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_string<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<String, Error = Error>,
+    T: core::convert::TryInto<String, Error = Error>,
     Output: From<String>,
 {
     let value: String = value.try_into()?;
@@ -343,16 +345,16 @@ where
 
 pub fn bytes<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<Bytes>,
+    T: core::convert::Into<Bytes>,
     Output: From<Bytes>,
 {
     let value: Bytes = value.into();
     value.into()
 }
 
-pub fn try_bytes<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_bytes<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<Bytes, Error = Error>,
+    T: core::convert::TryInto<Bytes, Error = Error>,
     Output: From<Bytes>,
 {
     let value: Bytes = value.try_into()?;

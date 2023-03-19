@@ -4,6 +4,10 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tezos_core::validation::is_hex_str;
 
 use crate::{Error, Result};
+use alloc::borrow::ToOwned;
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 /// A structure representing bytes.
 #[derive(Debug, PartialEq, Eq, Clone)]

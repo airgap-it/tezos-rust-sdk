@@ -1,4 +1,4 @@
-use std::result;
+use core::result;
 
 #[cfg(feature = "std")]
 use derive_more::Error as DError;

@@ -6,6 +6,8 @@ use crate::{
     types::encoded::{ContractAddress, ContractHash, Encoded, TraitMetaEncoded},
     Error, Result,
 };
+use alloc::string::String;
+use alloc::vec::Vec;
 
 pub struct ContractAddressBytesCoder;
 

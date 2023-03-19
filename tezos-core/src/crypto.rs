@@ -3,6 +3,7 @@
 pub mod default;
 
 use crate::Result;
+use alloc::vec::Vec;
 
 /// Trait defining the interface of a crypto provider.
 pub trait CryptoProvider {

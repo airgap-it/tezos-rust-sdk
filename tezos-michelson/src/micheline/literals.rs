@@ -4,6 +4,8 @@ use tezos_core::types::number::Nat;
 
 pub use crate::common::{bytes::Bytes, string::String};
 use crate::{Error, Result};
+use alloc::format;
+use alloc::string::ToString;
 pub use tezos_core::types::number::Int;
 
 use super::Micheline;
@@ -166,10 +168,10 @@ impl From<&String> for Micheline {
     }
 }
 
-impl TryFrom<std::string::String> for Literal {
+impl TryFrom<alloc::string::String> for Literal {
     type Error = Error;
 
-    fn try_from(value: std::string::String) -> Result<Self> {
+    fn try_from(value: alloc::string::String) -> Result<Self> {
         let string: String = value.try_into()?;
 
         Ok(Literal::String(string))

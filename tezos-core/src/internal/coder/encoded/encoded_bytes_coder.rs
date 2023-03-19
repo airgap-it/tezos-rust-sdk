@@ -4,6 +4,7 @@ use crate::internal::{
 };
 use crate::types::encoded::{Encoded, MetaEncoded};
 use crate::{Error, Result};
+use alloc::vec::Vec;
 
 pub struct EncodedBytesCoder;
 

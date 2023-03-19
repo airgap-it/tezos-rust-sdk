@@ -1,4 +1,6 @@
 use crate::{Error, Result};
+use alloc::format;
+use alloc::string::String;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {

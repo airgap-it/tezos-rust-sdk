@@ -124,6 +124,8 @@ macro_rules! make_encoded_struct {
             };
             #[cfg(feature = "serde")]
             use serde::{Deserialize, Serialize};
+            use alloc::string::{ToString, String};
+            use alloc::vec::Vec;
 
             /// Structure representing a base58 encoded Tezos value
             #[derive(Debug, Clone, PartialEq, Eq)]

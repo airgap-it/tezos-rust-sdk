@@ -1,11 +1,12 @@
+use alloc::string::ToString;
+use core::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 use num_bigint::{BigUint, ToBigUint};
 use num_traits::{Num, Unsigned};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{Debug, Display},
-    str::FromStr,
-};
 
 use crate::validation::is_uint;
 use crate::{
@@ -16,6 +17,7 @@ use crate::{
     types::mutez::Mutez,
     Error, Result,
 };
+use alloc::{string::String, vec::Vec};
 
 /// An unsigned integer that can be encoded to a Zarith number
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -75,7 +77,7 @@ impl Nat {
 }
 
 impl Display for Nat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }

@@ -1,10 +1,10 @@
+use super::{number::natural::NaturalBytesCoder, ConsumingDecoder, Decoder, Encoder};
 use crate::{
     internal::consumable_list::ConsumableList,
     types::{mutez::Mutez, number::Nat},
     Error, Result,
 };
-
-use super::{number::natural::NaturalBytesCoder, ConsumingDecoder, Decoder, Encoder};
+use alloc::vec::Vec;
 
 pub struct MutezBytesCoder;
 

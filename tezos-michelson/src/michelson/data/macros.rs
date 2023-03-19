@@ -157,6 +157,9 @@ macro_rules! make_data {
                 Error, Result,
             };
             use super::{Data, Primitive};
+            #[allow(unused_imports)]
+            use alloc::vec::Vec;
+            use alloc::vec;
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name;
@@ -260,6 +263,10 @@ macro_rules! make_data {
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
                 Error, Result,
             };
+            use alloc::vec::Vec;
+            use alloc::vec;
+            #[allow(unused_imports)]
+            use alloc::boxed::Box;
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {

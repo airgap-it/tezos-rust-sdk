@@ -1,5 +1,8 @@
 use super::annotations::{Annotation, Kind};
 use crate::{micheline::primitive_application::PrimitiveApplication, Error, Result};
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldMetadata {

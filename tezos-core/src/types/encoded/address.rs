@@ -10,6 +10,10 @@ use crate::{
     internal::coder::{AddressBytesCoder, ContractAddressBytesCoder, ImplicitAddressBytesCoder},
     Error, Result,
 };
+use alloc::format;
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 /// Group of base58 encoded Tezos account addresses, either implicit or originated.
 ///

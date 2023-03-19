@@ -1,6 +1,6 @@
 //! Tezos Mutez type.
 
-use std::{fmt::Debug, str::FromStr};
+use core::{fmt::Debug, str::FromStr};
 
 use derive_more;
 use derive_more::{
@@ -17,6 +17,9 @@ use crate::internal::coder::{ConsumingDecoder, Decoder, Encoder, MutezBytesCoder
 use crate::internal::consumable_list::ConsumableList;
 use crate::validation::is_uint;
 use crate::{Error, Result};
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 use super::number::Nat;
 

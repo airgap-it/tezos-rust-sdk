@@ -12,6 +12,9 @@ use crate::{
         Michelson, PrimType,
     },
 };
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 
 pub struct MichelineNormalizer;
 

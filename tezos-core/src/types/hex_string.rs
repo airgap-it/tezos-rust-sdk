@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::validation::is_hex_str;
 use crate::{Error, Result};
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 /// Hexadecimal [String] type-safe representation.
 #[derive(Debug, Clone, PartialEq, Eq)]

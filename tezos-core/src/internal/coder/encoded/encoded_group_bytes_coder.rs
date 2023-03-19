@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::{
     internal::{
@@ -9,6 +9,7 @@ use crate::{
     types::encoded::Encoded,
     Error, Result,
 };
+use alloc::vec::Vec;
 
 use super::encoded_bytes_coder::EncodedBytesCoder;
 

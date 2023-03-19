@@ -13,6 +13,9 @@ use crate::{
     },
     Error, Result,
 };
+use alloc::string::String;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 
 /// Group of base58 encoded cryptographic keys, either secret or public.
 ///

@@ -18,12 +18,15 @@ use crate::{
     },
     Error, Result,
 };
+use alloc::format;
+use alloc::vec;
+use alloc::vec::Vec;
 
 pub trait Packer<T> {
     type Error;
 
-    fn pack(value: T, schema: Option<&Micheline>) -> std::result::Result<Vec<u8>, Error>;
-    fn unpack(bytes: &[u8], schema: Option<&Micheline>) -> std::result::Result<T, Error>;
+    fn pack(value: T, schema: Option<&Micheline>) -> core::result::Result<Vec<u8>, Error>;
+    fn unpack(bytes: &[u8], schema: Option<&Micheline>) -> core::result::Result<T, Error>;
 }
 
 pub struct MichelinePacker;

@@ -4,6 +4,9 @@ use tezos_core::internal::normalizer::Normalizer;
 
 use super::Micheline;
 use crate::{internal::normalizer::MichelineNormalizer, Error, Result};
+use alloc::format;
+use alloc::string::String;
+use alloc::vec::Vec;
 
 /// `Micheline` primitive application as defined in [the documentation](https://tezos.gitlab.io/shell/micheline.html#bnf-grammar).
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -85,9 +88,12 @@ impl PrimitiveApplication {
         self
     }
 
-    pub fn try_with_mutated_args<F, Error>(mut self, mutator: F) -> std::result::Result<Self, Error>
+    pub fn try_with_mutated_args<F, Error>(
+        mut self,
+        mutator: F,
+    ) -> core::result::Result<Self, Error>
     where
-        F: FnOnce(Vec<Micheline>) -> std::result::Result<Vec<Micheline>, Error>,
+        F: FnOnce(Vec<Micheline>) -> core::result::Result<Vec<Micheline>, Error>,
     {
         if let Some(args) = self.args {
             self.args = Some(mutator(args)?)
@@ -99,9 +105,9 @@ impl PrimitiveApplication {
         mut self,
         index: usize,
         replacer: F,
-    ) -> std::result::Result<Self, Error>
+    ) -> core::result::Result<Self, Error>
     where
-        F: FnOnce(Micheline) -> std::result::Result<Micheline, Error>,
+        F: FnOnce(Micheline) -> core::result::Result<Micheline, Error>,
     {
         if let Some(args) = self.args.as_mut() {
             let element = args.remove(index);

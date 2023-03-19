@@ -3,8 +3,12 @@ pub mod data;
 pub mod metadata;
 pub mod types;
 
+use alloc::format;
+use alloc::str::FromStr;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 use annotations::Annotation;
-use std::str::FromStr;
 use tezos_core::internal::normalizer::Normalizer;
 
 pub use self::{

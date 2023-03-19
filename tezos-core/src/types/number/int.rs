@@ -1,17 +1,21 @@
+use core::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 use num_bigint::{BigInt, ToBigInt};
 use num_integer::Integer;
 use num_traits::{Num, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{Debug, Display},
-    str::FromStr,
-};
 
 use crate::validation::is_int;
 use crate::{
     internal::coder::{Decoder, Encoder, IntegerBytesCoder},
     Error, Result,
+};
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
 };
 
 use super::Nat;
@@ -66,7 +70,7 @@ impl Int {
 }
 
 impl Display for Int {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }

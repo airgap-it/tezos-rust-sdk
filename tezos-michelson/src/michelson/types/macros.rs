@@ -135,6 +135,10 @@ macro_rules! make_type {
                 Error, Result,
             };
             use super::{Type, Primitive};
+            use alloc::vec::Vec;
+            use alloc::vec;
+            #[allow(unused_imports)]
+            use alloc::boxed::Box;
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {
@@ -168,13 +172,13 @@ macro_rules! make_type {
                     }
                 }
 
-                pub fn with_type_annotation<Output>(mut self, annotation: std::string::String) -> Output where Output: From<$name> {
+                pub fn with_type_annotation<Output>(mut self, annotation: alloc::string::String) -> Output where Output: From<$name> {
                     self.metadata = self.metadata.with_type_name(annotation);
 
                     self.into()
                 }
 
-                pub fn with_field_annotation<Output>(mut self, annotation: std::string::String) -> Output where Output: From<$name> {
+                pub fn with_field_annotation<Output>(mut self, annotation: alloc::string::String) -> Output where Output: From<$name> {
                     self.metadata = self.metadata.with_field_name(annotation);
 
                     self.into()
@@ -268,7 +272,7 @@ macro_rules! make_type {
                 #[allow(unused)]
                 fn from(value: $name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
-                    let annots: Vec<std::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
+                    let annots: Vec<alloc::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
                     $(
                         args.push(value.$field_name.into());
                     )*
@@ -289,7 +293,7 @@ macro_rules! make_type {
                 #[allow(unused)]
                 fn from(value: &$name) -> Self {
                     let mut args: Vec<Micheline> = vec![];
-                    let annots: Vec<std::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
+                    let annots: Vec<alloc::string::String> = value.annotations().into_iter().map(|annot| annot.value().into()).collect();
                     $(
                         args.push((&value.$field_name).into());
                     )*
