@@ -49,6 +49,15 @@ pub enum Error {
     InvalidContractAddress,
     InvalidHexString,
     CryptoProviderNotSet,
+    #[cfg(feature = "secp256_k1")]
+    Secp256K1Signing {
+        source: k256::ecdsa::signature::Error,
+    },
+    #[from(ignore)]
+    #[cfg(feature = "p256")]
+    P256Signing {
+        source: p256::ecdsa::signature::Error,
+    },
 }
 
 pub type Result<T> = result::Result<T, Error>;
