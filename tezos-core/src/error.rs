@@ -40,6 +40,12 @@ pub enum Error {
     TryFromBigUInt {
         source: num_bigint::TryFromBigIntError<num_bigint::BigUint>,
     },
+    Blake2InvalidOutputSize {
+        source: blake2::digest::InvalidOutputSize,
+    },
+    Blake2InvalidBufferSize {
+        source: blake2::digest::InvalidBufferSize,
+    },
     InvalidSecretKeyBytes,
     InvalidPublicKeyBytes,
     InvalidSignatureBytes,
@@ -49,6 +55,15 @@ pub enum Error {
     InvalidContractAddress,
     InvalidHexString,
     CryptoProviderNotSet,
+    #[cfg(feature = "secp256_k1")]
+    Secp256K1Signing {
+        source: k256::ecdsa::signature::Error,
+    },
+    #[from(ignore)]
+    #[cfg(feature = "p256")]
+    P256Signing {
+        source: p256::ecdsa::signature::Error,
+    },
 }
 
 pub type Result<T> = result::Result<T, Error>;

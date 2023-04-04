@@ -21,16 +21,7 @@ impl Crypto {
     }
 
     pub fn blake2b(&self, message: &[u8], size: usize) -> Result<Vec<u8>> {
-        use blake2::{
-            digest::{Update, VariableOutput},
-            Blake2bVar,
-        };
-        let mut hasher = Blake2bVar::new(size).unwrap();
-        hasher.update(message);
-        let mut buf = Vec::<u8>::new();
-        buf.resize(size, 0);
-        hasher.finalize_variable(&mut buf).unwrap();
-        Ok(buf)
+        blake2b(message, size)
     }
 
     pub fn sign_ed25519(&self, message: &[u8], secret: &[u8]) -> Result<Vec<u8>> {
@@ -84,4 +75,17 @@ impl Crypto {
             .ok_or(Error::CryptoProviderNotSet)?
             .verify(message, signature, public_key)
     }
+}
+
+pub fn blake2b(message: &[u8], size: usize) -> Result<Vec<u8>> {
+    use blake2::{
+        digest::{Update, VariableOutput},
+        Blake2bVar,
+    };
+    let mut hasher = Blake2bVar::new(size)?;
+    hasher.update(message);
+    let mut buf = Vec::<u8>::new();
+    buf.resize(size, 0);
+    hasher.finalize_variable(&mut buf)?;
+    Ok(buf)
 }
