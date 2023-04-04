@@ -2,10 +2,14 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    internal::coder::{EncodedBytesCoder, PublicKeyBytesCoder},
+    internal::{
+        coder::{EncodedBytesCoder, PublicKeyBytesCoder},
+        crypto::blake2b,
+    },
     types::encoded::{
-        Ed25519PublicKey, Ed25519SecretKey, Encoded, MetaEncoded, P256PublicKey, P256SecretKey,
-        Secp256K1PublicKey, Secp256K1SecretKey,
+        Ed25519PublicKey, Ed25519PublicKeyHash, Ed25519SecretKey, Encoded, ImplicitAddress,
+        MetaEncoded, P256PublicKey, P256PublicKeyHash, P256SecretKey, Secp256K1PublicKey,
+        Secp256K1PublicKeyHash, Secp256K1SecretKey,
     },
     Error, Result,
 };
@@ -280,6 +284,31 @@ impl PublicKey {
             || Secp256K1PublicKey::is_valid_bytes(value)
             || P256PublicKey::is_valid_bytes(value)
     }
+
+    /// Base58 encoded address
+    pub fn bs58_address(&self) -> Result<String> {
+        self.address().map(|address| address.into_string())
+    }
+
+    fn address(&self) -> Result<ImplicitAddress> {
+        fn address_of<T: Encoded>(v: &[u8]) -> Result<T> {
+            blake2b(v, 20).map(|hash| T::from_bytes(hash.as_slice()))?
+        }
+
+        let address = match self {
+            Self::Ed25519(value) => {
+                ImplicitAddress::from(address_of::<Ed25519PublicKeyHash>(&value.to_bytes()?)?)
+            }
+            Self::Secp256K1(value) => {
+                ImplicitAddress::from(address_of::<Secp256K1PublicKeyHash>(&value.to_bytes()?)?)
+            }
+            Self::P256(value) => {
+                ImplicitAddress::from(address_of::<P256PublicKeyHash>(&value.to_bytes()?)?)
+            }
+        };
+
+        Ok(address)
+    }
 }
 
 impl Encoded for PublicKey {
@@ -419,6 +448,15 @@ mod test {
     }
 
     #[test]
+    fn test_edpk_to_tz1() {
+        let key: PublicKey = "edpkuF5y5V7NNH5xKMCKHHqVDzq6YuUXiPT3FFjA9CGnht6xCgziTe"
+            .try_into()
+            .unwrap();
+        let address = key.bs58_address().unwrap();
+        assert_eq!(address, "tz1VZFmv9dJj7QFs8nv5JTjJiYJxVQXqmDMv".to_string())
+    }
+
+    #[test]
     fn test_edpk_secret_key() -> Result<()> {
         let key: SecretKey = "edskRhKTQkgxb7CNTr31rzy3xdkyKaYX9hySAnZYJTPmUzPB7WU4NL7C8pmtQDgRqQ4jDw4Ugh6Y1UW5nvo7UYrRbyhVYK1YuR".try_into()?;
         if let SecretKey::Ed25519(key) = key {
@@ -472,6 +510,15 @@ mod test {
     }
 
     #[test]
+    fn test_sppk_to_tz2() {
+        let key: PublicKey = "sppkDN74FpFyXiHUe7MZS7rwDzzwb2esc21355LEcSExN67KdNnAfqA"
+            .try_into()
+            .unwrap();
+        let address = key.bs58_address().unwrap();
+        assert_eq!(address, "tz2WHHyhmspQDmKzAZmDmUyqkhcS3BA5EiuU".to_string())
+    }
+
+    #[test]
     fn test_secp_256_k1_secret_key() -> Result<()> {
         let key: SecretKey = "spsk2WUw2TFXQq2CsrNhB7EfFzdhMyNvGoYgD4uGQ6e17MgoRDv1co".try_into()?;
         if let SecretKey::Secp256K1(key) = key {
@@ -522,6 +569,15 @@ mod test {
             return Ok(());
         }
         Err(Error::InvalidConversion)
+    }
+
+    #[test]
+    fn test_p2pk_to_tz2() {
+        let key: PublicKey = "p2pkDkL6thzTwyPjpmMotSqeKy1MAftLrseqTALwBhHwUtXRmFV983f"
+            .try_into()
+            .unwrap();
+        let address = key.bs58_address().unwrap();
+        assert_eq!(address, "tz3c6Z7Vaz3jDfpKLof6PSJsHsUDYjBbQpbn".to_string())
     }
 
     #[test]

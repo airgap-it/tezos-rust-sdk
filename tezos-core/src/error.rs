@@ -40,6 +40,12 @@ pub enum Error {
     TryFromBigUInt {
         source: num_bigint::TryFromBigIntError<num_bigint::BigUint>,
     },
+    Blake2InvalidOutputSize {
+        source: blake2::digest::InvalidOutputSize,
+    },
+    Blake2InvalidBufferSize {
+        source: blake2::digest::InvalidBufferSize,
+    },
     InvalidSecretKeyBytes,
     InvalidPublicKeyBytes,
     InvalidSignatureBytes,
