@@ -115,6 +115,7 @@ pub enum OperationContent {
     TxRollupRejection(TxRollupRejection),
     TransferTicket(TransferTicket),
     TxRollupDispatchTickets(TxRollupDispatchTickets),
+    Unknown(serde_json::Value), // must be the last one
 }
 
 impl From<tezos_operation::operations::OperationContent> for OperationContent {
@@ -215,7 +216,8 @@ impl TryFrom<OperationContent> for tezos_operation::operations::OperationContent
             | OperationContent::TxRollupRemoveCommitment(_)
             | OperationContent::TxRollupRejection(_)
             | OperationContent::TransferTicket(_)
-            | OperationContent::TxRollupDispatchTickets(_) => Err(Error::OperationNotSupported),
+            | OperationContent::TxRollupDispatchTickets(_)
+            | OperationContent::Unknown(_) => Err(Error::OperationNotSupported),
         }
     }
 }
