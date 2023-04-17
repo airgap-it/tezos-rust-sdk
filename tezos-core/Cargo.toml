@@ -7,19 +7,24 @@ edition = "2021"
 
 [dependencies]
 derive_more = "0.99.17"
-bs58 = { version = "0.4", features = ["check"] }
-num-bigint = "0.4"
-num-integer = "0.1"
-num-traits = { version = "0.2", features = ["i128"] }
+bs58 = { version = "0.4", features = ["check", "alloc"], default-features = false }
+num-bigint = { version = "0.4", default-features = false }
+num-integer = { version = "0.1", default-features = false }
+num-traits = { version = "0.2", default-features = false }
 ed25519-dalek = { version = "1.0.1", optional = true }
-k256 = { version = "0.13", optional = true, features = ["ecdsa"] }
-p256 = { version = "0.13", optional = true, features = ["ecdsa"] }
-hex = "0.4"
+k256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
+p256 = { version = "0.11", optional = true, features = ["ecdsa", "sha256"] }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
 serde = { version = "1", features = ["derive"], optional = true }
-blake2 = "0.10"
+blake2 = { version = "0.10", default-features = false }
 cfg-if = "1"
 
 [features]
+default = ["std"]
+std = [
+	"bs58/std",
+	"blake2/std"
+]
 full_crypto = ["ed25519", "secp256_k1", "p256"]
 ed25519 = ["dep:ed25519-dalek"]
 secp256_k1 = ["dep:k256"]

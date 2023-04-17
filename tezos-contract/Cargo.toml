@@ -10,10 +10,10 @@ derive_more = "0.99.17"
 async-trait = "0.1"
 
 # Local dependencies
-tezos-core = { path = "../tezos-core" }
-tezos-rpc = { path = "../tezos-rpc", default-features = false }
-tezos-michelson = { path = "../tezos-michelson" }
-tezos-operation = { path = "../tezos-operation" }
+tezos-core = { path = "../tezos-core", version = "0.1.4" }
+tezos-rpc = { path = "../tezos-rpc", version = "0.1.4", default-features = false }
+tezos-michelson = { path = "../tezos-michelson", version = "0.1.4" }
+tezos-operation = { path = "../tezos-operation", version = "0.1.4" }
 
 [dev-dependencies]
 tokio = { version = "1.19", features = ["macros"] }

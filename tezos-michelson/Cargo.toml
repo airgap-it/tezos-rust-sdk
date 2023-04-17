@@ -6,18 +6,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-derive_more = "0.99.17"
-num-traits = { version = "0.2", features = ["i128"] }
-num-integer = "0.1"
-hex = "0.4"
+derive_more = { version = "0.99.17", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+num-integer = { version = "0.1", default-features = false }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
 serde = { version = "1", features = ["derive"], optional = true }
-chrono = { version = "0.4", features = ["std"], default-features = false }
+chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 
-tezos-core = { path = "../tezos-core" }
+tezos-core = { path = "../tezos-core", version = "0.1.4", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
 serde_json = { version = "1", features = ["preserve_order"] }
 
 [features]
+default = ["std"]
+std = [
+	"tezos-core/std",
+]
 serde = ["dep:serde", "tezos-core/serde"]
