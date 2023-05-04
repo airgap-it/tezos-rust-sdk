@@ -4,7 +4,7 @@ A set of Rust libraries to interact with the Tezos blockchain.
 
 ## Use Cases
 
-The Tezos Swift SDK ships with tools that can be used to:
+The Tezos Rust SDK ships with tools that can be used to:
 
 *General*
 - convert a Base58 encoded string to bytes and vice versa
