@@ -56,7 +56,7 @@ pub use self::{
 ///     let contract_address: ContractHash = "KT1J4CiyWPmtFPXAjpgBezM5hoVHXHNzWBHK".try_into().unwrap();
 ///     let contract = rpc.contract_at(contract_address, None).await.unwrap();
 ///     let ledger = contract.storage().big_maps().get_by_name("ledger").unwrap();
-///     let balance: Nat = ledger.get_value(pair(vec![try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f").unwrap(), 0u8.into()]), None).await.unwrap().try_into().unwrap();
+///     let balance: Nat = ledger.get_value(&rpc, pair(vec![try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f").unwrap(), 0u8.into()]), None).await.unwrap().try_into().unwrap();
 /// }
 ///
 /// ```
