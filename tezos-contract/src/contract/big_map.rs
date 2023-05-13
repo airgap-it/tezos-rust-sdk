@@ -16,16 +16,15 @@ use tezos_rpc::{
 use crate::{utils::AnyAnnotationValue, Result};
 
 #[derive(Debug, Clone)]
-pub struct BigMap<'a, HttpClient: Http> {
+pub struct BigMap {
     pub id: u32,
     pub name: Option<String>,
     pub key_type: Type,
     pub value_type: Type,
-    client: &'a TezosRpc<HttpClient>,
 }
 
-impl<'a, HttpClient: Http> BigMap<'a, HttpClient> {
-    pub(crate) fn new(big_map_type: BigMapType, id: u32, client: &'a TezosRpc<HttpClient>) -> Self {
+impl BigMap {
+    pub(crate) fn new(big_map_type: BigMapType, id: u32) -> Self {
         let name: Option<String> = big_map_type
             .metadata()
             .any_annotation_value()
@@ -35,16 +34,19 @@ impl<'a, HttpClient: Http> BigMap<'a, HttpClient> {
             name,
             key_type: *big_map_type.key_type,
             value_type: *big_map_type.value_type,
-            client,
         }
     }
 
-    pub async fn get_value(&self, key: Michelson, block_id: Option<&BlockId>) -> Result<Micheline> {
+    pub async fn get_value<HttpClient: Http>(
+        &self,
+        client: &TezosRpc<HttpClient>,
+        key: Michelson,
+        block_id: Option<&BlockId>,
+    ) -> Result<Micheline> {
         let packed_key = key.pack(Some(&self.key_type))?;
         let hashed = Tezos::default().get_crypto().blake2b(&packed_key, 32)?;
         let script_expr: ScriptExprHash = (&hashed).try_into()?;
-        let mut request = self
-            .client
+        let mut request = client
             .get_big_map_value(self.id, &script_expr)
             .unparsing_mode(UnparsingMode::Optimized_legacy);
         if let Some(block_id) = block_id {
@@ -58,16 +60,16 @@ impl<'a, HttpClient: Http> BigMap<'a, HttpClient> {
 }
 
 #[derive(Debug, Clone)]
-pub struct BigMapContainer<'a, HttpClient: Http> {
-    big_maps: Vec<BigMap<'a, HttpClient>>,
+pub struct BigMapContainer {
+    big_maps: Vec<BigMap>,
 }
 
-impl<'a, HttpClient: Http> BigMapContainer<'a, HttpClient> {
-    pub fn new(big_maps: Vec<BigMap<'a, HttpClient>>) -> Self {
+impl BigMapContainer {
+    pub fn new(big_maps: Vec<BigMap>) -> Self {
         BigMapContainer { big_maps }
     }
 
-    pub fn get_by_name(&self, name: &str) -> Option<&BigMap<'a, HttpClient>> {
+    pub fn get_by_name(&self, name: &str) -> Option<&BigMap> {
         self.big_maps.iter().find(|big_map| {
             big_map
                 .name
@@ -76,7 +78,7 @@ impl<'a, HttpClient: Http> BigMapContainer<'a, HttpClient> {
         })
     }
 
-    pub fn get_by_index(&self, index: usize) -> Option<&BigMap<'a, HttpClient>> {
+    pub fn get_by_index(&self, index: usize) -> Option<&BigMap> {
         if index < self.big_maps.len() {
             return Some(&self.big_maps[index]);
         }
