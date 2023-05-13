@@ -61,32 +61,26 @@ pub use self::{
 ///
 /// ```
 #[derive(Debug, Clone)]
-pub struct Contract<'a, HttpClient: Http> {
+pub struct Contract {
     address: ContractHash,
-    storage: Storage<'a, HttpClient>,
-    client: &'a TezosRpc<HttpClient>,
-
+    storage: Storage,
     entrypoints: MappedEntrypoints,
 }
 
-impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
+impl Contract {
     pub fn address(&self) -> &ContractHash {
         &self.address
     }
 
-    pub fn storage(&self) -> &Storage<'a, HttpClient> {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 
-    pub fn client(&self) -> &'a TezosRpc<HttpClient> {
-        self.client
-    }
-
-    pub(crate) async fn new(
+    pub(crate) async fn new<HttpClient: Http>(
+        client: &TezosRpc<HttpClient>,
         address: ContractHash,
-        client: &'a TezosRpc<HttpClient>,
         block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>> {
+    ) -> Result<Contract> {
         let generic_address: Address = (&address).into();
         let mut request = client
             .get_contract_script(&generic_address)
@@ -106,8 +100,7 @@ impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
         let entrypoints = MappedEntrypoints::new(parameter)?;
         return Ok(Contract {
             address,
-            storage: Storage::new(script, client)?,
-            client,
+            storage: Storage::new(script)?,
             entrypoints,
         });
     }
@@ -470,21 +463,21 @@ impl CompatibleWith<Type> for DataSome {
 }
 
 #[async_trait]
-pub trait ContractFetcher<'a, HttpClient: Http + Sync> {
+pub trait ContractFetcher {
     async fn contract_at(
-        &'a self,
+        &self,
         address: ContractHash,
         block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>>;
+    ) -> Result<Contract>;
 }
 
 #[async_trait]
-impl<'a, HttpClient: Http + Sync> ContractFetcher<'a, HttpClient> for TezosRpc<HttpClient> {
+impl<HttpClient: Http + Sync> ContractFetcher for TezosRpc<HttpClient> {
     async fn contract_at(
-        &'a self,
+        &self,
         address: ContractHash,
         block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>> {
-        Contract::<'a, HttpClient>::new(address, self, block_id).await
+    ) -> Result<Contract> {
+        Contract::new(self, address, block_id).await
     }
 }
