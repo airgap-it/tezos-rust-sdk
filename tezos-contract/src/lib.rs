@@ -203,7 +203,7 @@
 //! }
 //! ```
 
-pub mod contract;
+mod contract;
 mod error;
 mod utils;
 
