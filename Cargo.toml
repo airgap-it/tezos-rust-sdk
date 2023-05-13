@@ -1,0 +1,15 @@
+[workspace]
+
+members = [
+    "tezos-core",
+    "tezos-michelson",
+    "tezos-operation",
+    "tezos-rpc",
+    "tezos-contract"
+]
+
+exclude = [
+    "samples/michelson-sample",
+    "samples/operation-sample",
+    "samples/contract-sample",
+]

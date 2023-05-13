@@ -1,5 +1,5 @@
 mod big_map;
-pub mod entrypoints;
+mod entrypoints;
 mod storage;
 
 use async_trait::async_trait;
