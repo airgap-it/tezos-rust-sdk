@@ -25,7 +25,10 @@ use tezos_operation::operations::{Entrypoint, Parameters, Transaction};
 use tezos_rpc::{
     client::TezosRpc,
     http::Http,
-    models::{block::BlockId, contract::UnparsingMode},
+    models::{
+        block::BlockId,
+        contract::{ContractScript, UnparsingMode},
+    },
 };
 
 use crate::{utils::AnyAnnotationValue, Error, Result};
@@ -76,33 +79,16 @@ impl Contract {
         &self.storage
     }
 
-    pub(crate) async fn new<HttpClient: Http>(
-        client: &TezosRpc<HttpClient>,
+    pub(crate) fn new(
         address: ContractHash,
-        block_id: Option<&BlockId>,
+        script: ContractScript,
+        entrypoints: MappedEntrypoints,
     ) -> Result<Contract> {
-        let generic_address: Address = (&address).into();
-        let mut request = client
-            .get_contract_script(&generic_address)
-            .unparsing_mode(UnparsingMode::Optimized_legacy);
-        if let Some(block_id) = block_id {
-            request = request.block_id(block_id);
-        }
-        let script = request.send().await?;
-        let parameter: Parameter = script
-            .code
-            .values()
-            .iter()
-            .nth(0)
-            .ok_or(Error::InvalidContractScript)?
-            .clone()
-            .try_into()?;
-        let entrypoints = MappedEntrypoints::new(parameter)?;
-        return Ok(Contract {
+        Ok(Contract {
             address,
             storage: Storage::new(script)?,
             entrypoints,
-        });
+        })
     }
 
     pub fn call(
@@ -478,6 +464,23 @@ impl<HttpClient: Http + Sync> ContractFetcher for TezosRpc<HttpClient> {
         address: ContractHash,
         block_id: Option<&BlockId>,
     ) -> Result<Contract> {
-        Contract::new(self, address, block_id).await
+        let generic_address: Address = (&address).into();
+        let mut request = self
+            .get_contract_script(&generic_address)
+            .unparsing_mode(UnparsingMode::Optimized_legacy);
+        if let Some(block_id) = block_id {
+            request = request.block_id(block_id);
+        }
+        let script = request.send().await?;
+        let parameter: Parameter = script
+            .code
+            .values()
+            .iter()
+            .nth(0)
+            .ok_or(Error::InvalidContractScript)?
+            .clone()
+            .try_into()?;
+        let entrypoints = MappedEntrypoints::new(parameter)?;
+        Contract::new(address, script, entrypoints)
     }
 }

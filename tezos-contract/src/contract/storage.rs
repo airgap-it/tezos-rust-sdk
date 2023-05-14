@@ -9,7 +9,7 @@ use tezos_michelson::{
     },
     MichelinePacker,
 };
-use tezos_rpc::{client::TezosRpc, http::Http, models::contract::ContractScript};
+use tezos_rpc::models::contract::ContractScript;
 
 use crate::{utils::AnyAnnotationValue, Error, Result};
 
