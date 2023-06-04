@@ -126,7 +126,7 @@ macro_rules! make_encoded_struct {
             use serde::{Deserialize, Serialize};
 
             /// Structure representing a base58 encoded Tezos value
-            #[derive(Debug, Clone, PartialEq, Eq)]
+            #[derive(Debug, Clone, PartialEq, Eq, Hash)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde( try_from = "String"))]
             pub struct $name(String);
 
