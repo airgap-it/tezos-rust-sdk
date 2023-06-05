@@ -13,7 +13,7 @@ hex = { version = "0.4", default-features = false, features = ["alloc"] }
 serde = { version = "1", features = ["derive"], optional = true }
 chrono = { version = "0.4", default-features = false, features = ["alloc"] }
 
-tezos-core = { path = "../tezos-core", version = "0.1.4", default-features = false }
+tezos-core = { path = "../tezos-core", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
