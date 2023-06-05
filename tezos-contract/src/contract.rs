@@ -25,7 +25,10 @@ use tezos_operation::operations::{Entrypoint, Parameters, Transaction};
 use tezos_rpc::{
     client::TezosRpc,
     http::Http,
-    models::{block::BlockId, contract::UnparsingMode},
+    models::{
+        block::BlockId,
+        contract::{ContractScript, UnparsingMode},
+    },
 };
 
 use crate::{utils::AnyAnnotationValue, Error, Result};
@@ -56,60 +59,36 @@ pub use self::{
 ///     let contract_address: ContractHash = "KT1J4CiyWPmtFPXAjpgBezM5hoVHXHNzWBHK".try_into().unwrap();
 ///     let contract = rpc.contract_at(contract_address, None).await.unwrap();
 ///     let ledger = contract.storage().big_maps().get_by_name("ledger").unwrap();
-///     let balance: Nat = ledger.get_value(pair(vec![try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f").unwrap(), 0u8.into()]), None).await.unwrap().try_into().unwrap();
+///     let balance: Nat = ledger.get_value(&rpc, pair(vec![try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f").unwrap(), 0u8.into()]), None).await.unwrap().try_into().unwrap();
 /// }
 ///
 /// ```
 #[derive(Debug, Clone)]
-pub struct Contract<'a, HttpClient: Http> {
+pub struct Contract {
     address: ContractHash,
-    storage: Storage<'a, HttpClient>,
-    client: &'a TezosRpc<HttpClient>,
-
+    storage: Storage,
     entrypoints: MappedEntrypoints,
 }
 
-impl<'a, HttpClient: Http> Contract<'a, HttpClient> {
+impl Contract {
     pub fn address(&self) -> &ContractHash {
         &self.address
     }
 
-    pub fn storage(&self) -> &Storage<'a, HttpClient> {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 
-    pub fn client(&self) -> &'a TezosRpc<HttpClient> {
-        self.client
-    }
-
-    pub(crate) async fn new(
+    pub(crate) fn new(
         address: ContractHash,
-        client: &'a TezosRpc<HttpClient>,
-        block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>> {
-        let generic_address: Address = (&address).into();
-        let mut request = client
-            .get_contract_script(&generic_address)
-            .unparsing_mode(UnparsingMode::Optimized_legacy);
-        if let Some(block_id) = block_id {
-            request = request.block_id(block_id);
-        }
-        let script = request.send().await?;
-        let parameter: Parameter = script
-            .code
-            .values()
-            .iter()
-            .nth(0)
-            .ok_or(Error::InvalidContractScript)?
-            .clone()
-            .try_into()?;
-        let entrypoints = MappedEntrypoints::new(parameter)?;
-        return Ok(Contract {
+        script: ContractScript,
+        entrypoints: MappedEntrypoints,
+    ) -> Result<Contract> {
+        Ok(Contract {
             address,
-            storage: Storage::new(script, client)?,
-            client,
+            storage: Storage::new(script)?,
             entrypoints,
-        });
+        })
     }
 
     pub fn call(
@@ -470,21 +449,38 @@ impl CompatibleWith<Type> for DataSome {
 }
 
 #[async_trait]
-pub trait ContractFetcher<'a, HttpClient: Http + Sync> {
+pub trait ContractFetcher {
     async fn contract_at(
-        &'a self,
+        &self,
         address: ContractHash,
         block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>>;
+    ) -> Result<Contract>;
 }
 
 #[async_trait]
-impl<'a, HttpClient: Http + Sync> ContractFetcher<'a, HttpClient> for TezosRpc<HttpClient> {
+impl<HttpClient: Http + Sync> ContractFetcher for TezosRpc<HttpClient> {
     async fn contract_at(
-        &'a self,
+        &self,
         address: ContractHash,
         block_id: Option<&BlockId>,
-    ) -> Result<Contract<'a, HttpClient>> {
-        Contract::<'a, HttpClient>::new(address, self, block_id).await
+    ) -> Result<Contract> {
+        let generic_address: Address = (&address).into();
+        let mut request = self
+            .get_contract_script(&generic_address)
+            .unparsing_mode(UnparsingMode::Optimized_legacy);
+        if let Some(block_id) = block_id {
+            request = request.block_id(block_id);
+        }
+        let script = request.send().await?;
+        let parameter: Parameter = script
+            .code
+            .values()
+            .iter()
+            .nth(0)
+            .ok_or(Error::InvalidContractScript)?
+            .clone()
+            .try_into()?;
+        let entrypoints = MappedEntrypoints::new(parameter)?;
+        Contract::new(address, script, entrypoints)
     }
 }

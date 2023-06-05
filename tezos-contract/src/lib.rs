@@ -152,7 +152,7 @@
 //!     let rpc = TezosRpc::new("https://testnet-tezos.giganode.io".into());
 //!     let contract = rpc.contract_at("KT1HNqxFJxnmUcX8wF915wxxaAAU4ixDwWQ7".try_into()?, None).await?;
 //!     let big_map = contract.storage().big_maps().get_by_name("ledger").unwrap();
-//!     let big_map_value = big_map.get_value(try_string("my_key").unwrap(), None).await?;
+//!     let big_map_value = big_map.get_value(&rpc, try_string("my_key").unwrap(), None).await?;
 //!     Ok(())
 //! }
 //! ```
@@ -267,6 +267,7 @@ mod test {
 
         let balance: Nat = ledger
             .get_value(
+                &rpc,
                 pair(vec![
                     try_string("tz1YY1LvD6TFH4z74pvxPQXBjAKHE5tB5Q8f")?,
                     0u8.into(),

@@ -9,24 +9,24 @@ use tezos_michelson::{
     },
     MichelinePacker,
 };
-use tezos_rpc::{client::TezosRpc, http::Http, models::contract::ContractScript};
+use tezos_rpc::models::contract::ContractScript;
 
 use crate::{utils::AnyAnnotationValue, Error, Result};
 
 use super::big_map::{BigMap, BigMapContainer};
 
 #[derive(Debug, Clone)]
-pub struct Storage<'a, HttpClient: Http> {
-    big_maps: BigMapContainer<'a, HttpClient>,
+pub struct Storage {
+    big_maps: BigMapContainer,
     mapped: MappedStorage,
 }
 
-impl<'a, HttpClient: Http> Storage<'a, HttpClient> {
-    pub fn big_maps(&self) -> &BigMapContainer<'a, HttpClient> {
+impl Storage {
+    pub fn big_maps(&self) -> &BigMapContainer {
         &self.big_maps
     }
 
-    pub fn new(script: ContractScript, client: &'a TezosRpc<HttpClient>) -> Result<Self> {
+    pub fn new(script: ContractScript) -> Result<Self> {
         let storage_type: TypeStorage = script
             .code
             .normalized()
@@ -37,9 +37,9 @@ impl<'a, HttpClient: Http> Storage<'a, HttpClient> {
             .try_into()?;
         let storage_type = *storage_type.r#type;
         let storage_value: Data = script.storage.normalized().try_into()?;
-        let mut big_maps = Vec::<BigMap<'a, HttpClient>>::new();
+        let mut big_maps = Vec::<BigMap>::new();
         let mapped = MappedStorage::new(storage_type, storage_value, |big_map_type, id| {
-            big_maps.push(BigMap::new(big_map_type, id, client));
+            big_maps.push(BigMap::new(big_map_type, id));
         })?;
         Ok(Self {
             big_maps: BigMapContainer::new(big_maps),
