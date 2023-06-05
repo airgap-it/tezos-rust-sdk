@@ -43,8 +43,8 @@ pub mod default {
     use crate::models::error::RpcError;
 
     use super::*;
-    use reqwest::{Client, Response};
     use reqwest::header::HeaderValue;
+    use reqwest::{Client, Response};
 
     #[derive(Debug)]
     pub struct HttpClient {
@@ -63,14 +63,18 @@ pub mod default {
         ) -> Result<T, Error> {
             if response.status() != 200 {
                 // Do not parse JSON when the content type is `plain/text`
-                return match response.headers().get("content-type").map(HeaderValue::as_bytes) {
+                return match response
+                    .headers()
+                    .get("content-type")
+                    .map(HeaderValue::as_bytes)
+                {
                     Some(b"application/json") => {
                         let errors: Vec<RpcError> = response.json().await?;
                         Err(Error::RpcErrors(errors.into()))
                     }
                     _ => Err(Error::RpcErrorPlain {
                         description: response.text().await?,
-                    })
+                    }),
                 };
             }
 
@@ -124,7 +128,7 @@ pub mod default {
                     .send()
                     .await?,
             )
-                .await
+            .await
         }
 
         /// Convenience method to make a `PATCH` request to a URL.
