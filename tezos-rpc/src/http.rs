@@ -44,6 +44,7 @@ pub mod default {
 
     use super::*;
     use reqwest::{Client, Response};
+    use reqwest::header::HeaderValue;
 
     #[derive(Debug)]
     pub struct HttpClient {
@@ -62,13 +63,15 @@ pub mod default {
         ) -> Result<T, Error> {
             if response.status() != 200 {
                 // Do not parse JSON when the content type is `plain/text`
-                if response.headers()["content-type"] == "application/json" {
-                    let errors: Vec<RpcError> = response.json().await?;
-                    return Err(Error::RpcErrors(errors.into()));
-                }
-                return Err(Error::RpcErrorPlain {
-                    description: response.text().await?,
-                });
+                return match response.headers().get("content-type").map(HeaderValue::as_bytes) {
+                    Some(b"application/json") => {
+                        let errors: Vec<RpcError> = response.json().await?;
+                        Err(Error::RpcErrors(errors.into()))
+                    }
+                    _ => Err(Error::RpcErrorPlain {
+                        description: response.text().await?,
+                    })
+                };
             }
 
             Ok(response.json().await?)
@@ -121,7 +124,7 @@ pub mod default {
                     .send()
                     .await?,
             )
-            .await
+                .await
         }
 
         /// Convenience method to make a `PATCH` request to a URL.
