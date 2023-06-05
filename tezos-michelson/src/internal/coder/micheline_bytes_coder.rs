@@ -12,6 +12,9 @@ use crate::{
     michelson::Primitive,
     Error, Result,
 };
+use alloc::borrow::ToOwned;
+use alloc::vec;
+use alloc::vec::Vec;
 
 pub struct MichelineBytesCoder;
 

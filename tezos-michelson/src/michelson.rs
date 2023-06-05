@@ -3,8 +3,12 @@ pub mod data;
 pub mod metadata;
 pub mod types;
 
+use alloc::format;
+use alloc::str::FromStr;
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
 use annotations::Annotation;
-use std::str::FromStr;
 use tezos_core::internal::normalizer::Normalizer;
 
 pub use self::{
@@ -78,8 +82,7 @@ impl Michelson {
     /// use tezos_michelson::michelson::{data, Michelson, types};
     /// use hex_literal::hex;
     ///
-    /// let bytes = hex!("05002a");
-    /// let michelson = Michelson::unpack(&bytes, Some(&types::int()));
+    /// let michelson = Michelson::unpack(&hex!("A3"), Some(&types::int()));
     /// ```
     pub fn unpack(bytes: &[u8], schema: Option<&Type>) -> Result<Self> {
         let schema: Option<Micheline> = schema.map(|value| value.into());

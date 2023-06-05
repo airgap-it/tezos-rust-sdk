@@ -1,5 +1,7 @@
 use crate::crypto::CryptoProvider;
 use crate::{Error, Result};
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 
 pub struct Crypto {
     ed25519_provider: Option<Box<dyn CryptoProvider>>,

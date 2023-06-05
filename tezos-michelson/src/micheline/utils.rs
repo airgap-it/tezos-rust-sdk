@@ -3,6 +3,7 @@ use crate::micheline::{
     literals::{Bytes, Int, String},
     PrimitiveApplication,
 };
+use alloc::vec::Vec;
 
 /// Utility function to create a tezos [String] and convert it to
 /// a type inferred by the context at call location.
@@ -18,9 +19,9 @@ use crate::micheline::{
 ///     Ok(())
 /// }
 /// ```
-pub fn try_string<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_string<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<String, Error = Error>,
+    T: core::convert::TryInto<String, Error = Error>,
     Output: From<String>,
 {
     let string: String = value.try_into()?;
@@ -39,7 +40,7 @@ where
 /// ```
 pub fn int<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<Int>,
+    T: core::convert::Into<Int>,
     Output: From<Int>,
 {
     let int: Int = value.into();
@@ -60,9 +61,9 @@ where
 ///     Ok(())
 /// }
 /// ```
-pub fn try_int<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_int<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<Int, Error = Error>,
+    T: core::convert::TryInto<Int, Error = Error>,
     Output: From<Int>,
 {
     let int: Int = value.try_into()?;
@@ -81,7 +82,7 @@ where
 /// ```
 pub fn bytes<T, Output>(value: T) -> Output
 where
-    T: std::convert::Into<Bytes>,
+    T: core::convert::Into<Bytes>,
     Output: From<Bytes>,
 {
     let bytes: Bytes = value.into();
@@ -102,9 +103,9 @@ where
 ///     Ok(())
 /// }
 /// ```
-pub fn try_bytes<T, Output, Error>(value: T) -> std::result::Result<Output, Error>
+pub fn try_bytes<T, Output, Error>(value: T) -> core::result::Result<Output, Error>
 where
-    T: std::convert::TryInto<Bytes, Error = Error>,
+    T: core::convert::TryInto<Bytes, Error = Error>,
     Output: From<Bytes>,
 {
     let bytes: Bytes = value.try_into()?;
@@ -120,7 +121,7 @@ where
 /// ```
 pub fn primitive_application<T>(prim: T) -> PrimitiveApplication
 where
-    T: std::convert::Into<std::string::String>,
+    T: core::convert::Into<alloc::string::String>,
 {
     PrimitiveApplication::new(prim.into(), None, None)
 }
@@ -135,7 +136,7 @@ where
 /// let value: Micheline = sequence(vec![int(10), bytes(vec![10u8])]);
 pub fn sequence<T, Output>(values: T) -> Output
 where
-    T: std::convert::Into<Vec<Micheline>>,
+    T: core::convert::Into<Vec<Micheline>>,
     Output: From<Sequence>,
 {
     let values: Vec<Micheline> = values.into();

@@ -1,4 +1,5 @@
 use crate::types::encoded::{Encoded, MetaEncoded};
+use alloc::vec::Vec;
 
 pub trait BytesTag {
     fn value(&self) -> &'static [u8];

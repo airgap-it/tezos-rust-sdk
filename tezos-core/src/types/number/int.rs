@@ -1,25 +1,24 @@
-use lazy_static::lazy_static;
-use num_bigint::{BigInt, ToBigInt};
-use num_integer::Integer;
-use num_traits::{Num, ToPrimitive};
-use regex::Regex;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-use std::{
+use core::{
     fmt::{Debug, Display},
     str::FromStr,
 };
+use num_bigint::{BigInt, ToBigInt};
+use num_integer::Integer;
+use num_traits::{Num, ToPrimitive};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
+use crate::validation::is_int;
 use crate::{
     internal::coder::{Decoder, Encoder, IntegerBytesCoder},
     Error, Result,
 };
+use alloc::{
+    string::{String, ToString},
+    vec::Vec,
+};
 
 use super::Nat;
-
-lazy_static! {
-    static ref REGEX: Regex = Regex::new(r"^-?[0-9]+$").unwrap();
-}
 
 /// An integer that can be encoded to a Zarith number
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -58,7 +57,7 @@ impl Int {
     }
 
     pub fn is_valid(value: &str) -> bool {
-        REGEX.is_match(value)
+        is_int(value)
     }
 
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
@@ -71,7 +70,7 @@ impl Int {
 }
 
 impl Display for Int {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
 }

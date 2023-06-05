@@ -18,11 +18,11 @@ pub use self::{
 use super::consumable_list::ConsumableList;
 
 pub trait ConfigurableEncoder<T, S, C, Error> {
-    fn encode_with_configuration(value: &T, configuration: C) -> std::result::Result<S, Error>;
+    fn encode_with_configuration(value: &T, configuration: C) -> core::result::Result<S, Error>;
 }
 
 pub trait Encoder<T, S, Error>: ConfigurableEncoder<T, S, (), Error> {
-    fn encode(value: &T) -> std::result::Result<S, Error>;
+    fn encode(value: &T) -> core::result::Result<S, Error>;
 }
 
 impl<E, T, S, Error> ConfigurableEncoder<T, S, (), Error> for E

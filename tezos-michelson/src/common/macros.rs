@@ -19,7 +19,7 @@ macro_rules! make_primitive_enum {
             }
         }
 
-        impl std::str::FromStr for Primitive {
+        impl alloc::str::FromStr for Primitive {
             type Err = Error;
 
             fn from_str(s: &str) -> Result<Self> {
@@ -49,7 +49,7 @@ macro_rules! make_primitive_enum {
             }
         }
 
-        impl From<Primitive> for std::string::String {
+        impl From<Primitive> for alloc::string::String {
             fn from(value: Primitive) -> Self {
                 match value {
                     $(Primitive::$name => stringify!($code).into(),)*

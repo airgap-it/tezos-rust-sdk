@@ -113,6 +113,11 @@ macro_rules! make_instruction {
                 micheline::{Micheline, primitive_application::PrimitiveApplication},
                 Error, Result,
             };
+            use alloc::string::String;
+            use alloc::vec::Vec;
+            use alloc::vec;
+            #[allow(unused_imports)]
+            use alloc::boxed::Box;
 
             #[derive(Debug, Clone, PartialEq)]
             pub struct $name {

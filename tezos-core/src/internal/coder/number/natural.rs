@@ -9,6 +9,7 @@ use crate::{
     types::number::Nat,
     Error, Result,
 };
+use alloc::{vec, vec::Vec};
 
 #[derive(Debug)]
 pub struct NaturalBytesCoder;

@@ -1,8 +1,15 @@
-use derive_more::{Display, Error as DError, From};
-use std::{result, string::FromUtf8Error};
+use alloc::string::FromUtf8Error;
+use alloc::string::String;
+use core::num;
+use core::result;
+use derive_more::{Display, From};
+
+#[cfg(feature = "std")]
+use derive_more::Error as DError;
 
 /// Errors returned by this crate.
-#[derive(DError, Display, Debug, From)]
+#[derive(Display, Debug, From)]
+#[cfg_attr(feature = "std", derive(DError))]
 pub enum Error {
     Internal {
         description: String,
@@ -19,10 +26,11 @@ pub enum Error {
     InvalidUnsignedIntegerString,
     InvalidTezString,
     BigIntParse {
+        #[cfg_attr(feature = "std", error(not(source)))]
         source: num_bigint::ParseBigIntError,
     },
     IntParse {
-        source: std::num::ParseIntError,
+        source: num::ParseIntError,
     },
     InvalidStringConversion {
         source: FromUtf8Error,
@@ -32,12 +40,14 @@ pub enum Error {
     InvalidNaturalBytes,
     InvalidIntegerBytes,
     TryFromInt {
-        source: std::num::TryFromIntError,
+        source: num::TryFromIntError,
     },
     TryFromBigInt {
+        #[cfg_attr(feature = "std", error(not(source)))]
         source: num_bigint::TryFromBigIntError<num_bigint::BigInt>,
     },
     TryFromBigUInt {
+        #[cfg_attr(feature = "std", error(not(source)))]
         source: num_bigint::TryFromBigIntError<num_bigint::BigUint>,
     },
     Blake2InvalidOutputSize {

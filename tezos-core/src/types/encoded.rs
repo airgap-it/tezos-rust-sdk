@@ -20,6 +20,8 @@ use crate::{
     },
     Error, Result,
 };
+use alloc::string::String;
+use alloc::vec::Vec;
 
 use macros::{make_encoded_struct, make_encoded_structs};
 

@@ -9,6 +9,8 @@ use crate::{
     },
     Error, Result,
 };
+use alloc::format;
+use alloc::vec::Vec;
 
 /// `Micheline` sequence types as defined in [the documentation](https://tezos.gitlab.io/shell/micheline.html#bnf-grammar).
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -4,6 +4,7 @@ use crate::{
     michelson::{data::Data, Michelson},
     Error, Result,
 };
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sequence(Vec<Instruction>);

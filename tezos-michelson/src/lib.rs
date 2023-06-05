@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! The `tezos-michelson` crate provides various features to make working with `Micheline` expressions easier. It can help developers
 //! to deserialize and serialize expressions from/to JSON, pack and unpack it using an optional schema or convert it to
 //! a better typed `Michelson` structure.
@@ -504,6 +506,7 @@
 //! let micheline: Micheline = pair.into();
 //! let michelson: Michelson = micheline.try_into().expect("valid conversion to Michelson");
 //! ```
+extern crate alloc;
 
 mod common;
 mod error;

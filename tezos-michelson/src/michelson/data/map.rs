@@ -1,6 +1,7 @@
 use crate::{micheline::Micheline, michelson::Michelson, Error, Result};
 
 use super::{Data, Elt};
+use alloc::vec::Vec;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Map(Vec<Elt>);

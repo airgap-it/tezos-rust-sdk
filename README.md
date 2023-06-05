@@ -35,6 +35,16 @@ Rust 1.60.0 or above.
 
 Install the `rustc` compiler and the `cargo` command line tool through [rustup](https://rustup.rs).
 
+### Support for no_std
+
+The `tezos-core` and `tezos-michelson` crates can be used without the standard library (`#![no_std]`) by disabling
+the default `std` feature in your `Cargo.toml`:
+
+```toml
+tezos-core = { git = "https://github.com/airgap-it/tezos-rust-sdk", default-features = false }
+tezos-michelson = { git = "https://github.com/airgap-it/tezos-rust-sdk", default-features = false }
+```
+
 ## Build
 
 ```shell
