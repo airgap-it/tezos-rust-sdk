@@ -16,7 +16,7 @@ tezos-michelson = { path = "../tezos-michelson" }
 tezos-operation = { path = "../tezos-operation" }
 
 [dev-dependencies]
-tokio = { version = "1.19", features = ["macros"] }
+tokio = { version = "1.28", features = ["macros"] }
 httpmock = { version = "0.6" }
 
 [features]
