@@ -27,7 +27,7 @@ impl EncodedBytesCoder {
             );
         }
 
-        return Err(Error::InvalidBytes);
+        Err(Error::InvalidBytes)
     }
 
     pub fn decode_consuming_with_meta<E: Encoded, CL: ConsumableList<u8>>(
@@ -35,7 +35,7 @@ impl EncodedBytesCoder {
         meta: &MetaEncoded,
     ) -> Result<E> {
         let bytes = value.consume_until(meta.bytes_length)?;
-        Self::decode_with_meta(&bytes, meta)
+        Self::decode_with_meta(bytes, meta)
     }
 }
 

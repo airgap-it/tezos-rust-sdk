@@ -325,11 +325,11 @@ impl ContractAddress {
         } else {
             value
         };
-        return ContractHash::is_valid_bytes(bytes);
+        ContractHash::is_valid_bytes(bytes)
     }
 
     fn split_to_components(value: &str) -> Result<(&str, Option<&str>)> {
-        let components = value.split("%").collect::<Vec<_>>();
+        let components = value.split('%').collect::<Vec<_>>();
         if components.len() > 2 {
             return Err(Error::InvalidContractAddress);
         }
@@ -457,7 +457,7 @@ mod test {
             String::from(address),
             "KT1QTcAXeefhJ3iXLurRt81WRKdv7YqyYFmo"
         );
-        return Ok(());
+        Ok(())
     }
 
     #[test]

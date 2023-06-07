@@ -297,7 +297,7 @@ mod test {
                 .header("content-type", "application/json")
                 .body(include_str!("__TEST_DATA__/contract.json"));
         });
-        let rpc = TezosRpc::new(rpc_url.into());
+        let rpc = TezosRpc::new(rpc_url);
         let contract = rpc.contract_at(contract_address, None).await?;
         let partial_transaction = contract.call(
             "transfer".into(),

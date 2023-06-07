@@ -26,7 +26,7 @@ pub struct ConsumableBytes<'a> {
 impl<'a> ConsumableBytes<'a> {
     pub fn new(bytes: &'a [u8]) -> Self {
         Self {
-            bytes: bytes.as_ref(),
+            bytes,
             position: 0,
         }
     }

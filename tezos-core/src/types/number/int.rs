@@ -50,10 +50,10 @@ impl Int {
     where
         <I as FromStr>::Err: Debug,
     {
-        Ok(self
+        self
             .0
             .parse::<I>()
-            .map_err(|_error| Error::InvalidIntegerConversion)?)
+            .map_err(|_error| Error::InvalidIntegerConversion)
     }
 
     pub fn is_valid(value: &str) -> bool {

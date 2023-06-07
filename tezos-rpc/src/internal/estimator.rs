@@ -47,7 +47,7 @@ impl<'a, HttpClient: Http> OperationFeeEstimator<'a, HttpClient> {
     }
 }
 
-const PLACEHOLDER_SIGNATURE: &'static str = "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q";
+const PLACEHOLDER_SIGNATURE: &str = "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q";
 
 #[async_trait]
 impl<'a, HttpClient: Http + Send + Sync> FeeEstimator for OperationFeeEstimator<'a, HttpClient> {
@@ -267,13 +267,13 @@ impl TryUpdateWith<OperationContent> for tezos_operation::operations::OperationC
         }
 
         if let Some(metadata_limits) = rpc_operation_content.metadata_limits()? {
-            let forged = (&self).to_forged_bytes()?;
+            let forged = self.to_forged_bytes()?;
             let size = forged.len() + 32 + 64; // content size + forged branch size + forged signature size
             let fee = fee(size, &metadata_limits)?;
             return Ok(self.apply(Some(fee), &metadata_limits));
         }
 
-        return Ok(self);
+        Ok(self)
     }
 }
 
@@ -372,7 +372,7 @@ trait RpcMetadata<OperationResult: RpcOperationResult> {
             let operation_result_limits = self.operation_result().limits()?;
 
             results
-                .into_iter()
+                .iter()
                 .try_fold(operation_result_limits, |mut acc, result| {
                     let limits = result.limits()?;
                     acc.gas += limits.gas;
@@ -437,7 +437,7 @@ trait RpcOperationResult {
 
         sum += (self.number_of_originated_contracts() as u64) * 257;
 
-        return sum;
+        sum
     }
 }
 

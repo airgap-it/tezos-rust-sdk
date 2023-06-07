@@ -43,7 +43,7 @@ impl Decoder<ContractAddress, [u8], Error> for ContractAddressBytesCoder {
         };
         Ok(ContractAddress::from_components(
             &contract_hash,
-            entrypoint.as_ref().map(|x| &**x),
+            entrypoint.as_deref(),
         ))
     }
 }

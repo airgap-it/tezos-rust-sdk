@@ -15,11 +15,11 @@ use {
     tezos_michelson::micheline::Micheline,
 };
 
-const DEFAULT: &'static str = "default";
-const ROOT: &'static str = "root";
-const DO: &'static str = "do";
-const SET_DELEGATE: &'static str = "set_delegate";
-const REMOVE_DELEGATE: &'static str = "remove_delegate";
+const DEFAULT: &str = "default";
+const ROOT: &str = "root";
+const DO: &str = "do";
+const SET_DELEGATE: &str = "set_delegate";
+const REMOVE_DELEGATE: &str = "remove_delegate";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Transaction {

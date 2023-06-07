@@ -33,7 +33,7 @@ impl Encoder<Address, Vec<u8>, Error> for AddressBytesCoder {
 
 impl Decoder<Address, [u8], Error> for AddressBytesCoder {
     fn decode(value: &[u8]) -> Result<Address> {
-        let tag = AddressTag::recognize(&value).ok_or(Error::InvalidBytes)?;
+        let tag = AddressTag::recognize(value).ok_or(Error::InvalidBytes)?;
         let bytes = value[tag.value().len()..].to_vec();
 
         match tag {
@@ -73,8 +73,7 @@ impl AddressTag {
     fn recognize(bytes: &[u8]) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|item| bytes.starts_with(item.value()))
-            .map(|tag| *tag)
+            .find(|item| bytes.starts_with(item.value())).copied()
     }
 
     fn values() -> &'static [AddressTag] {

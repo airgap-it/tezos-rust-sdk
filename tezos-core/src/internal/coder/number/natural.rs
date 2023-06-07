@@ -52,7 +52,7 @@ impl NaturalBytesCoder {
         if has_next {
             return Self::decode_with(value, decoded, shift + 7);
         }
-        return Ok(decoded);
+        Ok(decoded)
     }
 }
 

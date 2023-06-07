@@ -62,7 +62,7 @@ where
     match Option::<Format<T>>::deserialize(deserializer) {
         Ok(res) => match res {
             Some(op) => Ok(match op {
-                Format::String(s) => s.parse::<T>().map_or(None, Some),
+                Format::String(s) => s.parse::<T>().ok(),
                 Format::Number(i) => Some(i),
             }),
             None => Ok(None),
@@ -91,7 +91,7 @@ where
             Some(value) => Ok(match value {
                 Format::String(v) => v
                     .iter()
-                    .map(|s| s.parse::<T>().map_or(None, Some))
+                    .map(|s| s.parse::<T>().ok())
                     .collect(),
                 Format::Number(i) => Some(i),
             }),

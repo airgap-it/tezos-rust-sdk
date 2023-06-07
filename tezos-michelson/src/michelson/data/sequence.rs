@@ -11,11 +11,11 @@ pub struct Sequence(Vec<Data>);
 
 impl Sequence {
     pub fn values(&self) -> &[Data] {
-        return &self.0;
+        &self.0
     }
 
     pub fn into_values(self) -> Vec<Data> {
-        return self.0;
+        self.0
     }
 
     pub fn new(values: Vec<Data>) -> Self {

@@ -114,7 +114,7 @@ mod tests {
         let valid_response = serde_json::json!(
             {
                 "block": invalid_block_hash,
-                "level": 2424833 as u64,
+                "level": 2424833_u64,
                 "errors": [
                     {
                         "kind": "permanent",
@@ -128,7 +128,7 @@ mod tests {
         server.mock(|when, then| {
             when.method(GET).path(super::path(
                 TezosRpcChainId::Main.value(),
-                &invalid_block_hash.to_string(),
+                invalid_block_hash,
             ));
             then.status(200)
                 .header("content-type", "application/json")

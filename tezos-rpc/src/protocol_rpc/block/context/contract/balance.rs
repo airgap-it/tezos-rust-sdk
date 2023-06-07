@@ -80,7 +80,7 @@ mod tests {
         let rpc_url = server.base_url();
 
         let contract_address: Address = "tz1bLUuUBWtJqFX2Hz3A3whYE5SNTAGHjcpL".try_into().unwrap();
-        let expected_balance = BigInt::from(9999999999999999999 as u64);
+        let expected_balance = BigInt::from(9999999999999999999_u64);
         let block_id = BlockId::Head;
 
         server.mock(|when, then| {

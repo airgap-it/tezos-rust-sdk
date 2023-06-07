@@ -36,7 +36,7 @@ impl Normalizer<PrimitiveApplication> for MichelineNormalizer {
             michelson::types::Pair::prim_value().name(),
         ];
         let args_len = value.args().as_ref().map(|args| args.len()).unwrap_or(0);
-        if pair_prims.contains(&&value.prim()) && args_len > 2 {
+        if pair_prims.contains(&value.prim()) && args_len > 2 {
             let prim: String = value.prim().into();
             value.with_mutated_args(|args| {
                 let mut args = args;
@@ -48,7 +48,7 @@ impl Normalizer<PrimitiveApplication> for MichelineNormalizer {
         } else {
             value.with_mutated_args(|args| {
                 args.into_iter()
-                    .map(|arg| Self::normalize(arg))
+                    .map(Self::normalize)
                     .collect::<Vec<_>>()
             })
         }
@@ -60,7 +60,7 @@ impl Normalizer<Sequence> for MichelineNormalizer {
         value
             .into_values()
             .into_iter()
-            .map(|value| Self::normalize(value))
+            .map(Self::normalize)
             .collect::<Vec<_>>()
             .into()
     }
@@ -84,7 +84,7 @@ impl Normalizer<Data> for MichelsonNormalizer {
                 value
                     .into_values()
                     .into_iter()
-                    .map(|value| Self::normalize(value))
+                    .map(Self::normalize)
                     .collect::<Vec<_>>()
                     .into(),
             ),
@@ -92,7 +92,7 @@ impl Normalizer<Data> for MichelsonNormalizer {
                 value
                     .into_values()
                     .into_iter()
-                    .map(|value| Self::normalize(value))
+                    .map(Self::normalize)
                     .collect::<Vec<_>>()
                     .into(),
             ),
@@ -197,7 +197,7 @@ impl Normalizer<data::Pair> for MichelsonNormalizer {
             data::Pair::new(
                 values
                     .into_iter()
-                    .map(|value| Self::normalize(value))
+                    .map(Self::normalize)
                     .collect(),
             )
         }
@@ -221,7 +221,7 @@ impl Normalizer<types::Pair> for MichelsonNormalizer {
             types::Pair::new(
                 values
                     .into_iter()
-                    .map(|value| Self::normalize(value))
+                    .map(Self::normalize)
                     .collect(),
                 Some(value.metadata),
             )
@@ -246,7 +246,7 @@ impl Normalizer<types::ComparablePair> for MichelsonNormalizer {
             types::ComparablePair::new(
                 values
                     .into_iter()
-                    .map(|value| Self::normalize(value))
+                    .map(Self::normalize)
                     .collect(),
                 Some(value.metadata),
             )
@@ -357,7 +357,7 @@ impl Normalizer<instructions::Sequence> for MichelsonNormalizer {
         value
             .into_instructions()
             .into_iter()
-            .map(|value| Self::normalize(value))
+            .map(Self::normalize)
             .collect::<Vec<_>>()
             .into()
     }

@@ -35,7 +35,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
             ctx,
             chain_id: ctx.chain_id(),
             block_id: &BlockId::Head,
-            contract: contract,
+            contract,
             unparsing_mode: None,
             normalize_types: None,
         }
@@ -171,7 +171,7 @@ mod tests {
         let normalize_types = true;
 
         let body = serde_json::to_string(&super::NormalizedPayload {
-            unparsing_mode: unparsing_mode,
+            unparsing_mode,
             normalize_types: Some(normalize_types),
         })?;
 

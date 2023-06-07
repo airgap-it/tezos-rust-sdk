@@ -120,7 +120,7 @@ impl UnsignedOperation {
         key: &SecretKey,
         tezos: &Tezos,
     ) -> Result<SignedOperation> {
-        let signature = self.sign_with(key, &tezos)?;
+        let signature = self.sign_with(key, tezos)?;
 
         Ok(SignedOperation::new(self.branch, self.contents, signature))
     }

@@ -145,7 +145,7 @@ impl Encoder<DoubleEndorsementEvidence, Vec<u8>, Error> for OperationContentByte
 
 impl Encoder<InlinedEndorsement, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &InlinedEndorsement) -> Result<Vec<u8>> {
-        let branch_bytes = (&value).branch.to_bytes()?;
+        let branch_bytes = value.branch.to_bytes()?;
         let operations_bytes = Self::encode(&value.operations)?;
         let signature_bytes = value.signature.to_bytes()?;
 
@@ -227,8 +227,8 @@ impl Encoder<ActivateAccount, Vec<u8>, Error> for OperationContentBytesCoder {
 
 impl Encoder<Proposals, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Proposals) -> Result<Vec<u8>> {
-        let source_bytes = (&value).source.to_bytes()?;
-        let period_bytes = utils::encode_i32((&value).period);
+        let source_bytes = value.source.to_bytes()?;
+        let period_bytes = utils::encode_i32(value.period);
         let proposals_bytes = utils::encode_list(&value.proposals)?;
 
         let tag = Proposals::tag().to_bytes();
@@ -276,7 +276,7 @@ impl Encoder<DoublePreendorsementEvidence, Vec<u8>, Error> for OperationContentB
 
 impl Encoder<InlinedPreendrosement, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &InlinedPreendrosement) -> Result<Vec<u8>> {
-        let branch_bytes = (&value).branch.to_bytes()?;
+        let branch_bytes = value.branch.to_bytes()?;
         let operations_bytes = Self::encode(&value.operations)?;
         let signature_byte = value.signature.to_bytes()?;
 
@@ -380,7 +380,7 @@ impl Encoder<Entrypoint, Vec<u8>, Error> for OperationContentBytesCoder {
 impl Encoder<Origination, Vec<u8>, Error> for OperationContentBytesCoder {
     fn encode(value: &Origination) -> Result<Vec<u8>> {
         let content_bytes = Self::encode_manager_operation_content(value)?;
-        let balance_bytes = (&value.balance).to_bytes()?;
+        let balance_bytes = value.balance.to_bytes()?;
         let delegate_bytes = if let Some(delegate) = &value.delegate {
             delegate.to_bytes()?
         } else {

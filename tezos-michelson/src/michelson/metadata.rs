@@ -5,6 +5,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub struct FieldMetadata {
     field_name: Option<Annotation>,
 }
@@ -17,13 +18,13 @@ impl FieldMetadata {
     pub fn annotations(&self) -> Vec<&Annotation> {
         vec![self.field_name()]
             .into_iter()
-            .flat_map(|annot| annot)
+            .flatten()
             .collect::<Vec<&Annotation>>()
     }
 
     pub fn new(field_name: Option<Annotation>) -> Result<Self> {
         if let Some(field_name) = &field_name {
-            if !Self::is_valid_field_name(&field_name) {
+            if !Self::is_valid_field_name(field_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
@@ -41,11 +42,7 @@ impl FieldMetadata {
     }
 }
 
-impl Default for FieldMetadata {
-    fn default() -> Self {
-        Self { field_name: None }
-    }
-}
+
 
 impl TryFrom<&PrimitiveApplication> for FieldMetadata {
     type Error = Error;
@@ -56,6 +53,7 @@ impl TryFrom<&PrimitiveApplication> for FieldMetadata {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub struct TypeFieldMetadata {
     type_name: Option<Annotation>,
     field_name: Option<Annotation>,
@@ -73,18 +71,18 @@ impl TypeFieldMetadata {
     pub fn annotations(&self) -> Vec<&Annotation> {
         vec![self.type_name(), self.field_name()]
             .into_iter()
-            .flat_map(|annot| annot)
+            .flatten()
             .collect::<Vec<&Annotation>>()
     }
 
     pub fn new(type_name: Option<Annotation>, field_name: Option<Annotation>) -> Result<Self> {
         if let Some(type_name) = &type_name {
-            if !Self::is_valid_type_name(&type_name) {
+            if !Self::is_valid_type_name(type_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
         if let Some(field_name) = &field_name {
-            if !Self::is_valid_field_name(&field_name) {
+            if !Self::is_valid_field_name(field_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
@@ -115,14 +113,7 @@ impl TypeFieldMetadata {
     }
 }
 
-impl Default for TypeFieldMetadata {
-    fn default() -> Self {
-        Self {
-            type_name: None,
-            field_name: None,
-        }
-    }
-}
+
 
 impl TryFrom<&PrimitiveApplication> for TypeFieldMetadata {
     type Error = Error;
@@ -136,6 +127,7 @@ impl TryFrom<&PrimitiveApplication> for TypeFieldMetadata {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub struct VariableMetadata {
     variable_name: Option<Annotation>,
 }
@@ -148,7 +140,7 @@ impl VariableMetadata {
     pub fn annotations(&self) -> Vec<&Annotation> {
         vec![self.variable_name()]
             .into_iter()
-            .flat_map(|annot| annot)
+            .flatten()
             .collect::<Vec<&Annotation>>()
     }
 
@@ -170,15 +162,10 @@ impl TryFrom<&PrimitiveApplication> for VariableMetadata {
     }
 }
 
-impl Default for VariableMetadata {
-    fn default() -> Self {
-        Self {
-            variable_name: None,
-        }
-    }
-}
+
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub struct TypeVariableMetadata {
     type_name: Option<Annotation>,
     variable_name: Option<Annotation>,
@@ -196,18 +183,18 @@ impl TypeVariableMetadata {
     pub fn annotations(&self) -> Vec<&Annotation> {
         vec![self.type_name(), self.variable_name()]
             .into_iter()
-            .flat_map(|annot| annot)
+            .flatten()
             .collect::<Vec<&Annotation>>()
     }
 
     pub fn new(type_name: Option<Annotation>, variable_name: Option<Annotation>) -> Result<Self> {
         if let Some(type_name) = &type_name {
-            if !Self::is_valid_type_name(&type_name) {
+            if !Self::is_valid_type_name(type_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
         if let Some(variable_name) = &variable_name {
-            if !Self::is_valid_variable_name(&variable_name) {
+            if !Self::is_valid_variable_name(variable_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
@@ -226,14 +213,7 @@ impl TypeVariableMetadata {
     }
 }
 
-impl Default for TypeVariableMetadata {
-    fn default() -> Self {
-        Self {
-            type_name: None,
-            variable_name: None,
-        }
-    }
-}
+
 
 impl TryFrom<&PrimitiveApplication> for TypeVariableMetadata {
     type Error = Error;
@@ -247,6 +227,7 @@ impl TryFrom<&PrimitiveApplication> for TypeVariableMetadata {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub struct TwoVariableMetadata {
     first_variable_name: Option<Annotation>,
     second_variable_name: Option<Annotation>,
@@ -264,7 +245,7 @@ impl TwoVariableMetadata {
     pub fn annotations(&self) -> Vec<&Annotation> {
         vec![self.first_variable_name(), self.second_variable_name()]
             .into_iter()
-            .flat_map(|annot| annot)
+            .flatten()
             .collect::<Vec<&Annotation>>()
     }
 
@@ -273,12 +254,12 @@ impl TwoVariableMetadata {
         second_variable_name: Option<Annotation>,
     ) -> Result<Self> {
         if let Some(first_variable_name) = &first_variable_name {
-            if !Self::is_valid_variable_name(&first_variable_name) {
+            if !Self::is_valid_variable_name(first_variable_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
         if let Some(second_variable_name) = &second_variable_name {
-            if !Self::is_valid_variable_name(&second_variable_name) {
+            if !Self::is_valid_variable_name(second_variable_name) {
                 return Err(Error::InvalidAnnotation);
             }
         }
@@ -293,14 +274,7 @@ impl TwoVariableMetadata {
     }
 }
 
-impl Default for TwoVariableMetadata {
-    fn default() -> Self {
-        Self {
-            first_variable_name: None,
-            second_variable_name: None,
-        }
-    }
-}
+
 
 impl TryFrom<&PrimitiveApplication> for TwoVariableMetadata {
     type Error = Error;
