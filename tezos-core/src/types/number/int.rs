@@ -50,8 +50,7 @@ impl Int {
     where
         <I as FromStr>::Err: Debug,
     {
-        self
-            .0
+        self.0
             .parse::<I>()
             .map_err(|_error| Error::InvalidIntegerConversion)
     }

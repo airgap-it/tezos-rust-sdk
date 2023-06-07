@@ -184,7 +184,8 @@ impl ParametersValueConstructor for Type {
         }
         match self {
             Self::Pair(pair) => {
-                let args = pair.types
+                let args = pair
+                    .types
                     .iter()
                     .map(|pair_type| pair_type.construct_parameter_value(arguments))
                     .collect::<Result<Vec<_>>>()?;
@@ -475,7 +476,8 @@ impl<HttpClient: Http + Sync> ContractFetcher for TezosRpc<HttpClient> {
         let parameter: Parameter = script
             .code
             .values()
-            .iter().next()
+            .iter()
+            .next()
             .ok_or(Error::InvalidContractScript)?
             .clone()
             .try_into()?;

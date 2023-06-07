@@ -27,7 +27,8 @@ pub trait EncodedTag: BytesTag + Sized + Copy {
     {
         Self::values()
             .iter()
-            .find(|item| item.is_valid(bytes)).copied()
+            .find(|item| item.is_valid(bytes))
+            .copied()
     }
 
     fn recognize_consumable(bytes: &[u8]) -> Option<Self>
@@ -36,7 +37,8 @@ pub trait EncodedTag: BytesTag + Sized + Copy {
     {
         Self::values()
             .iter()
-            .find(|item| item.is_valid_consumable(bytes)).copied()
+            .find(|item| item.is_valid_consumable(bytes))
+            .copied()
     }
 
     fn from_encoded<E: Encoded>(value: &E) -> Option<Self>
@@ -45,6 +47,7 @@ pub trait EncodedTag: BytesTag + Sized + Copy {
     {
         Self::values()
             .iter()
-            .find(|item| item.meta() == value.meta()).copied()
+            .find(|item| item.meta() == value.meta())
+            .copied()
     }
 }
