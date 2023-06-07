@@ -31,10 +31,12 @@ jobs:
           override: true
           default: true
 
-      # Uncomment once linting issues have been fixed
-      # Enable this for clippy linting.
-      # - name: Check and Lint Code
-      #   run: cargo clippy -- -D warnings
+      - name: Run cargo fmt
+        run: cargo fmt --check
+
+      - name: Check and Lint Code
+        run: cargo clippy
+        #run: cargo clippy -- -D warnings
 
       - name: Run cargo check
         run: cargo check --locked
@@ -44,6 +46,3 @@ jobs:
 
       - name: Run cargo test
         run: cargo test
-
-      - name: Run cargo fmt
-        run: cargo fmt --check
