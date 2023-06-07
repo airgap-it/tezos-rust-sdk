@@ -49,10 +49,10 @@ impl Nat {
     where
         <I as FromStr>::Err: Debug,
     {
-        Ok(self
+        self
             .0
             .parse::<I>()
-            .map_err(|_error| Error::InvalidNaturalConversion)?)
+            .map_err(|_error| Error::InvalidNaturalConversion)
     }
 
     pub fn is_valid(value: &str) -> bool {

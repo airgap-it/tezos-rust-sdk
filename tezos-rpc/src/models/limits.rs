@@ -14,19 +14,13 @@ pub const HARD_GAS_LIMIT_PER_BLOCK: u64 = 5200000;
 pub const HARD_STORAGE_LIMIT_PER_OPERATION: u64 = 60000;
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct Limits {
     pub operation: OperationLimits,
     pub block: BlockLimits,
 }
 
-impl Default for Limits {
-    fn default() -> Self {
-        Self {
-            operation: Default::default(),
-            block: Default::default(),
-        }
-    }
-}
+
 
 #[derive(Debug, Clone)]
 pub struct OperationLimits {

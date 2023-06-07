@@ -91,10 +91,10 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// * `length` : Only retrieve `length` values. Useful in combination with `offset` for pagination.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block_id>/context/big_maps/<big_map_id>?[offset=<uint>]&[length=<uint>]`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-big-maps-big-map-id)
-pub fn get<'a, HttpClient: Http>(
-    ctx: &'a TezosRpcContext<HttpClient>,
+pub fn get<HttpClient: Http>(
+    ctx: &TezosRpcContext<HttpClient>,
     big_map_id: u32,
-) -> RpcRequestBuilder<'a, HttpClient> {
+) -> RpcRequestBuilder<'_, HttpClient> {
     RpcRequestBuilder::new(ctx, big_map_id)
 }
 

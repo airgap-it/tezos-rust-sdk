@@ -55,7 +55,7 @@ mod tests {
 
         let valid_response = serde_json::json!({
             "block_hash": "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2",
-            "level": 2424833 as u64
+            "level": 2424833_u64
         });
 
         server.mock(|when, then| {

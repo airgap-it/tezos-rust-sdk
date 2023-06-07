@@ -21,7 +21,7 @@ pub struct PublicKeyBytesCoder;
 
 impl Encoder<PublicKey, Vec<u8>, Error> for PublicKeyBytesCoder {
     fn encode(value: &PublicKey) -> Result<Vec<u8>> {
-        EncodedGroupBytesCoder::<Self>::encode(&value)
+        EncodedGroupBytesCoder::<Self>::encode(value)
     }
 }
 
@@ -48,8 +48,7 @@ impl PublicKeyTag {
     pub fn recognize(bytes: &[u8]) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|item| item.is_valid(bytes))
-            .map(|item| *item)
+            .find(|item| item.is_valid(bytes)).copied()
     }
 }
 

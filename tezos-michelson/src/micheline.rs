@@ -92,42 +92,42 @@ impl Micheline {
         if let Self::Literal(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn is_primitive_application(&self) -> bool {
         if let Self::PrimitiveApplication(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn is_sequence(&self) -> bool {
         if let Self::Sequence(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn into_literal(self) -> Option<Literal> {
         if let Self::Literal(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 
     pub fn into_primitive_application(self) -> Option<PrimitiveApplication> {
         if let Self::PrimitiveApplication(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 
     pub fn into_sequence(self) -> Option<Sequence> {
         if let Self::Sequence(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 
     /// Normalizes the Michelson structure.

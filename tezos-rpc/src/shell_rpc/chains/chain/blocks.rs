@@ -42,7 +42,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 
     /// Set the requested number of predecessors to return.
     pub fn length(mut self, length: &u32) -> Self {
-        self.length = Some(length.clone());
+        self.length = Some(*length);
 
         self
     }
@@ -57,7 +57,7 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
     /// A date in seconds from epoch.
     /// When `min_date` is provided, blocks with a timestamp before `min_date` are filtered out.
     pub fn min_date(mut self, min_date: &u64) -> Self {
-        self.min_date = Some(min_date.clone());
+        self.min_date = Some(*min_date);
 
         self
     }
@@ -109,7 +109,7 @@ mod tests {
 
         server.mock(|when, then| {
             when.method(GET)
-                .path(super::path(&TezosRpcChainId::Main.value()))
+                .path(super::path(TezosRpcChainId::Main.value()))
                 .query_param("length", "1")
                 .query_param(
                     "head",

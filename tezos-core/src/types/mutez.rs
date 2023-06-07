@@ -79,6 +79,7 @@ use super::number::Nat;
     derive(Serialize, Deserialize),
     serde(try_from = "String")
 )]
+#[derive(Default)]
 pub struct Mutez(#[cfg_attr(feature = "serde", serde(serialize_with = "i64_to_string"))] i64);
 
 impl Mutez {
@@ -280,7 +281,7 @@ impl TryFrom<String> for Mutez {
     type Error = Error;
 
     fn try_from(value: String) -> Result<Self> {
-        Ok(Self::from_str(&value)?)
+        Self::from_str(&value)
     }
 }
 
@@ -288,7 +289,7 @@ impl TryFrom<&str> for Mutez {
     type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        Ok(Self::from_str(value)?)
+        Self::from_str(value)
     }
 }
 
@@ -316,11 +317,7 @@ impl TryFrom<&Mutez> for Vec<u8> {
     }
 }
 
-impl Default for Mutez {
-    fn default() -> Self {
-        Self(0)
-    }
-}
+
 
 #[cfg(test)]
 mod test {

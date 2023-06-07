@@ -576,7 +576,7 @@ impl MichelinePacker {
             .try_with_mutated_args(|values| {
                 values
                     .into_iter()
-                    .map(|value| Ok(Self::pre_pack_lambda(value.try_into()?, schema)?))
+                    .map(|value| Self::pre_pack_lambda(value.try_into()?, schema))
                     .collect::<Result<Vec<_>>>()
             })?
             .into())
@@ -593,7 +593,7 @@ impl MichelinePacker {
             .try_with_mutated_args(|values| {
                 values
                     .into_iter()
-                    .map(|value| Ok(Self::post_unpack_lambda(value.try_into()?, schema)?))
+                    .map(|value| Self::post_unpack_lambda(value.try_into()?, schema))
                     .collect::<Result<Vec<_>>>()
             })?
             .into())
@@ -810,8 +810,7 @@ impl Tag {
     fn recognize(bytes: &[u8]) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|item| bytes.starts_with(item.value()))
-            .map(|item| *item)
+            .find(|item| bytes.starts_with(item.value())).copied()
     }
 }
 

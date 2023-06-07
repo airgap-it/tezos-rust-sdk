@@ -23,10 +23,10 @@ impl MappedEntrypoints {
         } else {
             vec![]
         };
-        return Ok(MappedEntrypoints {
+        Ok(MappedEntrypoints {
             parameters_type,
             entrypoint_paths,
-        });
+        })
     }
 
     pub fn get(&self, entrypoint: &Entrypoint) -> Option<&Type> {
@@ -70,12 +70,12 @@ fn entrypoint_paths(
         entries: &mut Vec<(Entrypoint, Vec<EntrypointPathComponent>)>,
     ) {
         if let Type::Or(lhs) = value {
-            let mut path = current_path.map(|value| value.clone()).unwrap_or(vec![]);
+            let mut path = current_path.cloned().unwrap_or(vec![]);
             path.push(path_component);
             let entrypoints = entrypoint_paths(lhs, Some(path));
             entries.extend(entrypoints.into_iter());
         } else if let Some(name) = value.metadata().field_name() {
-            let mut path = current_path.map(|value| value.clone()).unwrap_or(vec![]);
+            let mut path = current_path.cloned().unwrap_or(vec![]);
             path.push(path_component);
             entries.push((Entrypoint::from_str(name.value_without_prefix()), path));
         }

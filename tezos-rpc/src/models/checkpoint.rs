@@ -38,7 +38,7 @@ mod test {
         let json =
             "{\"block_hash\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1}";
 
-        let invalid_block: Checkpoint = serde_json::from_str(&json)?;
+        let invalid_block: Checkpoint = serde_json::from_str(json)?;
 
         assert_eq!(
             invalid_block.block_hash,

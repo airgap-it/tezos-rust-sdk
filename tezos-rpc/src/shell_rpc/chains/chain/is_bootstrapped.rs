@@ -77,7 +77,7 @@ mod tests {
 
         let response = client.is_bootstrapped().send().await?;
 
-        assert_eq!(response.bootstrapped, false);
+        assert!(!response.bootstrapped);
         assert_eq!(response.sync_state, ChainStatus::Stuck);
 
         Ok(())

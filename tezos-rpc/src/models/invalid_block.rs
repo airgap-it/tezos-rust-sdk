@@ -35,7 +35,7 @@ mod test {
     fn test_serde_deserialize() -> Result<(), crate::error::Error> {
         let json = "{\"block\":\"BLsqrZ5VimZ5ZJf4s256PH9JP4GAsKnaLsb8BxTkZJN2ijq77KA\",\"level\":1,\"errors\":[]}";
 
-        let invalid_block: InvalidBlock = serde_json::from_str(&json)?;
+        let invalid_block: InvalidBlock = serde_json::from_str(json)?;
 
         assert_eq!(
             invalid_block.block,

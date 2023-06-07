@@ -45,9 +45,9 @@ mod test {
     fn test_serde_deserialize() -> Result<(), crate::error::Error> {
         let json = "{\"bootstrapped\":false,\"sync_state\":\"stuck\"}";
 
-        let status: BootstrappedStatus = serde_json::from_str(&json)?;
+        let status: BootstrappedStatus = serde_json::from_str(json)?;
 
-        assert_eq!(status.bootstrapped, false);
+        assert!(!status.bootstrapped);
         assert_eq!(status.sync_state, ChainStatus::Stuck);
 
         Ok(())

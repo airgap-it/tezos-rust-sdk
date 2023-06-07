@@ -73,7 +73,7 @@ impl ConsumingDecoder<Int, u8, Error> for IntegerBytesCoder {
         };
         let result: BigInt = abs * sign;
 
-        return Ok(result.into());
+        Ok(result.into())
     }
 }
 

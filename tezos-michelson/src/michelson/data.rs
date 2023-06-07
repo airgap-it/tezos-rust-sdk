@@ -273,7 +273,7 @@ impl From<Bytes> for Michelson {
 
 impl From<Unit> for () {
     fn from(_: Unit) -> Self {
-        ()
+        
     }
 }
 

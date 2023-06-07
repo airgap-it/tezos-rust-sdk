@@ -184,28 +184,28 @@ impl ParametersValueConstructor for Type {
         }
         match self {
             Self::Pair(pair) => {
-                let args = (&pair.types)
+                let args = pair.types
                     .iter()
                     .map(|pair_type| pair_type.construct_parameter_value(arguments))
                     .collect::<Result<Vec<_>>>()?;
-                return Ok(PrimitiveApplication::new(
+                Ok(PrimitiveApplication::new(
                     Primitive::Data(DataPrimitive::Pair).into(),
                     Some(args),
                     None,
                 )
-                .into());
+                .into())
             }
             Self::List(list) => {
-                let value = (&list.r#type).construct_parameter_value(arguments)?;
+                let value = list.r#type.construct_parameter_value(arguments)?;
                 Ok(Micheline::Sequence(vec![value].into()))
             }
             Self::Set(set) => {
-                let value = (&set.r#type).construct_parameter_value(arguments)?;
+                let value = set.r#type.construct_parameter_value(arguments)?;
                 Ok(Micheline::Sequence(vec![value].into()))
             }
             Self::Map(map) => {
-                let key = (&map.key_type).construct_parameter_value(arguments)?;
-                let value = (&map.value_type).construct_parameter_value(arguments)?;
+                let key = map.key_type.construct_parameter_value(arguments)?;
+                let value = map.value_type.construct_parameter_value(arguments)?;
                 Ok(Micheline::Sequence(
                     vec![PrimitiveApplication::new(
                         Primitive::Data(DataPrimitive::Elt).into(),
@@ -217,8 +217,8 @@ impl ParametersValueConstructor for Type {
                 ))
             }
             Type::BigMap(big_map) => {
-                let key = (&big_map.key_type).construct_parameter_value(arguments)?;
-                let value = (&big_map.value_type).construct_parameter_value(arguments)?;
+                let key = big_map.key_type.construct_parameter_value(arguments)?;
+                let value = big_map.value_type.construct_parameter_value(arguments)?;
                 Ok(Micheline::Sequence(
                     vec![PrimitiveApplication::new(
                         Primitive::Data(DataPrimitive::Elt).into(),
@@ -342,7 +342,7 @@ impl CompatibleWith<Type> for DataSequence {
                 let element_type = &value.r#type;
                 self.values()
                     .iter()
-                    .all(|item| item.is_compatible_with(&element_type))
+                    .all(|item| item.is_compatible_with(element_type))
             }
             Type::Pair(_) => {
                 let pair: Data = Pair::new(self.clone().into_values()).into();
@@ -360,13 +360,13 @@ impl CompatibleWith<Type> for Map {
                 let key = &*item.key;
                 let value = &*item.value;
 
-                return key.is_compatible_with(key_type) && value.is_compatible_with(value_type);
+                key.is_compatible_with(key_type) && value.is_compatible_with(value_type)
             })
         }
 
         match value {
-            Type::Map(map) => check(self, &*map.key_type, &*map.value_type),
-            Type::BigMap(map) => check(self, &*map.key_type, &*map.value_type),
+            Type::Map(map) => check(self, &map.key_type, &map.value_type),
+            Type::BigMap(map) => check(self, &map.key_type, &map.value_type),
             _ => false,
         }
     }
@@ -475,8 +475,7 @@ impl<HttpClient: Http + Sync> ContractFetcher for TezosRpc<HttpClient> {
         let parameter: Parameter = script
             .code
             .values()
-            .iter()
-            .nth(0)
+            .iter().next()
             .ok_or(Error::InvalidContractScript)?
             .clone()
             .try_into()?;

@@ -216,6 +216,7 @@ pub struct OperationListLength {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Default)]
 pub struct Level {
     pub level: i32,
     pub level_position: i32,
@@ -226,19 +227,7 @@ pub struct Level {
     pub expected_commitment: bool,
 }
 
-impl Default for Level {
-    fn default() -> Self {
-        Level {
-            level: 0,
-            level_position: 0,
-            cycle: 0,
-            cycle_position: 0,
-            voting_period: 0,
-            voting_period_position: 0,
-            expected_commitment: false,
-        }
-    }
-}
+
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct LevelInfo {
@@ -310,18 +299,16 @@ pub enum TestChainStatusName {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[derive(Default)]
 pub enum BlockId {
+    #[default]
     Head,
     Genesis,
     Hash(BlockHash),
     Level(i32),
 }
 
-impl Default for BlockId {
-    fn default() -> Self {
-        BlockId::Head
-    }
-}
+
 
 impl BlockId {
     pub fn value(&self) -> String {

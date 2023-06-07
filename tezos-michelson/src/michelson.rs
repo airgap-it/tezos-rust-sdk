@@ -102,21 +102,21 @@ impl Michelson {
         if let Self::Data(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     fn is_instruction(&self) -> bool {
         if let Self::Data(Data::Instruction(_)) = self {
             return true;
         }
-        return false;
+        false
     }
 
     fn is_elt(&self) -> bool {
         if let Self::Data(Data::Elt(_)) = self {
             return true;
         }
-        return false;
+        false
     }
 }
 

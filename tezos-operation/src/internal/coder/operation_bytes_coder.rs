@@ -18,7 +18,7 @@ pub struct OperationBytesCoder;
 impl<O: Operation> Encoder<O, Vec<u8>, Error> for OperationBytesCoder {
     fn encode(value: &O) -> std::result::Result<Vec<u8>, Error> {
         let branch_bytes = value.branch().to_bytes()?;
-        let content_bytes = value.contents().into_iter().try_fold::<_, _, Result<_>>(
+        let content_bytes = value.contents().iter().try_fold::<_, _, Result<_>>(
             Vec::<u8>::new(),
             |mut acc, value| {
                 acc.append(&mut OperationContentBytesCoder::encode(value)?);

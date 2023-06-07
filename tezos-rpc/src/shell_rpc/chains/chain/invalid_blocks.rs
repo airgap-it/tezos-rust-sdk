@@ -61,7 +61,7 @@ mod tests {
             [
                 {
                     "block": "BLY6dM4iqKHxjAJb2P9dRVEroejqYx71qFddGVCk1wn9wzSs1S2",
-                    "level": 2424833 as u64,
+                    "level": 2424833_u64,
                     "errors": [
                         {
                             "kind": "permanent",

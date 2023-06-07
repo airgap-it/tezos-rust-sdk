@@ -90,6 +90,6 @@ mod tests {
             bootstrapped: false,
         };
 
-        super::patch(&client.context(), &req).send().await
+        super::patch(client.context(), &req).send().await
     }
 }

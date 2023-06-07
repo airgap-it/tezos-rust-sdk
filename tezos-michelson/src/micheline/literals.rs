@@ -28,42 +28,42 @@ impl Literal {
         if let Literal::Int(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn is_string(&self) -> bool {
         if let Literal::String(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn is_bytes(&self) -> bool {
         if let Literal::Bytes(_) = self {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn into_micheline_int(self) -> Option<Int> {
         if let Literal::Int(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 
     pub fn into_micheline_string(self) -> Option<String> {
         if let Literal::String(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 
     pub fn into_micheline_bytes(self) -> Option<Bytes> {
         if let Literal::Bytes(value) = self {
             return Some(value);
         }
-        return None;
+        None
     }
 }
 

@@ -37,15 +37,15 @@ impl PrimitiveApplication {
     }
 
     pub fn first_arg(&self) -> Option<&Micheline> {
-        self.args.as_ref().map(|args| args.first()).flatten()
+        self.args.as_ref().and_then(|args| args.first())
     }
 
     pub fn second_arg(&self) -> Option<&Micheline> {
-        self.args.as_ref().map(|args| args.iter().nth(1)).flatten()
+        self.args.as_ref().and_then(|args| args.iter().nth(1))
     }
 
     pub fn nth_arg(&self, n: usize) -> Option<&Micheline> {
-        self.args.as_ref().map(|args| args.iter().nth(n)).flatten()
+        self.args.as_ref().and_then(|args| args.iter().nth(n))
     }
 
     pub fn annots(&self) -> &Option<Vec<String>> {

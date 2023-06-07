@@ -51,9 +51,9 @@ impl<'a, HttpClient: Http> RpcRequestBuilder<'a, HttpClient> {
 /// Access the list of all constants.
 ///
 /// [`GET /chains/<chain_id>/blocks/<block>/context/constants`](https://tezos.gitlab.io/active/rpc.html#get-block-id-context-constants)
-pub fn get<'a, HttpClient: Http>(
-    ctx: &'a TezosRpcContext<HttpClient>,
-) -> RpcRequestBuilder<'a, HttpClient> {
+pub fn get<HttpClient: Http>(
+    ctx: &TezosRpcContext<HttpClient>,
+) -> RpcRequestBuilder<'_, HttpClient> {
     RpcRequestBuilder::new(ctx)
 }
 

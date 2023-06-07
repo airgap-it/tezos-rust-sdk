@@ -20,7 +20,7 @@ pub struct ImplicitAddressBytesCoder;
 
 impl Encoder<ImplicitAddress, Vec<u8>, Error> for ImplicitAddressBytesCoder {
     fn encode(value: &ImplicitAddress) -> Result<Vec<u8>> {
-        EncodedGroupBytesCoder::<Self>::encode(&value)
+        EncodedGroupBytesCoder::<Self>::encode(value)
     }
 }
 
