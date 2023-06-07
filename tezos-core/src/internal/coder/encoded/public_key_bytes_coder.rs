@@ -48,7 +48,8 @@ impl PublicKeyTag {
     pub fn recognize(bytes: &[u8]) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|item| item.is_valid(bytes)).copied()
+            .find(|item| item.is_valid(bytes))
+            .copied()
     }
 }
 

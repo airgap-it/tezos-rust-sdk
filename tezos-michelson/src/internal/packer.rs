@@ -810,7 +810,8 @@ impl Tag {
     fn recognize(bytes: &[u8]) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|item| bytes.starts_with(item.value())).copied()
+            .find(|item| bytes.starts_with(item.value()))
+            .copied()
     }
 }
 

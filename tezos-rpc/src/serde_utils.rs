@@ -89,10 +89,7 @@ where
     match Option::<Format<T>>::deserialize(deserializer) {
         Ok(res) => match res {
             Some(value) => Ok(match value {
-                Format::String(v) => v
-                    .iter()
-                    .map(|s| s.parse::<T>().ok())
-                    .collect(),
+                Format::String(v) => v.iter().map(|s| s.parse::<T>().ok()).collect(),
                 Format::Number(i) => Some(i),
             }),
             None => Ok(None),

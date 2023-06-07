@@ -215,8 +215,7 @@ pub struct OperationListLength {
     pub max_op: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Default)]
 pub struct Level {
     pub level: i32,
     pub level_position: i32,
@@ -226,8 +225,6 @@ pub struct Level {
     pub voting_period_position: i32,
     pub expected_commitment: bool,
 }
-
-
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub struct LevelInfo {
@@ -298,8 +295,7 @@ pub enum TestChainStatusName {
     Running,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum BlockId {
     #[default]
     Head,
@@ -307,8 +303,6 @@ pub enum BlockId {
     Hash(BlockHash),
     Level(i32),
 }
-
-
 
 impl BlockId {
     pub fn value(&self) -> String {

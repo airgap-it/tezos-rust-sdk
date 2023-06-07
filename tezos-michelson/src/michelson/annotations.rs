@@ -25,7 +25,8 @@ impl Kind {
     fn recognize(value: &str) -> Option<Self> {
         Self::values()
             .iter()
-            .find(|kind| kind.is_valid(value)).copied()
+            .find(|kind| kind.is_valid(value))
+            .copied()
     }
 
     pub fn is_valid(&self, value: &str) -> bool {

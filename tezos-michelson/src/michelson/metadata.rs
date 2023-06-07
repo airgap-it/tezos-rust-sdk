@@ -4,8 +4,7 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct FieldMetadata {
     field_name: Option<Annotation>,
 }
@@ -42,8 +41,6 @@ impl FieldMetadata {
     }
 }
 
-
-
 impl TryFrom<&PrimitiveApplication> for FieldMetadata {
     type Error = Error;
 
@@ -52,8 +49,7 @@ impl TryFrom<&PrimitiveApplication> for FieldMetadata {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TypeFieldMetadata {
     type_name: Option<Annotation>,
     field_name: Option<Annotation>,
@@ -113,8 +109,6 @@ impl TypeFieldMetadata {
     }
 }
 
-
-
 impl TryFrom<&PrimitiveApplication> for TypeFieldMetadata {
     type Error = Error;
 
@@ -126,8 +120,7 @@ impl TryFrom<&PrimitiveApplication> for TypeFieldMetadata {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct VariableMetadata {
     variable_name: Option<Annotation>,
 }
@@ -162,10 +155,7 @@ impl TryFrom<&PrimitiveApplication> for VariableMetadata {
     }
 }
 
-
-
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TypeVariableMetadata {
     type_name: Option<Annotation>,
     variable_name: Option<Annotation>,
@@ -213,8 +203,6 @@ impl TypeVariableMetadata {
     }
 }
 
-
-
 impl TryFrom<&PrimitiveApplication> for TypeVariableMetadata {
     type Error = Error;
 
@@ -226,8 +214,7 @@ impl TryFrom<&PrimitiveApplication> for TypeVariableMetadata {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct TwoVariableMetadata {
     first_variable_name: Option<Annotation>,
     second_variable_name: Option<Annotation>,
@@ -273,8 +260,6 @@ impl TwoVariableMetadata {
         annotation.kind() == Kind::Variable
     }
 }
-
-
 
 impl TryFrom<&PrimitiveApplication> for TwoVariableMetadata {
     type Error = Error;

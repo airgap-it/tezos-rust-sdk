@@ -66,7 +66,8 @@ impl MetaEncoded {
     pub fn recognize_base58(value: &str) -> Result<&'static MetaEncoded> {
         META_ENCODED_VALUES
             .iter()
-            .find(|item| item.is_valid_base58(value)).copied()
+            .find(|item| item.is_valid_base58(value))
+            .copied()
             .ok_or(Error::InvalidBase58EncodedData {
                 description: value.into(),
             })
@@ -75,14 +76,16 @@ impl MetaEncoded {
     pub fn recognize_bytes(value: &[u8]) -> Result<&'static MetaEncoded> {
         META_ENCODED_VALUES
             .iter()
-            .find(|item| item.is_valid_prefixed_bytes(value)).copied()
+            .find(|item| item.is_valid_prefixed_bytes(value))
+            .copied()
             .ok_or(Error::InvalidBytes)
     }
 
     pub fn recognize_consumable_bytes(value: &[u8]) -> Result<&'static MetaEncoded> {
         META_ENCODED_VALUES
             .iter()
-            .find(|item| item.is_valid_prefixed_consumable_bytes(value)).copied()
+            .find(|item| item.is_valid_prefixed_consumable_bytes(value))
+            .copied()
             .ok_or(Error::InvalidBytes)
     }
 }

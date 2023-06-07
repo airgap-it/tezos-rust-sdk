@@ -46,11 +46,8 @@ impl Normalizer<PrimitiveApplication> for MichelineNormalizer {
                 ]
             })
         } else {
-            value.with_mutated_args(|args| {
-                args.into_iter()
-                    .map(Self::normalize)
-                    .collect::<Vec<_>>()
-            })
+            value
+                .with_mutated_args(|args| args.into_iter().map(Self::normalize).collect::<Vec<_>>())
         }
     }
 }
@@ -194,12 +191,7 @@ impl Normalizer<data::Pair> for MichelsonNormalizer {
             ])
         } else {
             let values = value.values;
-            data::Pair::new(
-                values
-                    .into_iter()
-                    .map(Self::normalize)
-                    .collect(),
-            )
+            data::Pair::new(values.into_iter().map(Self::normalize).collect())
         }
     }
 }
@@ -219,10 +211,7 @@ impl Normalizer<types::Pair> for MichelsonNormalizer {
         } else {
             let values = value.types;
             types::Pair::new(
-                values
-                    .into_iter()
-                    .map(Self::normalize)
-                    .collect(),
+                values.into_iter().map(Self::normalize).collect(),
                 Some(value.metadata),
             )
         }
@@ -244,10 +233,7 @@ impl Normalizer<types::ComparablePair> for MichelsonNormalizer {
         } else {
             let values = value.types;
             types::ComparablePair::new(
-                values
-                    .into_iter()
-                    .map(Self::normalize)
-                    .collect(),
+                values.into_iter().map(Self::normalize).collect(),
                 Some(value.metadata),
             )
         }
