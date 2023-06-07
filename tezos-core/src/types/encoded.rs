@@ -38,7 +38,7 @@ pub trait Encoded: Sized {
     /// Returns an error of the provided value is not a valid base58 string for the type being created.
     fn new(value: String) -> Result<Self>;
     /// Returns the base58 string value.
-    fn into_string(&self) -> String {
+    fn into_string(self) -> String {
         self.value().into()
     }
     /// Encodes the value to its bytes representation

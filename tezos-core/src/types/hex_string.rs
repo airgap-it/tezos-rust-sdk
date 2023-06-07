@@ -28,11 +28,15 @@ impl HexString {
         Err(Error::InvalidHexString)
     }
 
-    pub fn len(&self) -> usize {
+    pub fn len(self) -> usize {
         if self.0.starts_with(Self::PREFIX) {
             return self.0.len() - Self::PREFIX.len();
         }
         self.0.len()
+    }
+
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
     }
 
     pub fn len_with_prefix(&self) -> usize {
