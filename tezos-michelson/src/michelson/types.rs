@@ -36,6 +36,14 @@ make_types!(
         2,
         boxed: (code: crate::michelson::data::instructions::Instruction)
     ),
+    (
+        View,
+        view,
+        145,
+        boxed: (r#input_type: Type),
+        boxed: (r#output_type: Type),
+        boxed: (code: crate::michelson::data::instructions::Instruction)
+    ),
     (Option, option, 99, boxed: (r#type: Type)),
     (List, list, 95, boxed: (r#type: Type)),
     (Set, set, 102, boxed: (r#type: Type)),
