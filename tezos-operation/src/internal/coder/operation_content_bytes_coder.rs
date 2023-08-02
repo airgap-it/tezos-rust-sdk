@@ -169,7 +169,7 @@ impl Encoder<BlockHeader, Vec<u8>, Error> for OperationContentBytesCoder {
         let level_bytes = utils::encode_i32(value.level);
         let proto_bytes = [value.proto];
         let predecessor_bytes = value.predecessor.to_bytes()?;
-        let timestamp_bytes = utils::encode_i64(value.timestamp.timestamp_millis());
+        let timestamp_bytes = utils::encode_i64(value.timestamp.timestamp());
         let validation_pass_bytes = [value.validation_pass];
         let operation_hash_bytes = value.operations_hash.to_bytes()?;
         let fitness_bytes = utils::encode_bytes(&value.fitness.iter().fold(
@@ -599,12 +599,10 @@ impl ConsumingDecoder<BlockHeader, u8, Error> for OperationContentBytesCoder {
         let level = utils::decode_consuming_i32(value)?;
         let proto = value.consume_first()?;
         let predecessor = BlockHash::from_consumable_bytes(value)?;
-        let timestamp_millis = utils::decode_consuming_i64(value)?;
 
-        let ts_secs = timestamp_millis / 1000;
-        let ts_ns = (timestamp_millis % 1000) * 1_000_000;
-        let timestamp = NaiveDateTime::from_timestamp_opt(ts_secs, ts_ns as u32)
-            .expect("out-of-range number of seconds and/or invalid nanosecond");
+        let ts_secs = utils::decode_consuming_i64(value)?;
+        let timestamp = NaiveDateTime::from_timestamp_opt(ts_secs, 0)
+            .expect("out-of-range number of seconds and/or invalid seconds");
 
         let validation_pass = value.consume_first()?;
         let operations_hash = OperationListListHash::from_consumable_bytes(value)?;
