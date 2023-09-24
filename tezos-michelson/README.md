@@ -32,7 +32,7 @@ cargo test
 To generate and open the Rust documentation for this crate, use the following command at the root of the crate:
 
 ```shell
-crago doc --open
+cargo doc --open
 ```
 
 ## Setup
